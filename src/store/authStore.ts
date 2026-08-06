@@ -1,0 +1,319 @@
+import { create } from "zustand";
+import type { User, UserRole } from "@/types";
+import { auth, db, firebaseConfig } from "@/lib/firebase/firebase";
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+interface AuthState {
+  currentUser: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  users: User[];
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
+
+  initializeAuthListener: () => () => void;
+  initializeUsersListener: () => () => void;
+  
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  registerStudent: (
+    name: string,
+    email: string,
+    password: string,
+    grade: string,
+    parentPhone?: string,
+    fatherName?: string
+  ) => Promise<{ success: boolean; error?: string; studentId?: string }>;
+  
+  getStudentUsers: () => User[];
+  getArchivedStudents: () => User[];
+  getAllUsers: () => User[];
+  
+  deleteStudent: (studentId: string) => Promise<void>;
+  updateStudent: (studentId: string, name: string, email: string) => Promise<{ success: boolean; error?: string }>;
+  updateAvatar: (userId: string, avatarData: string) => Promise<void>;
+}
+
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  currentUser: null,
+  isAuthenticated: false,
+  isLoading: true,
+  users: [],
+  _hasHydrated: true,
+  setHasHydrated: (state) => set({ _hasHydrated: state }),
+
+  initializeAuthListener: () => {
+    set({ isLoading: true });
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          if (userDoc.exists()) {
+            set({
+              currentUser: { id: firebaseUser.uid, ...userDoc.data() } as User,
+              isAuthenticated: true,
+              isLoading: false
+            });
+          } else {
+            set({ currentUser: null, isAuthenticated: false, isLoading: false });
+          }
+        } catch (error) {
+          console.error("Auth listener error fetching user doc:", error);
+          set({ currentUser: null, isAuthenticated: false, isLoading: false });
+        }
+      } else {
+        set({ currentUser: null, isAuthenticated: false, isLoading: false });
+      }
+    });
+    return unsubscribe;
+  },
+
+  initializeUsersListener: () => {
+    const q = query(collection(db, "users"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allUsers: User[] = [];
+      snapshot.forEach((docSnap) => {
+        allUsers.push({ id: docSnap.id, ...docSnap.data() } as User);
+      });
+      set({ users: allUsers });
+    });
+    return unsubscribe;
+  },
+
+  login: async (emailOrUsername: string, password: string) => {
+    set({ isLoading: true });
+    try {
+      let firebaseEmail = emailOrUsername.trim();
+      if (firebaseEmail === "Adarsh@77") firebaseEmail = "adarsh@rudra.edu";
+      if (firebaseEmail === "Akansha@27") firebaseEmail = "akansha@rudra.edu";
+
+      const userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, password);
+      let userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      
+      // Auto-provision if it's a known teacher but doc doesn't exist (e.g. newly enabled Auth)
+      if (!userDoc.exists() && (firebaseEmail === "adarsh@rudra.edu" || firebaseEmail === "akansha@rudra.edu")) {
+        const newTeacherDoc = {
+          id: userCredential.user.uid,
+          name: firebaseEmail === "adarsh@rudra.edu" ? "Adarsh Pandey" : "Akansha Pandey",
+          username: firebaseEmail === "adarsh@rudra.edu" ? "Adarsh@77" : "Akansha@27",
+          email: firebaseEmail,
+          role: "teacher",
+          createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, "users", userCredential.user.uid), newTeacherDoc);
+        userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      }
+
+      if (userDoc.exists()) {
+        set({ 
+          currentUser: { id: userCredential.user.uid, ...userDoc.data() } as User,
+          isAuthenticated: true,
+          isLoading: false
+        });
+        return { success: true };
+      } else {
+        await signOut(auth);
+        set({ isLoading: false });
+        return { success: false, error: "User document not found" };
+      }
+    } catch (error: any) {
+      set({ isLoading: false });
+      return { success: false, error: "Invalid username or password" };
+    }
+  },
+
+  loginWithGoogle: async () => {
+    set({ isLoading: true });
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      
+      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      
+      if (userDoc.exists()) {
+        set({ 
+          currentUser: { id: userCredential.user.uid, ...userDoc.data() } as User,
+          isAuthenticated: true,
+          isLoading: false
+        });
+        return { success: true };
+      } else {
+        // If the user hasn't been registered by a teacher, sign them back out and deny entry
+        await signOut(auth);
+        set({ isLoading: false });
+        return { success: false, error: "This Google account is not registered. Please contact your teacher." };
+      }
+    } catch (error: any) {
+      set({ isLoading: false });
+      // Ignore popup closed errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        return { success: false };
+      }
+      return { success: false, error: error.message || "Failed to sign in with Google" };
+    }
+  },
+
+  logout: async () => {
+    try {
+      await signOut(auth);
+      set({ currentUser: null, isAuthenticated: false });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  },
+
+  registerStudent: async (name, email, password, grade, parentPhone, fatherName) => {
+    const { currentUser } = get();
+    if (!currentUser || currentUser.role !== "teacher") {
+      return { success: false, error: "Only teachers can add students" };
+    }
+
+    try {
+      // PROD WAY: Create secondary auth instance to prevent logging out the teacher
+      const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+      const secondaryAuth = getAuth(secondaryApp);
+      
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const studentId = userCredential.user.uid;
+      
+      // Sign out of the secondary app so it doesn't persist
+      await signOut(secondaryAuth);
+      
+      const newStudent = {
+        username: email,
+        name,
+        role: "student" as UserRole,
+        createdAt: new Date().toISOString(),
+        classId: `class-${grade.replace(/\s+/g, '-').toLowerCase()}`,
+        grade,
+        addedByTeacherId: currentUser.id,
+        parentPhone: parentPhone || "",
+        fatherName: fatherName || "",
+      };
+
+      // Create document in Firestore
+      await setDoc(doc(db, "users", studentId), newStudent);
+      
+      // GENERATE INITIAL FEE PROFILE & INVOICE INSTANTLY
+      try {
+        const { useFeeStore } = await import("./feeStore");
+        // Ensure fee store is hydrated before writing
+        if (useFeeStore.persist) {
+            await useFeeStore.persist.rehydrate();
+        }
+        
+        const now = new Date();
+        const monthStr = now.toISOString().substring(0, 7);
+        const dueDate = new Date(now);
+        dueDate.setMonth(dueDate.getMonth() + 1); // Exact same date, next month
+
+        const newProfile = {
+          studentId,
+          monthlyFee: 2500,
+          paymentFrequency: "monthly",
+          preferredDueDate: 5,
+          feeStartDate: now.toISOString(),
+          lateFeeRule: { type: "none", amount: 0, gracePeriodDays: 5 },
+          discounts: [],
+          isActive: true
+        };
+
+        const newInvoice = {
+          id: `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          studentId,
+          month: monthStr,
+          issueDate: now.toISOString(),
+          dueDate: dueDate.toISOString(),
+          baseAmount: 2500,
+          discountAmount: 0,
+          lateFeeAmount: 0,
+          previousBalance: 0,
+          totalAmount: 2500,
+          amountPaid: 0,
+          status: "pending",
+          items: [{ description: "Initial Tuition Fee", amount: 2500 }]
+        };
+
+        await setDoc(doc(db, "fees", studentId), newProfile);
+        await setDoc(doc(db, "feeInvoices", newInvoice.id), newInvoice);
+        
+        console.log(`[authStore] Generated initial fee profile and invoice for ${studentId}`);
+      } catch (feeError) {
+        console.error("Failed to generate initial fee invoice:", feeError);
+      }
+      
+      return { success: true, studentId };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Failed to create student" };
+    }
+  },
+
+  getStudentUsers: () => {
+    return get().getAllUsers().filter(u => u.role === "student" && (u as any).status !== "archived");
+  },
+  
+  getArchivedStudents: () => {
+    return get().getAllUsers().filter(u => u.role === "student" && ((u as any).status === "archived" || (u as any).status === "deleted"));
+  },
+
+  getAllUsers: () => {
+    return get().users;
+  },
+
+  deleteStudent: async (studentId: string) => {
+    try {
+      await updateDoc(doc(db, "users", studentId), {
+        status: "deleted",
+        username: `deleted_${Date.now()}`
+      });
+      
+      // Dynamic imports to avoid circular dependencies
+      const { useHomeworkStore } = await import("./homeworkStore");
+      const { useFeeStore } = await import("./feeStore");
+      const { useDoubtStore } = await import("./doubtStore");
+      
+      if (useHomeworkStore.getState().purgeStudentSubmissions) {
+         useHomeworkStore.getState().purgeStudentSubmissions(studentId);
+      }
+      if (useFeeStore.getState().purgeStudentFees) {
+         useFeeStore.getState().purgeStudentFees(studentId);
+      }
+      if (useDoubtStore.getState().purgeStudentDoubts) {
+         useDoubtStore.getState().purgeStudentDoubts(studentId);
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+    }
+  },
+
+  updateStudent: async (studentId: string, name: string, email: string) => {
+    try {
+      await updateDoc(doc(db, "users", studentId), {
+        name,
+        username: email
+      });
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Failed to update student" };
+    }
+  },
+
+  updateAvatar: async (userId: string, avatarData: string) => {
+    try {
+      await updateDoc(doc(db, "users", userId), { avatar: avatarData });
+    } catch (error) {
+      console.error("Firebase update failed for avatar", error);
+    }
+  }
+}));

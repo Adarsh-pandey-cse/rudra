@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isTeacher() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "teacher";
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Users can read/write their own data
+      // Teachers can read all users and write to student profiles they manage
+      allow read: if isAuthenticated();
+      allow write: if request.auth.uid == userId || isTeacher();
+    }
+
+    // Homeworks (Assignments)
+    match /homeworks/{homeworkId} {
+      // Teachers can manage assignments
+      // Students can read assignments
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    
+    // Homework Submissions
+    match /homeworkSubmissions/{submissionId} {
+      // Teachers can read/write all submissions
+      // Students can only read/write their own submissions
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow write: if isTeacher() || (isAuthenticated() && request.resource.data.studentId == request.auth.uid);
+    }
+    
+    // Doubts
+    match /doubts/{doubtId} {
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow write: if isTeacher() || (isAuthenticated() && request.resource.data.studentId == request.auth.uid);
+    }
+    
+    // Fees and Invoices
+    match /fees/{studentId} {
+      allow read: if isTeacher() || request.auth.uid == studentId;
+      allow write: if isTeacher();
+    }
+    match /feeInvoices/{invoiceId} {
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow write: if isTeacher();
+    }
+    match /feePayments/{paymentId} {
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow write: if isTeacher();
+    }
+    
+    // Notices
+    match /notices/{noticeId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    // Curriculum
+    match /curriculum/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    
+    // Fallback: Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
