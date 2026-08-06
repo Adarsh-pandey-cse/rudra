@@ -1,0 +1,505 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { Search, UserPlus, Users2, Eye, EyeOff, Edit, Trash2, AlertCircle, BellRing, CheckCircle2, TrendingUp, IndianRupee } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { useDataStore } from "@/store/dataStore";
+import { useFeeStore } from "@/store/feeStore";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import GlassCard from "@/components/ui/GlassCard";
+import GradientButton from "@/components/ui/GradientButton";
+import GlassButton from "@/components/ui/GlassButton";
+import EmptyState from "@/components/ui/EmptyState";
+import Link from "next/link";
+import { getMasteryColor, getMasteryLevel, Student } from "@/types";
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { y: 16, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
+};
+
+export default function StudentListPage() {
+  const router = useRouter();
+  const { currentUser, isAuthenticated, _hasHydrated, getStudentUsers, getArchivedStudents, deleteStudent, updateStudent } = useAuthStore();
+  const { getAllStudentProgress } = useDataStore();
+  const { invoices, isInitialized, initializeMockData } = useFeeStore();
+  
+  const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"active" | "past">("active");
+  
+  const [showPasswordId, setShowPasswordId] = useState<string | null>(null);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  
+  // Edit form state
+  const [editName, setEditName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    if (!_hasHydrated) return;
+    if (!isAuthenticated || currentUser?.role !== "teacher") {
+      router.push("/auth/login");
+      return;
+    }
+    initializeMockData();
+    setMounted(true);
+  }, [isAuthenticated, currentUser, router, initializeMockData, _hasHydrated]);
+
+  const students = useMemo(() => activeTab === "active" ? getStudentUsers() : getArchivedStudents(), [getStudentUsers, getArchivedStudents, editingStudentId, activeTab]); 
+  const allProgress = getAllStudentProgress();
+
+  const filteredStudents = useMemo(() => {
+    return students
+      .filter((u): u is Student => u.role === "student")
+      .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || (s.username || "").toLowerCase().includes(searchQuery.toLowerCase()))
+      .map(s => {
+        const studentInvoices = invoices.filter(inv => inv.studentId === s.id);
+        const totalPending = studentInvoices.reduce((sum, inv) => sum + (inv.totalAmount - inv.amountPaid), 0);
+        
+        return {
+          ...s,
+          progress: allProgress[s.id],
+          balance: totalPending
+        };
+      });
+  }, [students, allProgress, searchQuery, invoices]);
+
+  const groupedStudents = useMemo(() => {
+    const groups: Record<string, typeof filteredStudents> = {};
+    filteredStudents.forEach(s => {
+      const cls = s.classId || (s as Student).grade || "Unassigned";
+      if (!groups[cls]) groups[cls] = [];
+      groups[cls].push(s);
+    });
+    // Sort keys alphabetically
+    return Object.keys(groups).sort().reduce((obj, key) => {
+      obj[key] = groups[key];
+      return obj;
+    }, {} as Record<string, typeof filteredStudents>);
+  }, [filteredStudents]);
+
+  // Derived stats
+  const totalStudents = students.length;
+  const avgMastery = filteredStudents.length 
+    ? Math.round(filteredStudents.reduce((acc, s) => acc + (s.progress?.overallScore || 0), 0) / filteredStudents.length)
+    : 0;
+  const totalPendingDues = filteredStudents.reduce((acc, s) => acc + s.balance, 0);
+
+  if (!mounted || !currentUser) return null;
+
+  const startEditing = (student: typeof students[0]) => {
+    setEditingStudentId(student.id);
+    setEditName(student.name);
+    setEditUsername(student.username || "");
+    setEditPassword("••••••••"); 
+    setEditError("");
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudentId) return;
+    const res = await updateStudent(editingStudentId, editName, editUsername);
+    if (res.success) {
+      setEditingStudentId(null);
+    } else {
+      setEditError(res.error || "Failed to update");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to remove this student? Their past submissions and ratings will be preserved in the Past Students section.")) {
+      await deleteStudent(id);
+    }
+  };
+
+  const togglePassword = (id: string) => {
+    setShowPasswordId(prev => prev === id ? null : id);
+  };
+
+  const handleSendReminder = (studentId: string, studentName: string, amount: number) => {
+    const reminder = {
+      id: `rem_${Date.now()}`,
+      title: "Fee Reminder",
+      body: `${studentName}, your fee of ₹${amount.toLocaleString('en-IN')} is overdue. Please pay at the earliest.`,
+      date: new Date().toISOString()
+    };
+    
+    localStorage.setItem(`manual_fee_reminder_${studentId}`, JSON.stringify(reminder));
+    alert(`Push notification sent to ${studentName}!`);
+  };
+
+  return (
+    <DashboardLayout role="teacher">
+      <motion.div 
+        className="space-y-6 pb-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">My Students</h1>
+            <p className="text-sm text-[#B6C2D9]">Manage your classroom, track progress, and view balances.</p>
+          </div>
+          <Link href="/dashboard/teacher/students/add">
+            <GradientButton className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              <span>Add Student</span>
+            </GradientButton>
+          </Link>
+        </motion.div>
+
+        {/* Stats Row */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <GlassCard className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#5B5CFF]/20 rounded-xl">
+                <Users2 className="w-6 h-6 text-[#5B5CFF]" />
+              </div>
+              <div>
+                <p className="text-sm text-[#7B8798]">Total Students</p>
+                <p className="text-2xl font-bold text-white">{totalStudents}</p>
+              </div>
+            </div>
+          </GlassCard>
+          <GlassCard className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#2DD4BF]/20 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-[#2DD4BF]" />
+              </div>
+              <div>
+                <p className="text-sm text-[#7B8798]">Average Mastery</p>
+                <p className="text-2xl font-bold text-white">{avgMastery}%</p>
+              </div>
+            </div>
+          </GlassCard>
+          <GlassCard className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#FB923C]/20 rounded-xl">
+                <IndianRupee className="w-6 h-6 text-[#FB923C]" />
+              </div>
+              <div>
+                <p className="text-sm text-[#7B8798]">Pending Dues</p>
+                <p className="text-2xl font-bold text-white">₹{totalPendingDues.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Edit Modal */}
+        <AnimatePresence>
+          {editingStudentId && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }} 
+              animate={{ opacity: 1, height: "auto" }} 
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <GlassCard className="mb-6">
+                <h2 className="text-lg font-semibold text-white mb-4">Edit Student Details</h2>
+                {editError && (
+                  <div className="mb-4 p-3 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-xl flex items-center gap-2 text-[#EF4444] text-sm">
+                    <AlertCircle className="w-4 h-4" /> {editError}
+                  </div>
+                )}
+                <form onSubmit={handleUpdate} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-[#B6C2D9] mb-1">Full Name</label>
+                      <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-[#B6C2D9] mb-1">Username (Email)</label>
+                      <input type="email" required value={editUsername} onChange={e => setEditUsername(e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-[#B6C2D9] mb-1">Password</label>
+                      <input type="text" value={editPassword} disabled className="w-full bg-white/[0.02] border border-white/[0.04] rounded-xl px-4 py-2 text-[#7B8798] cursor-not-allowed" title="Update password feature coming soon" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <GlassButton type="button" onClick={() => setEditingStudentId(null)}>Cancel</GlassButton>
+                    <GradientButton type="submit">Save Changes</GradientButton>
+                  </div>
+                </form>
+              </GlassCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Search and Tabs */}
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+          <GlassCard className="p-2 flex items-center gap-3 w-full sm:w-auto flex-1">
+            <div className="pl-3">
+              <Search className="text-[#7B8798] w-5 h-5" />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Search students by name or username..." 
+              className="bg-transparent border-none outline-none flex-1 py-2 text-white placeholder-[#7B8798]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </GlassCard>
+          
+          <div className="flex bg-white/[0.03] p-1 rounded-lg border border-white/[0.05] w-full sm:w-auto">
+            <button 
+              onClick={() => setActiveTab("active")}
+              className={`flex-1 sm:flex-none px-6 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "active" ? "bg-[#5B5CFF] text-white" : "text-[#7B8798] hover:text-white"}`}
+            >
+              Active
+            </button>
+            <button 
+              onClick={() => setActiveTab("past")}
+              className={`flex-1 sm:flex-none px-6 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "past" ? "bg-[#5B5CFF] text-white" : "text-[#7B8798] hover:text-white"}`}
+            >
+              Past Students
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Students List */}
+        <motion.div variants={itemVariants}>
+          {students.length === 0 ? (
+            <EmptyState 
+              icon={<Users2 className="w-12 h-12 text-[#7B8798]" />}
+              title="No students yet"
+              description="You haven't added any students to your class. Add your first student to start tracking their progress."
+              action={
+                <Link href="/dashboard/teacher/students/add">
+                  <GradientButton className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5" />
+                    <span>Add First Student</span>
+                  </GradientButton>
+                </Link>
+              }
+            />
+          ) : (
+            <GlassCard className="overflow-hidden p-0">
+              {/* Desktop Table View */}
+              <div className="overflow-x-auto hidden md:block">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/[0.08] bg-white/[0.02]">
+                      <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Student</th>
+                      <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Credentials</th>
+                      <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Details & Fees</th>
+                      <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Mastery</th>
+                      <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.08]">
+                    {Object.keys(groupedStudents).length > 0 ? (
+                      Object.entries(groupedStudents).flatMap(([className, classStudents]) => [
+                        <tr key={`group-${className}`} className="bg-[#07111F]/80 border-y border-white/[0.08]">
+                          <td colSpan={5} className="px-6 py-3 text-xs font-bold text-[#4F9DFF] uppercase tracking-widest">
+                            Class: {className} <span className="text-[#7B8798] ml-2">({classStudents.length} Students)</span>
+                          </td>
+                        </tr>,
+                        ...classStudents.map((s) => {
+                          const score = s.progress?.overallScore ?? 0;
+                          const color = getMasteryColor(getMasteryLevel(score));
+                          const isShowingPassword = showPasswordId === s.id;
+                          
+                          return (
+                            <tr key={s.id} className="hover:bg-white/[0.02] transition-colors group">
+                              <td className="px-6 py-4 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-lg border border-white/10">
+                                    {s.avatar ? (
+                                      s.avatar.length < 10 ? (
+                                        <span className="text-xl">{s.avatar}</span>
+                                      ) : (
+                                        <img src={s.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                      )
+                                    ) : (
+                                      s.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-white">{s.name}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[13px] text-[#B6C2D9] font-mono">@{s.username}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[13px] text-[#B6C2D9] font-mono bg-white/[0.06] px-2 py-0.5 rounded border border-white/[0.08]">
+                                      {isShowingPassword ? (s.password || "No Password Set") : "••••••••"}
+                                    </span>
+                                    <button onClick={() => togglePassword(s.id)} className="text-[#7B8798] hover:text-white transition-colors" title="Toggle Password">
+                                      {isShowingPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col gap-1 text-[13px] text-[#B6C2D9]">
+                                  <div>Grade: <span className="text-white">{(s as Student).grade || 'N/A'}</span></div>
+                                  {(s as Student).parentPhone && (
+                                    <div>Phone: <span className="text-white">{(s as Student).parentPhone}</span></div>
+                                  )}
+                                  <div className="mt-1 flex items-center gap-2">
+                                    <span className="text-[#7B8798]">Dues:</span>
+                                    {s.balance > 0 ? (
+                                      <span className="text-[#EF4444] font-medium">₹{s.balance.toLocaleString('en-IN')}</span>
+                                    ) : (
+                                      <span className="text-[#22C55E] font-medium flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Clear</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color: color }} />
+                                    <span className="text-sm font-semibold text-white">{score}%</span>
+                                  </div>
+                                  <div className="w-24 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                                    <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                {activeTab === "active" ? (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button onClick={() => startEditing(s)} className="p-2 bg-white/5 hover:bg-[#4F9DFF]/20 text-[#7B8798] hover:text-[#4F9DFF] rounded-[10px] transition-colors border border-transparent hover:border-[#4F9DFF]/30" title="Edit Student">
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleDelete(s.id)} className="p-2 bg-white/5 hover:bg-[#EF4444]/20 text-[#7B8798] hover:text-[#EF4444] rounded-[10px] transition-colors border border-transparent hover:border-[#EF4444]/30" title="Archive Student">
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-[#7B8798] uppercase tracking-wider font-semibold">Archived</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })
+                      ])
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-[#7B8798] text-sm">
+                          No students match your search.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden flex flex-col divide-y divide-white/[0.08]">
+                {Object.keys(groupedStudents).length > 0 ? (
+                  Object.entries(groupedStudents).map(([className, classStudents]) => (
+                    <div key={`mobile-group-${className}`}>
+                      <div className="bg-[#07111F]/80 border-y border-white/[0.08] px-4 py-2.5 text-xs font-bold text-[#4F9DFF] uppercase tracking-widest sticky top-0 z-10">
+                        Class: {className} <span className="text-[#7B8798] ml-1">({classStudents.length})</span>
+                      </div>
+                      <div className="divide-y divide-white/[0.04]">
+                        {classStudents.map((s) => {
+                          const score = s.progress?.overallScore ?? 0;
+                          const color = getMasteryColor(getMasteryLevel(score));
+                          const isShowingPassword = showPasswordId === s.id;
+                          
+                          return (
+                            <div key={`mobile-${s.id}`} className="p-4 flex flex-col gap-4 hover:bg-white/[0.02] transition-colors">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden shadow-lg border border-white/10">
+                                    {s.avatar ? (
+                                      s.avatar.length < 10 ? (
+                                        <span>{s.avatar}</span>
+                                      ) : (
+                                        <img src={s.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                      )
+                                    ) : (
+                                      s.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-bold text-white mb-0.5">{s.name}</div>
+                                    <span className="text-[12px] text-[#B6C2D9] font-mono">@{s.username}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => startEditing(s)} className="p-2 bg-white/5 text-[#4F9DFF] rounded-[10px]">
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button onClick={() => handleDelete(s.id)} className="p-2 bg-white/5 text-[#EF4444] rounded-[10px]">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3 text-[13px] text-[#B6C2D9] bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[#7B8798] text-[10px] uppercase">Password</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono">{isShowingPassword ? (s.password || "None") : "••••••••"}</span>
+                                    <button onClick={() => togglePassword(s.id)} className="text-[#7B8798] hover:text-white">
+                                      {isShowingPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[#7B8798] text-[10px] uppercase">Dues</span>
+                                  {s.balance > 0 ? (
+                                    <span className="text-[#EF4444] font-semibold">₹{s.balance.toLocaleString('en-IN')}</span>
+                                  ) : (
+                                    <span className="text-[#22C55E] font-semibold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Clear</span>
+                                  )}
+                                </div>
+                                {(s as Student).parentPhone && (
+                                  <div className="flex flex-col gap-1 col-span-2">
+                                    <span className="text-[#7B8798] text-[10px] uppercase">Parent Phone</span>
+                                    <span className="text-white">{(s as Student).parentPhone}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-col gap-1.5 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[11px] text-[#7B8798] uppercase">Mastery</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color: color }} />
+                                    <span className="text-xs font-semibold text-white">{score}%</span>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                                  <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center text-[#7B8798] text-sm">
+                    No students match your search.
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+          )}
+        </motion.div>
+      </motion.div>
+    </DashboardLayout>
+  );
+}

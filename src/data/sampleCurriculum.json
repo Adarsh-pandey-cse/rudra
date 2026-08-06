@@ -1,0 +1,144 @@
+{
+  "classes": [
+    {
+      "classId": "class-10",
+      "className": "Class 10",
+      "subjects": [
+        {
+          "subjectId": "sub-10-sci",
+          "subjectName": "Science",
+          "subjectCode": "086",
+          "color": "#10B981",
+          "iconName": "FlaskConical",
+          "bookName": "Science Textbook for Class X (NCERT)",
+          "academicYear": "2024-2025",
+          "board": "CBSE",
+          "language": "English",
+          "totalChapters": 13,
+          "totalTopics": 45,
+          "estimatedCompletionTimeHours": 120,
+          "difficulty": "Medium",
+          "units": [
+            {
+              "unitId": "unit-10-sci-1",
+              "unitName": "Chemical Substances-Nature and Behaviour",
+              "chapters": [
+                {
+                  "chapterId": "ch-10-sci-1",
+                  "chapterName": "Chemical Reactions and Equations",
+                  "unitName": "Chemical Substances-Nature and Behaviour",
+                  "chapterNumber": 1,
+                  "chapterDescription": "Understanding how chemical substances interact, balance equations, and the different types of chemical reactions.",
+                  "estimatedHours": 8,
+                  "revisionHours": 2,
+                  "homeworkHours": 3,
+                  "practiceHours": 4,
+                  "difficulty": "Medium",
+                  "importance": "High",
+                  "conceptWeight": 85,
+                  "examWeight": 8,
+                  "pyqWeight": 90,
+                  "learningObjectives": [
+                    "Identify chemical changes.",
+                    "Write and balance chemical equations.",
+                    "Classify chemical reactions."
+                  ],
+                  "commonMistakes": [
+                    "Forgetting to balance oxygen and hydrogen last.",
+                    "Confusing displacement with double displacement."
+                  ],
+                  "visualLearningRecommended": true,
+                  "diagramRequired": false,
+                  "numericalRequired": true,
+                  "practicalRequired": true,
+                  "synonyms": ["Chemical Changes", "Reactions"],
+                  "alternativeNames": [],
+                  "keywords": ["Reactants", "Products", "Catalyst"],
+                  "examKeywords": ["Balance", "Precipitate", "Oxidation"],
+                  "importantWords": ["Exothermic", "Endothermic"],
+                  "testMetadata": {
+                    "mcqCount": 15,
+                    "veryShortCount": 10,
+                    "shortCount": 5,
+                    "longCount": 3,
+                    "caseStudyCount": 2,
+                    "assertionReasonCount": 5,
+                    "hotsCount": 2,
+                    "competencyCount": 4,
+                    "practicalCount": 2,
+                    "diagramCount": 0
+                  },
+                  "xpReward": 500,
+                  "topics": [
+                    {
+                      "topicId": "top-10-sci-1-1",
+                      "topicName": "Balancing Chemical Equations",
+                      "shortDescription": "Applying the law of conservation of mass to chemical equations.",
+                      "conceptExplanation": "A balanced chemical equation has an equal number of atoms of each element on both reactant and product sides.",
+                      "prerequisiteTopics": ["Atoms and Molecules (Class 9)"],
+                      "nextTopics": ["Types of Chemical Reactions"],
+                      "formulaList": [],
+                      "definitions": ["Balanced Equation", "Skeletal Equation"],
+                      "examples": ["Mg + O2 → MgO => 2Mg + O2 → 2MgO"],
+                      "realLifeApplications": ["Industrial synthesis of ammonia (Haber process)"],
+                      "importantFacts": ["Mass can neither be created nor destroyed in a chemical reaction."],
+                      "keywords": ["Conservation of Mass", "Stoichiometry"],
+                      "expectedQuestions": ["Balance the following equation: Fe + H2O → Fe3O4 + H2"],
+                      "difficulty": "Medium",
+                      "estimatedStudyTimeMinutes": 45,
+                      "estimatedPracticeTimeMinutes": 60,
+                      "revisionFrequencyDays": 7,
+                      "masteryWeight": 100,
+                      "revisionPriority": "High",
+                      "retentionDifficulty": 6,
+                      "confidenceThreshold": 80,
+                      "minimumPracticeQuestions": 20,
+                      "recommendedRevisionDays": [1, 3, 7, 21],
+                      "weakTopicFlag": true,
+                      "needsDiagram": false,
+                      "needsAnimation": true,
+                      "needsVideo": true,
+                      "needsSimulation": true,
+                      "needsExperiment": false,
+                      "aiTutorSupport": {
+                        "simpleExplanation": "Imagine a seesaw. You need the same amount of weight (atoms) on the left side (reactants) as the right side (products).",
+                        "mediumExplanation": "To satisfy the Law of Conservation of Mass, we multiply the chemical formulas by coefficients so the number of atoms for each element is identical on both sides.",
+                        "detailedExplanation": "Balancing involves the trial and error method, often starting with the most complex molecule and leaving diatomic gases (like O2 and H2) for last.",
+                        "analogy": "Like baking a cake: if you put in 2 eggs and 1 cup of flour, you must have the mass of 2 eggs and 1 cup of flour in the baked cake.",
+                        "realLifeExample": "Rusting of iron.",
+                        "commonDoubts": ["Can I change the subscripts instead of coefficients? (No, that changes the chemical identity)"],
+                        "frequentlyAskedQuestions": [
+                          { "q": "Why do we balance equations?", "a": "To satisfy the law of conservation of mass." }
+                        ]
+                      },
+                      "subtopics": [
+                        {
+                          "subtopicId": "subtop-10-sci-1-1-1",
+                          "subtopicName": "Hit and Trial Method",
+                          "learningObjective": "Master the step-by-step approach to balancing equations.",
+                          "microConcepts": ["Identifying elements", "Counting atoms", "Adding coefficients"],
+                          "commonErrors": ["Changing chemical formulas (subscripts) instead of coefficients."],
+                          "memoryTricks": ["Start with the heaviest/most complex molecule first."],
+                          "examples": ["Balancing rusting of iron equation."],
+                          "practiceSuggestions": ["Practice with at least 10 different skeletal equations."]
+                        }
+                      ],
+                      "flashcards": [
+                        {
+                          "question": "What law requires chemical equations to be balanced?",
+                          "answer": "Law of Conservation of Mass",
+                          "difficulty": "Easy",
+                          "memoryCategory": "Concept"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
