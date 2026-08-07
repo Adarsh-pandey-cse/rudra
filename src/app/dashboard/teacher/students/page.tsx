@@ -30,7 +30,7 @@ const itemVariants: Variants = {
 
 export default function StudentListPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, _hasHydrated, getStudentUsers, getArchivedStudents, deleteStudent, updateStudent } = useAuthStore();
+  const { currentUser, isAuthenticated, _hasHydrated, getStudentUsers, getArchivedStudents, deleteStudent, updateStudent, archiveStudent, restoreStudent } = useAuthStore();
   const { getAllStudentProgress } = useDataStore();
   const { invoices, isInitialized, initializeMockData } = useFeeStore();
   
@@ -118,9 +118,21 @@ export default function StudentListPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to remove this student? Their past submissions and ratings will be preserved in the Past Students section.")) {
-      await deleteStudent(id);
+  const handleDelete = async (id: string, isArchived: boolean) => {
+    if (isArchived) {
+      if (confirm("Are you sure you want to permanently delete this student? This action cannot be undone.")) {
+        await deleteStudent(id);
+      }
+    } else {
+      if (confirm("Are you sure you want to move this student to Past Students? Their data will be preserved.")) {
+        await archiveStudent(id);
+      }
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    if (confirm("Are you sure you want to restore this student to active status?")) {
+      await restoreStudent(id);
     }
   };
 
@@ -296,7 +308,11 @@ export default function StudentListPage() {
                       <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Student</th>
                       <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Credentials</th>
                       <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Details & Fees</th>
-                      <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Mastery</th>
+                      {activeTab === "active" ? (
+                        <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Mastery</th>
+                      ) : (
+                        <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider">Leave Date</th>
+                      )}
                       <th className="px-6 py-4 text-[11px] font-medium text-[#7B8798] uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
@@ -362,33 +378,56 @@ export default function StudentListPage() {
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
-                                <div className="flex flex-col gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color: color }} />
-                                    <span className="text-sm font-semibold text-white">{score}%</span>
-                                  </div>
-                                  <div className="w-24 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                                    <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-right">
+                              <td className="px-6 py-4 whitespace-nowrap">
                                 {activeTab === "active" ? (
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button onClick={() => startEditing(s)} className="p-2 bg-white/5 hover:bg-[#4F9DFF]/20 text-[#7B8798] hover:text-[#4F9DFF] rounded-[10px] transition-colors border border-transparent hover:border-[#4F9DFF]/30" title="Edit Student">
-                                      <Edit className="w-4 h-4" />
-                                    </button>
-                                    <button onClick={() => handleDelete(s.id)} className="p-2 bg-white/5 hover:bg-[#EF4444]/20 text-[#7B8798] hover:text-[#EF4444] rounded-[10px] transition-colors border border-transparent hover:border-[#EF4444]/30" title="Archive Student">
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
+                                  <div className="flex flex-col gap-2 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color: color }} />
+                                      <span className="text-sm font-semibold text-white">{score}%</span>
+                                    </div>
+                                    <div className="w-24 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                                      <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
+                                    </div>
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-[#7B8798] uppercase tracking-wider font-semibold">Archived</span>
+                                  <div className="text-[13px] text-white">
+                                    {s.leaveDate ? new Date(s.leaveDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                                  </div>
                                 )}
                               </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  {activeTab === "active" ? (
+                                    <>
+                                      <button 
+                                        onClick={() => handleSendReminder(s.id, s.name, s.balance)}
+                                        className={`p-2 rounded-xl transition-colors ${s.balance > 0 ? 'text-[#FB923C] hover:bg-[#FB923C]/10' : 'text-[#7B8798] opacity-50 cursor-not-allowed'}`}
+                                        disabled={s.balance <= 0}
+                                        title={s.balance > 0 ? "Send Fee Reminder" : "No Pending Dues"}
+                                      >
+                                        <BellRing className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => startEditing(s)} className="p-2 text-[#7B8798] hover:text-[#2DD4BF] hover:bg-[#2DD4BF]/10 rounded-xl transition-colors" title="Edit Student">
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => handleDelete(s.id, false)} className="p-2 text-[#7B8798] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-xl transition-colors" title="Archive Student">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button onClick={() => handleRestore(s.id)} className="p-2 text-[#7B8798] hover:text-[#2DD4BF] hover:bg-[#2DD4BF]/10 rounded-xl transition-colors" title="Restore Student">
+                                        <UserPlus className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => handleDelete(s.id, true)} className="p-2 text-[#7B8798] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-xl transition-colors" title="Permanently Delete">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
-                          )
+                          );
                         })
                       ])
                     ) : (
@@ -437,12 +476,25 @@ export default function StudentListPage() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <button onClick={() => startEditing(s)} className="p-2 bg-white/5 text-[#4F9DFF] rounded-[10px]">
-                                    <Edit className="w-4 h-4" />
-                                  </button>
-                                  <button onClick={() => handleDelete(s.id)} className="p-2 bg-white/5 text-[#EF4444] rounded-[10px]">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  {activeTab === "active" ? (
+                                    <>
+                                      <button onClick={() => startEditing(s)} className="p-2 bg-white/5 text-[#4F9DFF] rounded-[10px]">
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => handleDelete(s.id, false)} className="p-2 bg-white/5 text-[#EF4444] rounded-[10px]">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button onClick={() => handleRestore(s.id)} className="p-2 bg-white/5 text-[#2DD4BF] rounded-[10px]">
+                                        <UserPlus className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => handleDelete(s.id, true)} className="p-2 bg-white/5 text-[#EF4444] rounded-[10px]">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                               
@@ -472,18 +524,25 @@ export default function StudentListPage() {
                                 )}
                               </div>
                               
-                              <div className="flex flex-col gap-1.5 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[11px] text-[#7B8798] uppercase">Mastery</span>
-                                  <div className="flex items-center gap-1.5">
-                                    <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color: color }} />
-                                    <span className="text-xs font-semibold text-white">{score}%</span>
+                              {activeTab === "active" ? (
+                                <div className="flex flex-col gap-1.5 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] text-[#7B8798] uppercase">Mastery</span>
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color: color }} />
+                                      <span className="text-xs font-semibold text-white">{score}%</span>
+                                    </div>
+                                  </div>
+                                  <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                                    <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
                                   </div>
                                 </div>
-                                <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                                  <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
+                              ) : (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/[0.04]">
+                                  <span className="text-[11px] text-[#7B8798] uppercase">Leave Date</span>
+                                  <span className="text-sm font-semibold text-white">{s.leaveDate ? new Date(s.leaveDate).toLocaleDateString() : 'N/A'}</span>
                                 </div>
-                              </div>
+                              )}
                             </div>
                           );
                         })}

@@ -26,9 +26,9 @@ export function FeeReceiptModal({ isOpen, onClose, data }: FeeReceiptModalProps)
     const updateScale = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
-        // Template is 794px wide. We add a little padding.
         const targetWidth = 794; 
-        const newScale = Math.min(1, (containerWidth - 40) / targetWidth);
+        const padding = window.innerWidth < 768 ? 20 : 40;
+        const newScale = Math.min(1, (containerWidth - padding) / targetWidth);
         setScale(newScale);
       }
     };
@@ -75,9 +75,11 @@ export function FeeReceiptModal({ isOpen, onClose, data }: FeeReceiptModalProps)
       if (type === 'jpg') {
         const dataUrl = await toJpeg(element, { ...options, quality: 1, backgroundColor: '#ffffff' });
         downloadLink(dataUrl, getFileName('jpg'));
+        uploadToFirebase(dataUrl, 'jpg');
       } else if (type === 'png') {
         const dataUrl = await toPng(element, options);
         downloadLink(dataUrl, getFileName('png'));
+        uploadToFirebase(dataUrl, 'png');
       } else if (type === 'pdf') {
         const dataUrl = await toPng(element, options);
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -85,12 +87,24 @@ export function FeeReceiptModal({ isOpen, onClose, data }: FeeReceiptModalProps)
         const pdfHeight = pdf.internal.pageSize.getHeight();
         pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         pdf.save(getFileName('pdf'));
+        uploadToFirebase(dataUrl, 'pdf');
       }
     } catch (error) {
       console.error('Failed to generate receipt:', error);
       alert('Failed to generate receipt. Please try again.');
     } finally {
       setIsGenerating(null);
+    }
+  };
+
+  const uploadToFirebase = async (dataUrl: string, type: string) => {
+    try {
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const { receiptService } = await import('@/lib/firebase/receiptService');
+      await receiptService.uploadAsset(blob, `receipts/${data.receiptNumber}.${type}`);
+    } catch (e) {
+      console.error("Firebase upload failed", e);
     }
   };
 
@@ -159,7 +173,8 @@ export function FeeReceiptModal({ isOpen, onClose, data }: FeeReceiptModalProps)
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      {isOpen && data && (
+        <div key="fee-receipt-modal" className="fixed inset-0 z-[100] flex items-center justify-center">
         {/* Backdrop */}
         <motion.div 
           initial={{ opacity: 0 }}
@@ -224,7 +239,7 @@ export function FeeReceiptModal({ isOpen, onClose, data }: FeeReceiptModalProps)
                 
                 <ExportButton 
                   icon={ImageIcon} 
-                  label="Save as Image (PNG)"
+                  label="Save to Gallery (PNG)"
                   desc="High quality image format"
                   onClick={() => handleExport('png')}
                   loading={isGenerating === 'png'}
@@ -271,14 +286,15 @@ export function FeeReceiptModal({ isOpen, onClose, data }: FeeReceiptModalProps)
           </div>
 
         </motion.div>
+        
+        <style dangerouslySetInnerHTML={{__html: `
+          .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        `}} />
       </div>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-      `}} />
+      )}
     </AnimatePresence>
   );
 }

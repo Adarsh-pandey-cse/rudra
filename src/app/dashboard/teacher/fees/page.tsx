@@ -44,7 +44,7 @@ export default function TeacherFeesPage() {
   const { 
     isInitialized, initializeMockData, runDailyFeeEngine, 
     getTeacherDashboardStats, invoices, payments, recordPayment, undoPayment,
-    verifyPayment, rejectPayment, feeProfiles, updateFeeProfile
+    verifyPayment, rejectPayment, feeProfiles, updateFeeProfile, remindStudent
   } = useFeeStore();
 
   const [mounted, setMounted] = useState(false);
@@ -160,15 +160,8 @@ export default function TeacherFeesPage() {
     setEditingProfileStudent(null);
   };
 
-  const handleSendReminder = (studentId: string, studentName: string, amount: number) => {
-    const reminder = {
-      id: `rem_${Date.now()}`,
-      title: "Fee Reminder",
-      body: `${studentName}, your fee of ₹${amount.toLocaleString('en-IN')} is overdue. Please pay at the earliest.`,
-      date: new Date().toISOString()
-    };
-    
-    localStorage.setItem(`manual_fee_reminder_${studentId}`, JSON.stringify(reminder));
+  const handleSendReminder = (studentId: string, studentName: string, amount: number, dueDate: string) => {
+    remindStudent(studentId, amount, dueDate);
     alert(`Push notification sent to ${studentName}!`);
   };
 
@@ -220,7 +213,7 @@ export default function TeacherFeesPage() {
         totalPaid: invoice.amountPaid
       },
       verification: {
-        verifierName: record.generatedBy || "Admin",
+        verifierName: payment.verifierName || currentUser?.name || "Admin",
         verifiedDateTime: new Date(record.createdAt).toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
         isSystemVerified: true
       }
@@ -474,7 +467,7 @@ export default function TeacherFeesPage() {
                             {balance > 0 ? (
                               <>
                                 <button
-                                  onClick={() => handleSendReminder(student.id, student.name, balance)}
+                                  onClick={() => handleSendReminder(student.id, student.name, balance, new Date(invoice.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }))}
                                   className="px-2.5 py-1.5 rounded-[10px] bg-[#FB923C]/10 hover:bg-[#FB923C]/20 text-[#FB923C] text-[13px] font-medium border border-transparent hover:border-[#FB923C]/30 transition-all flex items-center gap-1.5"
                                   title="Send Push Reminder"
                                 >
@@ -592,7 +585,7 @@ export default function TeacherFeesPage() {
                           {balance > 0 ? (
                             <>
                               <button
-                                onClick={() => handleSendReminder(student.id, student.name, balance)}
+                                onClick={() => handleSendReminder(student.id, student.name, balance, invoice.dueDate)}
                                 className="p-1.5 rounded-[8px] bg-[#FB923C]/10 hover:bg-[#FB923C]/20 text-[#FB923C] border border-transparent hover:border-[#FB923C]/30 transition-all"
                                 title="Send Reminder"
                               >

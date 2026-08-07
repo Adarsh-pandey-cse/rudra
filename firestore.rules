@@ -39,20 +39,32 @@ service cloud.firestore {
     match /doubts/{doubtId} {
       allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
       allow write: if isTeacher() || (isAuthenticated() && request.resource.data.studentId == request.auth.uid);
+      
+      match /replies/{replyId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher() || (isAuthenticated() && request.resource.data.authorId == request.auth.uid);
+      }
     }
     
     // Fees and Invoices
-    match /fees/{studentId} {
+    match /feeProfiles/{studentId} {
       allow read: if isTeacher() || request.auth.uid == studentId;
       allow write: if isTeacher();
     }
-    match /feeInvoices/{invoiceId} {
+    match /invoices/{invoiceId} {
       allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
       allow write: if isTeacher();
     }
-    match /feePayments/{paymentId} {
+    match /payments/{paymentId} {
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow write: if isTeacher() || (isAuthenticated() && request.resource.data.studentId == request.auth.uid);
+    }
+    match /receipts/{receiptId} {
       allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
       allow write: if isTeacher();
+    }
+    match /audit_logs/{logId} {
+      allow read, write: if isTeacher();
     }
     
     // Notices
