@@ -131,6 +131,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     
     if (pathname.startsWith(href) && href !== `/dashboard/${role}`) return false;
     
+    const getLastVisited = useBadgeStore.getState().getLastVisited;
     let lastVisit = getLastVisited(currentUser.id, href);
     if (!lastVisit) {
       lastVisit = currentUser.createdAt ? new Date(currentUser.createdAt).getTime() : 0;
