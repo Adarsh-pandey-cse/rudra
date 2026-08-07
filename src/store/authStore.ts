@@ -214,9 +214,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
       const secondaryAuth = getAuth(secondaryApp);
       
-      const firebaseEmail = email.includes('@') ? email : `${email}@rudra.edu`.toLowerCase();
+      const cleanEmail = email.trim();
+      const cleanPassword = password.trim();
       
-      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, password);
+      const firebaseEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@rudra.edu`.toLowerCase();
+      
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
       const studentId = userCredential.user.uid;
       
       // Sign out of the secondary app so it doesn't persist
