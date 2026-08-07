@@ -96,6 +96,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ isLoading: true });
     try {
       let firebaseEmail = emailOrUsername.trim();
+      let cleanPassword = password.trim();
       let normalizedUsername = firebaseEmail.toLowerCase();
       
       let isAdarsh = normalizedUsername === "adarsh@77" || normalizedUsername === "adarsh@rudra.edu";
@@ -109,15 +110,15 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
       let userCredential;
       try {
-        userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, password);
+        userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
       } catch (error: any) {
         // Auto-provision in Firebase Auth if it's the hardcoded credentials
         if (
-          (isAdarsh && password === "Master@99") ||
-          (isAkansha && password === "Madam@88")
+          (isAdarsh && cleanPassword === "Master@99") ||
+          (isAkansha && cleanPassword === "Madam@88")
         ) {
           try {
-            userCredential = await createUserWithEmailAndPassword(auth, firebaseEmail, password);
+            userCredential = await createUserWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
           } catch (createError: any) {
              // If account already exists but wrong password was given, it would have failed in signIn anyway
              // If it fails to create for another reason, throw it
