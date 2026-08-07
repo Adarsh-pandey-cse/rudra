@@ -93,8 +93,10 @@ export default function LeaderboardPage() {
                     <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 flex items-center justify-center bg-gradient-to-br from-[#0D1929] to-[#07111F] text-xl font-bold text-white shadow-2xl ${
                       isFirst ? "border-[#EAB308]" : isSecond ? "border-[#94A3B8]" : "border-[#B45309]"
                     }`}>
-                      {student.avatar ? (
+                      {student.avatar && student.avatar.length > 10 ? (
                         <img src={student.avatar} alt={student.name || "Student"} className="w-full h-full rounded-full object-cover" />
+                      ) : student.avatar ? (
+                        <span className="text-sm md:text-xl font-bold text-white">{student.avatar}</span>
                       ) : (
                         (student.name || "S").substring(0, 2).toUpperCase()
                       )}
@@ -135,8 +137,10 @@ export default function LeaderboardPage() {
                 </div>
                 
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] flex items-center justify-center text-white font-bold shadow-lg">
-                  {student.avatar ? (
+                  {student.avatar && student.avatar.length > 10 ? (
                     <img src={student.avatar} alt={student.name || "Student"} className="w-full h-full rounded-full object-cover" />
+                  ) : student.avatar ? (
+                    <span className="text-sm font-bold text-white">{student.avatar}</span>
                   ) : (
                     (student.name || "S").substring(0, 2).toUpperCase()
                   )}
