@@ -94,9 +94,9 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const { visitRoute } = useBadgeStore(state => ({ visitRoute: state.visitRoute }));
   
   // Minimal data selectors for badge counting to prevent excessive re-renders
-  const assignmentsLength = useHomeworkStore(state => state.assignments.length);
-  const doubtsLength = useDoubtStore(state => state.doubts.length);
-  const noticesLength = useNoticeStore(state => state.notices.length);
+  const assignmentsLength = useHomeworkStore(state => state.assignments?.length || 0);
+  const doubtsLength = useDoubtStore(state => state.doubts?.length || 0);
+  const noticesLength = useNoticeStore(state => state.notices?.length || 0);
 
   useEffect(() => {
     setMounted(true);
