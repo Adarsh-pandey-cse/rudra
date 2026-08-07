@@ -52,21 +52,21 @@ export default function StudentSettingsPage() {
 
   if (!mounted || !currentUser) return null;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     
-    // Save Avatar
-    if (tempAvatar && currentUser) {
-      updateAvatar(currentUser.id, tempAvatar);
-    }
-
-    // Simulate API call for other settings
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      if (tempAvatar && currentUser) {
+        await updateAvatar(currentUser.id, tempAvatar);
+      }
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to save settings", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
