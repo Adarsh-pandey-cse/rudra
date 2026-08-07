@@ -129,11 +129,11 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     if (role === "student") {
       if (href === "/dashboard/student/homework") {
         const myAssignments = (assignments || []).filter(h => 
-          (h.targetClassId && h.targetClassId !== "-" ? h.targetClassId === currentUser.classId : true) || 
+          ((h as any).targetClassId && (h as any).targetClassId !== "-" ? (h as any).targetClassId === (currentUser as any).classId : true) || 
           (h as any).assignedTo?.includes(currentUser.id) || 
           (h as any).recipientStudentIds?.includes(currentUser.id)
         );
-        return myAssignments.some(h => new Date(h.createdAt).getTime() > lastVisit);
+        return myAssignments.some(h => new Date((h as any).createdAt).getTime() > lastVisit);
       }
       if (href === "/dashboard/student/doubts") {
         return doubts.some(d => 
@@ -144,7 +144,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       }
       if (href === "/dashboard/student/notices") {
         return notices.some(n => 
-          (n.targetAudience === 'all' || n.targetAudience === 'students' || n.targetClass === currentUser.classId) &&
+          ((n as any).targetAudience === 'all' || (n as any).targetAudience === 'students' || (n as any).targetClass === (currentUser as any).classId) &&
           new Date(n.createdAt).getTime() > lastVisit
         );
       }
@@ -158,7 +158,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       }
       if (href === "/dashboard/teacher/homework") {
         const { submissions } = useHomeworkStore.getState();
-        return submissions.some(s => new Date(s.submittedAt).getTime() > lastVisit);
+        return submissions.some(s => new Date(s.submittedAt || 0).getTime() > lastVisit);
       }
     }
     
@@ -176,10 +176,11 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   // Initialize Stores listeners and cross-tab syncing
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "rudra-homework-firebase") useHomeworkStore.persist.rehydrate();
-      if (e.key === "rudra-leaderboard-storage") useLeaderboardStore.persist.rehydrate();
-      if (e.key === "rudra-notifications") useNotificationStore.persist.rehydrate();
-      if (e.key === "rudra-auth") useAuthStore.persist.rehydrate();
+      if (e.key === "rudra-homework-firebase") (useHomeworkStore as any).persist?.rehydrate();
+      if (e.key === "rudra-leaderboard-storage") (useLeaderboardStore as any).persist?.rehydrate();
+      if (e.key === "rudra-notifications") (useNotificationStore as any).persist?.rehydrate();
+      if (e.key === "rudra-auth") (useAuthStore as any).persist?.rehydrate();
+
     };
 
     window.addEventListener("storage", handleStorageChange);

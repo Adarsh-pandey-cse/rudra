@@ -160,7 +160,7 @@ export default function StudentDashboard() {
   allAssignments.forEach(a => {
     const sub = getSubmission(a.id, currentUser.id);
     if (sub && sub.status !== 'pending' && sub.status !== 'draft' && typeof sub.grade === 'number') {
-      const subject = a.subject || "General";
+      const subject = a.subjectId || "General";
       if (!subjectMap.has(subject)) {
         subjectMap.set(subject, { subjectId: subject, overallScore: 0, count: 0, assignments: [] });
       }

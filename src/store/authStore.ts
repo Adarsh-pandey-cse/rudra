@@ -5,9 +5,7 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
@@ -25,7 +23,6 @@ interface AuthState {
   initializeUsersListener: () => () => void;
   
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   registerStudent: (
     name: string,
@@ -95,10 +92,35 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ isLoading: true });
     try {
       let firebaseEmail = emailOrUsername.trim();
-      if (firebaseEmail === "Adarsh@77") firebaseEmail = "adarsh@rudra.edu";
-      if (firebaseEmail === "Akansha@27") firebaseEmail = "akansha@rudra.edu";
+      let isAdarsh = firebaseEmail === "Adarsh@77" || firebaseEmail === "adarsh@rudra.edu";
+      let isAkansha = firebaseEmail === "Akansha@27" || firebaseEmail === "akansha@rudra.edu";
 
-      const userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, password);
+      if (isAdarsh) firebaseEmail = "adarsh@rudra.edu";
+      if (isAkansha) firebaseEmail = "akansha@rudra.edu";
+
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, password);
+      } catch (error: any) {
+        // Auto-provision in Firebase Auth if it's the hardcoded credentials
+        if (
+          (isAdarsh && password === "Master@99") ||
+          (isAkansha && password === "Madam@88")
+        ) {
+          try {
+            userCredential = await createUserWithEmailAndPassword(auth, firebaseEmail, password);
+          } catch (createError: any) {
+             // If account already exists but wrong password was given, it would have failed in signIn anyway
+             // If it fails to create for another reason, throw it
+             if (createError.code === 'auth/email-already-in-use') {
+                throw new Error("Invalid username or password");
+             }
+             throw createError;
+          }
+        } else {
+          throw error;
+        }
+      }
       let userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
       
       // Auto-provision if it's a known teacher but doc doesn't exist (e.g. newly enabled Auth)
@@ -132,38 +154,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       return { success: false, error: "Invalid username or password" };
     }
   },
-
-  loginWithGoogle: async () => {
-    set({ isLoading: true });
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      
-      if (userDoc.exists()) {
-        set({ 
-          currentUser: { id: userCredential.user.uid, ...userDoc.data() } as User,
-          isAuthenticated: true,
-          isLoading: false
-        });
-        return { success: true };
-      } else {
-        // If the user hasn't been registered by a teacher, sign them back out and deny entry
-        await signOut(auth);
-        set({ isLoading: false });
-        return { success: false, error: "This Google account is not registered. Please contact your teacher." };
-      }
-    } catch (error: any) {
-      set({ isLoading: false });
-      // Ignore popup closed errors
-      if (error.code === 'auth/popup-closed-by-user') {
-        return { success: false };
-      }
-      return { success: false, error: error.message || "Failed to sign in with Google" };
-    }
-  },
-
   logout: async () => {
     try {
       await signOut(auth);
@@ -209,8 +199,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       try {
         const { useFeeStore } = await import("./feeStore");
         // Ensure fee store is hydrated before writing
-        if (useFeeStore.persist) {
-            await useFeeStore.persist.rehydrate();
+        if ((useFeeStore as any).persist) {
+            await (useFeeStore as any).persist.rehydrate();
         }
         
         const now = new Date();

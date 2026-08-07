@@ -103,7 +103,7 @@ export default function StudentProgressPage() {
 
   // Real data fetch
   const { getStudentAssignments, getSubmission } = useHomeworkStore.getState();
-  const allAssignments = currentUser ? getStudentAssignments(currentUser.id, (currentUser as any).classId) : [];
+  const allAssignments = currentUser ? getStudentAssignments(currentUser.id) : [];
 
   const progress = currentUser ? getStudentProgress(currentUser.id) : {} as any;
   const leaderboardEntry = currentUser ? getLeaderboard().find(e => e.studentId === currentUser.id) : null;
@@ -119,7 +119,7 @@ export default function StudentProgressPage() {
     if (!currentUser) return;
     const sub = getSubmission(a.id, currentUser.id);
     if (sub && sub.status !== 'pending' && sub.status !== 'draft' && typeof sub.grade === 'number') {
-      const subject = a.subject || "General";
+      const subject = a.subjectId || "General";
       const existing = subjectMap.get(subject) || { total: 0, count: 0 };
       subjectMap.set(subject, { 
         total: existing.total + ((sub.grade / a.maxMarks) * 100), 
@@ -275,7 +275,7 @@ export default function StudentProgressPage() {
                   </h3>
                   
                   <div className="space-y-3">
-                    {weakTopics.length > 0 ? weakTopics.slice(0,2).map((topic, i) => (
+                    {weakTopics.length > 0 ? weakTopics.slice(0,2).map((topic: string, i: number) => (
                       <div key={i} className="p-3 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-[12px] flex items-start gap-3">
                         <AlertCircle className="w-4 h-4 text-[#EF4444] shrink-0 mt-0.5" />
                         <div>

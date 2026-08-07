@@ -258,11 +258,11 @@ export default function TeacherDashboard() {
                   const recentActivities = [];
 
                   // Latest Submission
-                  const latestSubmission = [...submissions].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())[0];
+                  const latestSubmission = [...submissions].sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime())[0];
                   if (latestSubmission) {
                     recentActivities.push({
                       title: "Homework Submitted",
-                      desc: `${latestSubmission.studentName} submitted ${latestSubmission.subjectName} homework`,
+                      desc: `${(latestSubmission as any).studentName || "A student"} submitted ${(latestSubmission as any).subjectName || "homework"}`,
                       time: latestSubmission.submittedAt,
                       icon: FileText,
                       color: "text-[#2DD4BF]", bg: "bg-[#2DD4BF]/10", border: "border-[#2DD4BF]/20",
@@ -297,11 +297,11 @@ export default function TeacherDashboard() {
                   }
 
                   // Latest Fee Payment
-                  const latestPayment = [...feeState.payments].sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())[0];
+                  const latestPayment = [...feeState.payments].sort((a, b) => new Date(b.paymentDate || 0).getTime() - new Date(a.paymentDate || 0).getTime())[0];
                   if (latestPayment) {
                     recentActivities.push({
                       title: "Fee Collection",
-                      desc: `${latestPayment.studentName || 'Student'} paid their monthly fees`,
+                      desc: `${(latestPayment as any).studentName || 'Student'} paid their monthly fees`,
                       time: latestPayment.paymentDate,
                       icon: CreditCard,
                       color: "text-[#FBBF24]", bg: "bg-[#FBBF24]/10", border: "border-[#FBBF24]/20",
@@ -309,7 +309,7 @@ export default function TeacherDashboard() {
                     });
                   }
 
-                  recentActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                  recentActivities.sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
                   const topActivities = recentActivities.slice(0, 4);
 
                   if (topActivities.length === 0) {
@@ -330,7 +330,7 @@ export default function TeacherDashboard() {
                           <p className="text-[12px] text-[#7B8798] mt-1">{act.desc}</p>
                         </div>
                         <span className="text-[11px] font-medium text-[#4B5563] whitespace-nowrap ml-2">
-                          {formatDistanceToNow(new Date(act.time), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(act.time || 0), { addSuffix: true })}
                         </span>
                       </div>
                     </Link>

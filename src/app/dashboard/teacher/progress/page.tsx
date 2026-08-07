@@ -79,8 +79,8 @@ export default function TeacherProgressPage() {
       // Find assignments
       const studentClassId = student.classId || student.grade;
       const studentAssignments = assignments.filter(a => {
-        if (a.targetClassId && a.targetClassId !== "-") {
-          return studentClassId === a.targetClassId;
+        if ((a as any).targetClassId && (a as any).targetClassId !== "-") {
+          return studentClassId === (a as any).targetClassId;
         }
         return (a as any).assignedTo?.includes(student.id) || (a as any).recipientStudentIds?.includes(student.id);
       });

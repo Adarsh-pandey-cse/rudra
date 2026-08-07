@@ -198,7 +198,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               updatedUsers[studentIndex] = {
                 ...updatedUsers[studentIndex],
                 streak: entries[entryIndex].streak
-              };
+              } as any;
               useAuthStore.setState({ users: updatedUsers });
             }
           }
@@ -220,11 +220,11 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               if (entry.streak > 0) {
                 // Find all assignments assigned to this student
                 const studentAssignments = assignments.filter(a => {
-                  if (a.targetClassId && a.targetClassId !== "-") {
+                  if ((a as any).targetClassId && (a as any).targetClassId !== "-") {
                     const authState = useAuthStore.getState();
                     const student = (authState.getAllUsers ? authState.getAllUsers() : authState.users).find(u => u.id === entry.studentId);
                     const studentClassId = (student as any)?.classId || (student as any)?.grade;
-                    return studentClassId === a.targetClassId;
+                    return studentClassId === (a as any).targetClassId;
                   }
                   return (a as any).assignedTo?.includes(entry.studentId) || (a as any).recipientStudentIds?.includes(entry.studentId);
                 });
@@ -248,7 +248,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
                   const studentIndex = authStore.users.findIndex(u => u.id === entry.studentId);
                   if (studentIndex >= 0) {
                     const updatedUsers = [...authStore.users];
-                    updatedUsers[studentIndex] = { ...updatedUsers[studentIndex], streak: 0 };
+                    updatedUsers[studentIndex] = { ...updatedUsers[studentIndex], streak: 0 } as any;
                     useAuthStore.setState({ users: updatedUsers });
                   }
                 }
@@ -270,7 +270,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         const unsub2 = eventBus.on("HOMEWORK_SUBMITTED", (event) => {
           if (event.payload && event.payload.studentId) {
             get().addPoints(event.payload.studentId, 10, "Homework submitted");
-            get().updateStreak(event.payload.studentId, !!event.payload.isLate);
+            get().updateStreak(event.payload.studentId, !!(event.payload as any).isLate);
           }
         });
         

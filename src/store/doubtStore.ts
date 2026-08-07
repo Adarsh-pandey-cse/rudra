@@ -81,7 +81,7 @@ export const useDoubtStore = create<DoubtState>((set, get) => ({
             doubts.push({ id: doc.id, ...doc.data() } as Doubt);
           });
           set(state => {
-            const localUploads = state.doubts.filter(d => d.status === "pending" || d.status === "failed");
+            const localUploads = state.doubts.filter(d => (d.status as any) === "pending" || (d.status as any) === "failed");
             
             const merged = [...doubts];
             for (const local of localUploads) {
@@ -141,14 +141,14 @@ export const useDoubtStore = create<DoubtState>((set, get) => ({
         const newDoubt: Doubt = {
           id,
           ...params,
-          status: "pending",
-          priority: "normal",
+          status: "pending" as any,
+          priority: "normal" as any,
           isAiAnswered: false,
           hasTeacherFollowUp: false,
           resolutionStatus: "unresolved",
           createdAt: now,
           updatedAt: now,
-        };
+        } as any;
 
         await doubtRepository.create(newDoubt);
         set(state => ({ doubts: [newDoubt, ...state.doubts] }));
@@ -292,6 +292,14 @@ export const useDoubtStore = create<DoubtState>((set, get) => ({
             link: `/dashboard/student/doubts/${doubtId}`
           });
         }
+      },
+      
+      updateDoubtStatus: async (doubtId, status) => {
+        const now = new Date().toISOString();
+        await doubtRepository.update(doubtId, { status, updatedAt: now });
+        set(state => ({
+          doubts: state.doubts.map(d => d.id === doubtId ? { ...d, status, updatedAt: now } : d)
+        }));
       },
 
       resolveDoubt: async (doubtId, teacherId) => {
