@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { db } from "@/lib/firebase/firebase";
-import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, where, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, where, deleteDoc, getDoc } from "firebase/firestore";
 import { eventBus } from '@/lib/eventBus';
 
 export interface AppNotification {
@@ -35,6 +35,30 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         };
         await setDoc(doc(db, "notifications", id), newNotif as any);
         set((state) => ({ notifications: [newNotif as any, ...state.notifications] }));
+        
+        // Trigger push notification via Vercel backend
+        if (notification.recipientId !== 'all_teachers') {
+          try {
+            const userDoc = await getDoc(doc(db, "users", notification.recipientId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              if (userData.fcmToken) {
+                await fetch('/api/notify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    token: userData.fcmToken,
+                    title: newNotif.title,
+                    message: newNotif.message,
+                    link: newNotif.link
+                  })
+                }).catch(e => console.error("FCM Fetch Error:", e));
+              }
+            }
+          } catch(e) {
+            console.error("Error triggering push notification", e);
+          }
+        }
       },
       markAsRead: async (id) => {
         await updateDoc(doc(db, "notifications", id), { read: true });
