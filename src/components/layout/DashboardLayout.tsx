@@ -91,7 +91,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const { currentUser, isAuthenticated, isLoading, logout } = useAuthStore();
   
   const [mounted, setMounted] = useState(false);
-  const { visitRoute } = useBadgeStore(state => ({ visitRoute: state.visitRoute }));
+  const visitRoute = useBadgeStore(state => state.visitRoute);
   
   // Minimal data selectors for badge counting to prevent excessive re-renders
   const assignmentsLength = useHomeworkStore(state => state.assignments?.length || 0);
@@ -474,7 +474,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
               <div className="h-9 w-9 rounded-full p-[2px] bg-gradient-to-tr from-[#5B5CFF] to-[#2DD4BF] shrink-0">
                 <div className="w-full h-full rounded-full bg-[#07111F] flex items-center justify-center overflow-hidden">
                   {currentUser?.avatar ? (
-                    currentUser.avatar.length < 10 ? (
+                    currentUser.avatar?.length < 10 ? (
                       <span className="text-sm font-bold text-white">{currentUser.avatar}</span>
                     ) : (
                       <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
