@@ -88,7 +88,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { currentUser, logout } = useAuthStore();
+  const { currentUser, isAuthenticated, isLoading, logout } = useAuthStore();
   
   const [mounted, setMounted] = useState(false);
   const { lastVisited, visitRoute, getLastVisited } = useBadgeStore();
@@ -102,6 +102,17 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // GLOBAL AUTH GUARD: Prevents the flash-logout race condition on refresh
+  useEffect(() => {
+    if (!mounted || isLoading) return;
+    
+    if (!isAuthenticated) {
+      router.replace("/auth/login");
+    } else if (currentUser && currentUser.role !== role) {
+      router.replace(`/dashboard/${currentUser.role}`);
+    }
+  }, [mounted, isLoading, isAuthenticated, currentUser, role, router]);
 
   useEffect(() => {
     if (currentUser && pathname) {
@@ -361,6 +372,21 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       </div>
     </div>
   );
+
+  if (!mounted || isLoading) {
+    return (
+      <div className="min-h-screen bg-[#07111F] text-white flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-12 h-12 border-4 border-white/10 border-t-[#5B5CFF] rounded-full animate-spin" />
+          <p className="text-[#B6C2D9] font-medium text-sm">Authenticating...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#07111F] text-white flex overflow-hidden">

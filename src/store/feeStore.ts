@@ -144,6 +144,14 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
   initializeMockData: async () => {
     if (get().isInitialized) return;
 
+    // Students lack permission to query all feeProfiles, bypass mock data generation for them
+    const { useAuthStore } = await import("./authStore");
+    const currentUser = useAuthStore.getState().currentUser;
+    if (currentUser?.role === "student") {
+      set({ isInitialized: true });
+      return;
+    }
+
     // Check if we already have data in Firestore
     const snapshot = await getDocs(collection(db, "feeProfiles"));
     if (!snapshot.empty) {
