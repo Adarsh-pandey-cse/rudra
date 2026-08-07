@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "mock-api-key",
@@ -27,3 +28,20 @@ const db = !getApps().length
   : getFirestore(app);
 
 export { app, auth, db, storage };
+
+// Initialize Messaging safely (only runs on client side where supported)
+export const getFCMToken = async () => {
+  try {
+    if (typeof window !== "undefined" && await isSupported()) {
+      const messaging = getMessaging(app);
+      const { getToken } = await import("firebase/messaging");
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+      });
+      return token;
+    }
+  } catch (error) {
+    console.error("An error occurred while retrieving token. ", error);
+  }
+  return null;
+};

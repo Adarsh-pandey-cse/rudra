@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { User, UserRole } from "@/types";
-import { auth, db, firebaseConfig } from "@/lib/firebase/firebase";
+import { auth, db, firebaseConfig, getFCMToken } from "@/lib/firebase/firebase";
 import { 
   signInWithEmailAndPassword, 
   signOut, 
@@ -145,8 +145,26 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
 
       if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.status === "deleted") {
+          await signOut(auth);
+          set({ isLoading: false });
+          return { success: false, error: "This account has been deleted" };
+        }
+        
+        try {
+          const token = await getFCMToken();
+          if (token) {
+            await updateDoc(doc(db, "users", userCredential.user.uid), {
+              fcmToken: token
+            });
+          }
+        } catch (e) {
+          console.error("Failed to save FCM token", e);
+        }
+
         set({ 
-          currentUser: { id: userCredential.user.uid, ...userDoc.data() } as User,
+          currentUser: { id: userCredential.user.uid, ...userData } as User,
           isAuthenticated: true,
           isLoading: false
         });
