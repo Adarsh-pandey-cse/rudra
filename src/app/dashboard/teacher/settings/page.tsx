@@ -395,14 +395,33 @@ export default function TeacherSettingsPage() {
                   <button 
                     type="button" 
                     onClick={async () => {
-                      if (confirm("Are you absolutely sure? This will wipe all students and test data!")) {
+                      if (confirm("Are you absolutely sure? This will wipe all students and test data from the database!")) {
                         try {
-                          const res = await fetch('/api/clean-students');
-                          const data = await res.json();
-                          if (data.success) alert("Successfully wiped test data! App is production ready.");
-                          else alert("Error: " + data.error);
+                          alert("Wiping started. Please wait, do not close the window...");
+                          const { getDocs, deleteDoc, collection } = await import('firebase/firestore');
+                          const { db } = await import('@/lib/firebase/config');
+                          
+                          // 1. Wipe Users
+                          const usersSnap = await getDocs(collection(db, 'users'));
+                          let delCount = 0;
+                          for (const doc of usersSnap.docs) {
+                            const data = doc.data();
+                            if (data.email !== 'adarsh@rudra.edu' && data.email !== 'akansha@rudra.edu') {
+                              await deleteDoc(doc.ref);
+                              delCount++;
+                            }
+                          }
+
+                          // 2. Wipe Collections
+                          const cols = ['doubts', 'receipts', 'feeProfiles', 'invoices', 'payments', 'homeworks', 'homeworkSubmissions', 'notices', 'notifications'];
+                          for (const c of cols) {
+                            const snap = await getDocs(collection(db, c));
+                            for (const d of snap.docs) await deleteDoc(d.ref);
+                          }
+                          
+                          alert(`Success! Wiped ${delCount} students and all test data. App is completely Production Ready.`);
                         } catch (e: any) {
-                          alert("Request failed: " + e.message);
+                          alert("Client Wipe failed: " + e.message);
                         }
                       }
                     }}
