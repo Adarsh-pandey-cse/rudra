@@ -389,6 +389,28 @@ export default function TeacherSettingsPage() {
                     </GradientButton>
                   </div>
                 </div>
+
+                <div className="bg-[#1A1D24] border border-white/5 rounded-2xl p-6 sm:p-8 mt-6">
+                  <h3 className="text-lg font-semibold text-white mb-6">Danger Zone</h3>
+                  <button 
+                    type="button" 
+                    onClick={async () => {
+                      if (confirm("Are you absolutely sure? This will wipe all students and test data!")) {
+                        try {
+                          const res = await fetch('/api/clean-students');
+                          const data = await res.json();
+                          if (data.success) alert("Successfully wiped test data! App is production ready.");
+                          else alert("Error: " + data.error);
+                        } catch (e: any) {
+                          alert("Request failed: " + e.message);
+                        }
+                      }
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 bg-[#EF4444] text-white rounded-xl font-medium hover:bg-[#EF4444]/90 transition-colors"
+                  >
+                    WIPE DATABASE (MAKE PRODUCTION READY)
+                  </button>
+                </div>
               </form>
             </GlassCard>
           </div>
