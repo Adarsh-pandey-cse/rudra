@@ -112,7 +112,10 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
         const allUsers = useAuthStore.getState().getAllUsers();
         const students = allUsers.filter(u => u.role === "student");
         
-        if (students.length === 0) return;
+        if (students.length === 0) {
+          set({ feeProfiles: [], invoices: [], payments: [], isInitialized: true });
+          return;
+        }
 
         const profiles: FeeProfile[] = [];
         const invoices: Invoice[] = [];

@@ -10,6 +10,7 @@ import GlassInput from "@/components/ui/GlassInput";
 import GradientButton from "@/components/ui/GradientButton";
 import { useAuthStore } from "@/store/authStore";
 import { useNoticeStore } from "@/store/noticeStore";
+import { uploadFile } from "@/lib/firebase/uploadService";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -39,6 +40,7 @@ export default function CreateNoticePage() {
   const [priority, setPriority] = useState<"medium" | "high" | "critical">("medium"); // "medium" = Info, "high" = Low Important, "critical" = Important
   const [duration, setDuration] = useState<string>("24"); // "1", "24", or "forever"
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -52,40 +54,55 @@ export default function CreateNoticePage() {
 
   if (!mounted || !currentUser) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) return;
     if (!body.trim() && attachments.length === 0) return;
     
-    let expiresAt: string | undefined = undefined;
-    if (duration !== "forever") {
-      const hours = parseInt(duration, 10);
-      expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
-    }
+    setIsSubmitting(true);
+    try {
+      let expiresAt: string | undefined = undefined;
+      if (duration !== "forever") {
+        const hours = parseInt(duration, 10);
+        expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+      }
 
-    createNotice({
-      teacherId: currentUser.id,
-      teacherName: currentUser.name,
-      title,
-      body,
-      shortBody: body.substring(0, 100),
-      type: "announcement",
-      priority: priority,
-      target: "all",
-      attachments: attachments.map(f => ({
-        id: `att_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        name: f.name,
-        type: f.type.startsWith('image') ? 'image' : f.type.includes('pdf') ? 'pdf' : 'link',
-        url: URL.createObjectURL(f),
-        size: f.size,
-        mimeType: f.type,
-        uploadedAt: new Date().toISOString()
-      })),
-      publishMode: "immediate",
-      isPinned: false,
-      status: "published",
-      expiresAt: expiresAt
-    });
-    router.push("/dashboard/teacher/notices");
+      const uploadedAttachments = await Promise.all(attachments.map(async (f) => {
+        const id = `att_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        // Upload to Firebase Storage
+        const uploadPath = `notices/${currentUser.id}/${id}_${f.name}`;
+        const downloadUrl = await uploadFile(f, uploadPath);
+        
+        return {
+          id,
+          name: f.name,
+          type: f.type.startsWith('image') ? 'image' : f.type.includes('pdf') ? 'pdf' : 'link',
+          url: downloadUrl,
+          size: f.size,
+          mimeType: f.type,
+          uploadedAt: new Date().toISOString()
+        };
+      }));
+
+      await createNotice({
+        teacherId: currentUser.id,
+        teacherName: currentUser.name,
+        title,
+        body,
+        shortBody: body.substring(0, 100),
+        type: "announcement",
+        priority: priority,
+        target: "all",
+        attachments: uploadedAttachments as any,
+        publishMode: "immediate",
+        isPinned: false,
+        status: "published",
+        expiresAt: expiresAt
+      });
+      router.push("/dashboard/teacher/notices");
+    } catch (error) {
+      console.error("Failed to publish notice", error);
+      setIsSubmitting(false);
+    }
   };
 
   const inputClasses = "w-full bg-white/[0.04] border border-white/[0.08] rounded-[14px] px-4 py-3 text-sm text-white placeholder:text-[#7B8798] focus:outline-none focus:ring-2 focus:ring-[#5B5CFF]/50 transition-all";
@@ -230,9 +247,9 @@ export default function CreateNoticePage() {
               </div>
 
               <div className="mt-6 pt-6 border-t border-white/[0.08]">
-                <GradientButton onClick={handleSubmit} className="w-full py-4 text-sm font-semibold flex items-center justify-center gap-2">
+                <GradientButton disabled={isSubmitting} onClick={handleSubmit} className="w-full py-4 text-sm font-semibold flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
-                  Publish Notice
+                  {isSubmitting ? "Publishing..." : "Publish Notice"}
                 </GradientButton>
               </div>
             </GlassCard>

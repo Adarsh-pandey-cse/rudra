@@ -19,7 +19,7 @@ export interface LeaderboardState {
 
 export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
       entries: [],
-      _hasHydrated: false,
+      _hasHydrated: true,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       
       initializeLeaderboard: () => {
