@@ -23,14 +23,14 @@ export default function SyncStores() {
         if (event.data?.type === 'STORE_SYNC') {
           const storeName = event.data.store;
           switch (storeName) {
-            case 'auth': useAuthStore.persist.rehydrate(); break;
+            case 'auth': (useAuthStore as any).persist?.rehydrate(); break;
             case 'homework': break;
             case 'notification': break;
             case 'notice': break;
             case 'doubt': break; // Doubt store is now synced via Firestore onSnapshot
-            case 'fee': useFeeStore.persist.rehydrate(); break;
-            case 'data': useDataStore.persist.rehydrate(); break;
-            case 'leaderboard': useLeaderboardStore.persist.rehydrate(); break;
+            case 'fee': (useFeeStore as any).persist?.rehydrate(); break;
+            case 'data': (useDataStore as any).persist?.rehydrate(); break;
+            case 'leaderboard': (useLeaderboardStore as any).persist?.rehydrate(); break;
             case 'analytics': break;
           }
         }
@@ -70,20 +70,20 @@ export default function SyncStores() {
     const handleStorage = (e: StorageEvent) => {
       // Fallback for browsers without BroadcastChannel
       if (e.key) {
-        if (e.key.includes('auth')) useAuthStore.persist.rehydrate();
+        if (e.key.includes('auth')) (useAuthStore as any).persist?.rehydrate();
         if (e.key.includes('homework')) {}
         if (e.key.includes('notification')) {}
         if (e.key.includes('notice')) {}
         if (e.key.includes('doubt')) {}
-        if (e.key.includes('fee')) useFeeStore.persist.rehydrate();
-        if (e.key.includes('data')) useDataStore.persist.rehydrate();
-        if (e.key.includes('leaderboard')) useLeaderboardStore.persist.rehydrate();
+        if (e.key.includes('fee')) (useFeeStore as any).persist?.rehydrate();
+        if (e.key.includes('data')) (useDataStore as any).persist?.rehydrate();
+        if (e.key.includes('leaderboard')) (useLeaderboardStore as any).persist?.rehydrate();
         if (e.key.includes('analytics')) {}
       } else {
-        useAuthStore.persist.rehydrate();
-        useFeeStore.persist.rehydrate();
-        useDataStore.persist.rehydrate();
-        useLeaderboardStore.persist.rehydrate();
+        (useAuthStore as any).persist?.rehydrate();
+        (useFeeStore as any).persist?.rehydrate();
+        (useDataStore as any).persist?.rehydrate();
+        (useLeaderboardStore as any).persist?.rehydrate();
       }
     };
 

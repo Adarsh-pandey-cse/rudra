@@ -81,7 +81,7 @@ export default function EditAssignmentWizardV2() {
     const master = teacherAssignments.find(a => a.id === assignmentId);
     
     if (master) {
-      setSelectedClassId(master.targetClassId || null);
+      setSelectedClassId((master as any).targetClassId || (master as any).classId || null);
       setSelectedSubjectId(master.subjectId);
       
       if (master.topicId) {
@@ -94,7 +94,7 @@ export default function EditAssignmentWizardV2() {
           board: "Custom",
           difficulty: "Medium",
           estimatedTime: 30,
-          learningOutcomes: [master.learningObjectives || ""],
+          learningOutcomes: [(master as any).learningObjectives || ""],
           class: "10",
           book: "Loaded Book",
           subtopics: [],
@@ -103,9 +103,9 @@ export default function EditAssignmentWizardV2() {
       }
 
       // Find which students have this assignment
-      const assignedStudentIds = Object.keys(homeworkMap).filter(sid => 
-        homeworkMap[sid].some(hw => hw.id === assignmentId)
-      );
+      const assignedStudentIds = useHomeworkStore.getState().submissions
+        .filter((sub: any) => sub.assignmentId === assignmentId)
+        .map((sub: any) => sub.studentId);
       setSelectedStudentIds(assignedStudentIds);
       
       const dateObj = new Date(master.dueDate);
@@ -115,14 +115,14 @@ export default function EditAssignmentWizardV2() {
       setDetailsState({
         title: master.title,
         description: master.description || "",
-        type: master.type as HomeworkType,
-        difficulty: master.difficulty as HomeworkDifficulty,
+        type: master.type as any,
+        difficulty: master.difficulty as any,
         estimatedTimeMin: 30,
         dueDate: ymd,
         dueTime: hm,
         allowLate: master.allowLateSubmission,
-        lateWindowHours: master.lateSubmissionWindow || 24,
-        evaluationMethod: master.evaluationMethod as EvaluationMethod,
+        lateWindowHours: (master as any).lateSubmissionWindow || 24,
+        evaluationMethod: (master as any).evaluationMethod as any,
         aiSettings: master.aiSettings || {
           ocr: true,
           handwriting: true,
@@ -138,7 +138,7 @@ export default function EditAssignmentWizardV2() {
     } else {
       router.push("/dashboard/teacher/homework");
     }
-  }, [isAuthenticated, currentUser, router, assignmentId, getTeacherAssignments, homeworkMap, _hasHydrated]);
+  }, [isAuthenticated, currentUser, router, assignmentId, _hasHydrated]);
 
   if (!mounted || !currentUser || !isLoaded) return null;
 
@@ -156,7 +156,7 @@ export default function EditAssignmentWizardV2() {
     
     const dueDateStr = `${detailsState.dueDate}T${detailsState.dueTime}:00Z`;
 
-    updateAssignment(assignmentId, {
+    const updatePayload: any = {
       title: detailsState.title,
       description: detailsState.description,
       subjectId: selectedSubjectId || "math",
@@ -170,7 +170,9 @@ export default function EditAssignmentWizardV2() {
       aiSettings: detailsState.aiSettings,
       targetClassId: selectedClassId || undefined,
       topicId: selectedTopic?.id,
-    });
+    };
+    
+    updateAssignment(assignmentId, updatePayload as any);
     
     // Note: We don't dynamically add/remove students here in the edit flow yet for simplicity, 
     // we just update the metadata of the master assignment and all existing copies.

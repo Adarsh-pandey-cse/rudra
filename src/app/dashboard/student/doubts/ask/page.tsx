@@ -54,7 +54,7 @@ export default function AskDoubtPage() {
       file, // Store actual File object
       preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : "",
       url: "",
-      type: file.type.startsWith('image/') ? 'image' : 'docx',
+      type: (file.type.startsWith('image/') ? 'image' : 'docx') as "image" | "pdf" | "docx" | "video" | "voice" | "link",
       uploadedAt: new Date().toISOString()
     }));
     setAttachments(prev => [...prev, ...newAttachments]);

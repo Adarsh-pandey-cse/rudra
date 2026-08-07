@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUploadStore, UploadTask } from "@/store/uploadStore";
 import { X, File, Image as ImageIcon, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, PauseCircle, PlayCircle, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils/utils";
+import { cn } from "@/lib/utils";
 
 export const UploadManager = () => {
   const tasksMap = useUploadStore(state => state.tasks);
@@ -102,7 +102,7 @@ export const UploadManager = () => {
                 {tasks.map(task => (
                   <div key={task.id} className="p-2 rounded-xl hover:bg-white/[0.02] transition-colors flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden relative">
-                      {task.file.type.startsWith("image/") ? (
+                      {task.file?.type?.startsWith("image/") ? (
                         <ImageIcon className="w-4 h-4 text-[#7B8798]" />
                       ) : (
                         <File className="w-4 h-4 text-[#7B8798]" />

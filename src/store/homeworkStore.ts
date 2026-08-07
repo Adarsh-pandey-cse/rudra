@@ -6,6 +6,7 @@ import type { Assignment, Submission, GeneratedQuestion, AnswerKeyItem, AiEvalua
 import { CBSE_CURRICULUM } from "@/data/cbse-curriculum";
 import { aiHomeworkService } from "@/lib/ai/aiHomeworkService";
 import { useAuthStore } from "@/store/authStore";
+import { useNotificationStore } from "@/store/notificationStore";
 import { eventBus } from "@/lib/eventBus";
 import { createAuditEntry, validateGrade, validateFeedback, AuditEntry, ReviewHistoryEntry } from "@/lib/homeworkLifecycle";
 import { homeworkRepository } from "@/lib/repositories/homework.repository";
@@ -440,11 +441,11 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                 type: 'HOMEWORK_SUBMITTED',
                 payload: {
                   assignmentId,
-                  studentId,
+                  studentId: studentId!,
                   submissionId: existing.id,
                   version: currentVersion,
                   isLate
-                }
+                } as any
               });
             }, 0);
             
@@ -488,7 +489,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                   submissionId: subId,
                   version: 1,
                   isLate
-                }
+                } as any
               });
             }, 0);
             
@@ -498,14 +499,14 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
             const studentName = student?.name || "A student";
             const className = (student as any)?.classId || (student as any)?.grade || "";
 
-            useNotificationStore.getState().createNotification(
-              assignment.teacherId,
-              "teacher",
-              "Homework Submitted",
-              `${studentName}${className ? ` from Class ${className}` : ''} has submitted "${assignment.title}".`,
-              "submission",
-              `/dashboard/teacher/homework/analytics/${assignmentId}`
-            );
+            if (assignment) {
+              useNotificationStore.getState().addNotification({
+                recipientId: assignment.teacherId,
+                title: "Homework Submitted",
+                message: `${studentName}${className ? ` from Class ${className}` : ''} has submitted "${assignment.title}".`,
+                link: `/dashboard/teacher/homework/analytics/${assignmentId}`
+              });
+            }
 
             set(state => ({ submissions: [...state.submissions, newSub] }));
         }
@@ -591,7 +592,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
             });
             eventBus.emit({
               type: 'HOMEWORK_SUBMITTED',
-              payload: { assignmentId, studentId, submissionId: existing.id, version: (existing.currentVersion || 0) + 1, isLate }
+              payload: { assignmentId, studentId, submissionId: existing.id, version: (existing.currentVersion || 0) + 1, isLate } as any
             });
           }, 0);
         } else {
@@ -641,7 +642,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
             });
             eventBus.emit({
               type: 'HOMEWORK_SUBMITTED',
-              payload: { assignmentId, studentId, submissionId: subId, version: 1, isLate }
+              payload: { assignmentId, studentId, submissionId: subId, version: 1, isLate } as any
             });
           }, 0);
         }

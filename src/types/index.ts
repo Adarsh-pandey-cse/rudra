@@ -25,6 +25,7 @@ export interface Student extends User {
   grade: string;
   parentPhone?: string;
   fatherName?: string;
+  status?: "active" | "archived" | "deleted";
 }
 
 // ─── Academic ──────────────────────────────────────────────────

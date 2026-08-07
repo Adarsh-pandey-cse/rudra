@@ -35,6 +35,7 @@ const VALID_TRANSITIONS: Record<SubmissionStatus, SubmissionStatus[]> = {
   'accepted': ['archived'],
   'rejected': ['started', 'submitted'],
   'resubmission_requested': ['started', 'submitted'],
+  'resubmitted': ['under_review', 'ai_evaluating', 'accepted', 'rejected'],
   'late': ['submitted'],
   'archived': [],
 };
