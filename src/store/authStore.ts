@@ -112,6 +112,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       try {
         userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
       } catch (error: any) {
+        if (error.code === "auth/invalid-api-key") throw error; // Don't swallow missing client API key!
+        
         if (
           (isAdarsh && cleanPassword === "Master@99") ||
           (isAkansha && cleanPassword === "Madam@88")
