@@ -77,7 +77,7 @@ export default function HomeworkAnalyticsPage() {
   const allUsers = getAllUsers();
   const assignedStudentIds = homework?.recipientStudentIds?.length 
     ? homework.recipientStudentIds 
-    : allUsers.filter(u => u.role === "student" && (u as any).classId === homework?.classId).map(u => u.id);
+    : allUsers.filter(u => u.role === "student" && ((u as any).classId === homework?.classId || (u as any).grade === homework?.classId?.replace("class-", ""))).map(u => u.id);
 
   // Analytics Math
   const totalAssigned = assignedStudentIds.length || 1;
