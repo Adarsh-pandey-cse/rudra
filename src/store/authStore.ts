@@ -128,7 +128,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
               userCredential = await createUserWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
             }
           } catch (createError: any) {
-             throw new Error("Could not sync teacher account. Make sure FIREBASE_SERVICE_ACCOUNT is set in Vercel.");
+             if (createError.code === "auth/invalid-api-key") throw createError;
+             throw new Error("Could not sync teacher account. Make sure FIREBASE_SERVICE_ACCOUNT is exactly correct in Vercel.");
           }
         } else {
           throw error;
@@ -182,7 +183,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
     } catch (error: any) {
       set({ isLoading: false });
-      return { success: false, error: "Invalid username or password" };
+      let errorMsg = "Invalid username or password";
+      if (error.message && !error.message.includes("Firebase:")) {
+        errorMsg = error.message; // Show our custom errors
+      } else if (error.code === "auth/invalid-api-key") {
+        errorMsg = "Missing Firebase API Key in Vercel. Please add NEXT_PUBLIC_FIREBASE variables.";
+      }
+      return { success: false, error: errorMsg };
     }
   },
   logout: async () => {
