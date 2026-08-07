@@ -100,7 +100,25 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         const unsubs: (() => void)[] = [];
 
         const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
-        const fbUnsub = onSnapshot(q, (snapshot) => {
+        const fbUnsub = onSnapshot(q, async (snapshot) => {
+          const { useAuthStore } = await import("./authStore");
+          const currentUser = useAuthStore.getState().currentUser;
+          
+          snapshot.docChanges().forEach(async (change) => {
+            if (change.type === 'added') {
+              const notif = change.doc.data() as AppNotification;
+              const isRecent = (new Date().getTime() - new Date(notif.createdAt).getTime()) < 10000;
+              
+              if (isRecent && currentUser && (notif.recipientId === currentUser.id || (notif.recipientId === 'all_teachers' && currentUser.role === 'teacher'))) {
+                const { toast } = await import("sonner");
+                toast.success(notif.title, {
+                  description: notif.message,
+                  duration: 6000,
+                });
+              }
+            }
+          });
+
           const notifications: AppNotification[] = [];
           snapshot.forEach((doc) => notifications.push({ id: doc.id, ...doc.data() } as AppNotification));
           set({ notifications });

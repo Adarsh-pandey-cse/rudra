@@ -1,5 +1,6 @@
 import { create } from "zustand";
-
+import { doc, updateDoc, increment } from "firebase/firestore";
+import { db } from "@/lib/firebase/firebase";
 import type { LeaderboardEntry } from "@/types/homework-types";
 import { useAuthStore } from "./authStore";
 import { eventBus } from "@/lib/eventBus";
@@ -23,36 +24,33 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       
       initializeLeaderboard: () => {
-        // Automatically populate leaderboard entries from student users
         const authState = useAuthStore.getState();
         const users = typeof authState.getAllUsers === 'function' ? authState.getAllUsers() : authState.users;
         const students = users.filter(u => u.role === "student" && (u as any).status !== "archived");
         
         set(state => {
-          let hasChanges = false;
           const currentEntries = [...state.entries];
           
           students.forEach(s => {
-            const existing = currentEntries.find(e => e.studentId === s.id);
-            if (!existing) {
-              hasChanges = true;
-              currentEntries.push({
-                studentId: s.id,
-                name: s.name,
-                avatar: s.avatar,
-                class: (s as any).classId || (s as any).grade || "-",
-                points: (s as any).points || 0,
-                homeworkCount: (s as any).homeworkCount || 0,
-                accuracy: 0,
-                streak: (s as any).streak || 0,
-                rank: 0
-              } as any);
+            const existingIndex = currentEntries.findIndex(e => e.studentId === s.id);
+            const entryData = {
+              studentId: s.id,
+              name: s.name,
+              avatar: s.avatar,
+              class: (s as any).classId || (s as any).grade || "-",
+              points: (s as any).points || 0,
+              homeworkCount: (s as any).homeworkCount || 0,
+              accuracy: 0,
+              streak: (s as any).streak || 0,
+              rank: 0
+            };
+            
+            if (existingIndex >= 0) {
+              currentEntries[existingIndex] = { ...currentEntries[existingIndex], ...entryData };
+            } else {
+              currentEntries.push(entryData as any);
             }
           });
-          
-          if (!hasChanges) {
-            return state; // No changes, return existing state to prevent re-renders
-          }
           
           // Sort and assign ranks
           currentEntries.sort((a, b) => {
@@ -95,115 +93,42 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         return currentEntries;
       },
       
-      addPoints: (studentId, points, reason) => {
-        set(state => {
-          const entries = [...state.entries];
-          const entryIndex = entries.findIndex(e => e.studentId === studentId);
-          
-          let previousRank = 0;
-          if (entryIndex >= 0) {
-            previousRank = entries[entryIndex].rank;
-            entries[entryIndex] = {
-              ...entries[entryIndex],
-              points: entries[entryIndex].points + points,
-              homeworkCount: entries[entryIndex].homeworkCount + 1,
-            };
-          } else {
-            // Find student details from auth store
-            const authState = useAuthStore.getState();
-            const users = typeof authState.getAllUsers === 'function' ? authState.getAllUsers() : authState.users;
-            const student = users.find(u => u.id === studentId);
-            if (student) {
-              entries.push({
-                studentId: student.id,
-                name: student.name,
-                avatar: student.avatar,
-                class: (student as any).classId || (student as any).grade || "-",
-                points: points,
-                homeworkCount: 1,
-                accuracy: 0,
-                streak: 0,
-                rank: 0
-              } as any);
-            }
-          }
-          
-          // Re-sort and rank
-          entries.sort((a, b) => {
-            if (b.points !== a.points) return b.points - a.points;
-            if (b.streak !== a.streak) return b.streak - a.streak;
-            return a.name.localeCompare(b.name);
+      addPoints: async (studentId, points, reason) => {
+        try {
+          const userRef = doc(db, "users", studentId);
+          await updateDoc(userRef, {
+            points: increment(points),
+            homeworkCount: increment(1)
           });
           
-          let newRank = 0;
-          entries.forEach((e, i) => {
-            e.rank = i + 1;
-            if (e.studentId === studentId) {
-              newRank = e.rank;
-            }
-          });
-
-          // Update points in authStore to sync student profile points
-          // NOTE: Per requirement 3 & 6, we read/write to authStore
-          const authStore = useAuthStore.getState();
-          const studentIndex = authStore.users.findIndex(u => u.id === studentId);
-          if (studentIndex >= 0) {
-            const updatedUsers = [...authStore.users];
-            const currentPoints = (updatedUsers[studentIndex] as any).points || 0;
-            const currentHomework = (updatedUsers[studentIndex] as any).homeworkCount || 0;
-            const updatedUser = {
-              ...updatedUsers[studentIndex],
-              points: currentPoints + points,
-              homeworkCount: currentHomework + 1
-            };
-            updatedUsers[studentIndex] = updatedUser;
-            
-            const isCurrent = authStore.currentUser?.id === studentId;
-            useAuthStore.setState({
-              users: updatedUsers,
-              currentUser: isCurrent ? updatedUser : authStore.currentUser
-            });
-          }
+          const currentEntry = get().entries.find(e => e.studentId === studentId);
+          const previousRank = currentEntry ? currentEntry.rank : 0;
           
-          // Emit LEADERBOARD_UPDATED
           eventBus.emit({
             type: "LEADERBOARD_UPDATED",
             payload: {
               studentId,
               points,
-              newRank,
+              newRank: previousRank, // Will be calculated after authStore sync
               previousRank
             }
           });
-          
-          return { entries };
-        });
+        } catch (error) {
+          console.error("Failed to add points to Firestore", error);
+        }
       },
 
-      updateStreak: (studentId, reset) => {
-        set(state => {
-          const entries = [...state.entries];
-          const entryIndex = entries.findIndex(e => e.studentId === studentId);
-          if (entryIndex >= 0) {
-            entries[entryIndex] = {
-              ...entries[entryIndex],
-              streak: reset ? 0 : (entries[entryIndex].streak || 0) + 1
-            };
-            
-            // Also sync to authStore for persistence
-            const authStore = useAuthStore.getState();
-            const studentIndex = authStore.users.findIndex(u => u.id === studentId);
-            if (studentIndex >= 0) {
-              const updatedUsers = [...authStore.users];
-              updatedUsers[studentIndex] = {
-                ...updatedUsers[studentIndex],
-                streak: entries[entryIndex].streak
-              } as any;
-              useAuthStore.setState({ users: updatedUsers });
-            }
+      updateStreak: async (studentId, reset) => {
+        try {
+          const userRef = doc(db, "users", studentId);
+          if (reset) {
+            await updateDoc(userRef, { streak: 0 });
+          } else {
+            await updateDoc(userRef, { streak: increment(1) });
           }
-          return { entries };
-        });
+        } catch (error) {
+          console.error("Failed to update streak in Firestore", error);
+        }
       },
 
       validateStreaks: () => {
@@ -261,6 +186,13 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
       },
 
       setupEventListeners: () => {
+        // Subscribe to authStore changes (which are synced live from Firestore)
+        const unsubAuth = useAuthStore.subscribe((state, prevState) => {
+          if (state.users !== prevState.users) {
+            get().initializeLeaderboard();
+          }
+        });
+
         const unsub1 = eventBus.on("HOMEWORK_GRADED", (event) => {
           if (event.payload && event.payload.studentId && event.payload.grade !== undefined) {
             get().addPoints(event.payload.studentId, event.payload.grade, "Homework graded");
@@ -275,6 +207,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         });
         
         return () => {
+          unsubAuth();
           unsub1();
           unsub2();
         };

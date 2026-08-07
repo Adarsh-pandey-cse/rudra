@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import RudraLogo from "@/components/brand/RudraLogo";
+import { Toaster } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { useNoticeStore } from "@/store/noticeStore";
 import { useHomeworkStore } from "@/store/homeworkStore";
@@ -209,6 +210,16 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       const { initializeAssignmentsListener, initializeSubmissionsListener } = useHomeworkStore.getState();
       const { initializeDoubtsListener } = useDoubtStore.getState();
       
+      let unsubFees: (() => void) | undefined;
+      import("@/store/feeStore").then(({ useFeeStore }) => {
+        unsubFees = useFeeStore.getState().initializeFeeListeners();
+      });
+
+      let unsubLeaderboard: (() => void) | undefined;
+      import("@/store/leaderboardStore").then(({ useLeaderboardStore }) => {
+        unsubLeaderboard = useLeaderboardStore.getState().setupEventListeners();
+      });
+      
       const unsubUsers = initializeUsersListener();
       const unsubNotices = initializeNoticeListener();
       const unsubAssignments = initializeAssignmentsListener();
@@ -226,6 +237,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
         unsubAssignments();
         unsubSubmissions();
         unsubDoubts();
+        if (unsubFees) unsubFees();
+        if (unsubLeaderboard) unsubLeaderboard();
         if (unsubReads) unsubReads();
       };
     }
@@ -492,6 +505,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
         {/* Scrollable Main Content */}
         <main className="flex-1 overflow-y-auto bg-[#07111F] p-4 sm:p-6 lg:p-8 pb-32 lg:pb-8 scroll-smooth relative z-0">
+          <Toaster position="top-right" theme="dark" richColors toastOptions={{ style: { background: '#131D2E', border: '1px solid rgba(255,255,255,0.08)' } }} />
           {children}
         </main>
       </div>
