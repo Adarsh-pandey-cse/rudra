@@ -328,8 +328,9 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
     
     feeProfiles.filter(p => p.isActive).forEach(profile => {
       const billingDateThisMonth = new Date(currentYear, currentMonth - 1, profile.preferredDueDate);
+      const hasAnyInvoice = invoices.some(i => i.studentId === profile.studentId);
       
-      if (now >= billingDateThisMonth) {
+      if (now >= billingDateThisMonth || !hasAnyInvoice) {
         const hasCurrentInvoice = invoices.some(i => i.studentId === profile.studentId && i.month === currentMonthStr);
         
         if (!hasCurrentInvoice) {
@@ -725,7 +726,44 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
   },
 
   updateFeeProfile: async (profile) => {
-    await setDoc(doc(db, "feeProfiles", profile.studentId), profile);
+    const batch = writeBatch(db);
+    batch.set(doc(db, "feeProfiles", profile.studentId), profile);
+
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    const currentMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+    
+    const { invoices } = get();
+    const hasCurrentInvoice = invoices.some(i => i.studentId === profile.studentId && i.month === currentMonthStr);
+    
+    if (!hasCurrentInvoice) {
+      const baseAmount = profile.monthlyFee;
+      let discountAmount = 0;
+      profile.discounts?.forEach(d => {
+        if (d.isPercentage) discountAmount += (baseAmount * d.amount) / 100;
+        else discountAmount += d.amount;
+      });
+      
+      const newInvId = `inv_${profile.studentId}_${currentYear}_${currentMonth}_${Date.now()}`;
+      const newInvoice: Invoice = {
+        id: newInvId,
+        studentId: profile.studentId,
+        month: currentMonthStr,
+        issueDate: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        baseAmount,
+        discountAmount,
+        lateFeeAmount: 0,
+        previousBalance: 0,
+        totalAmount: baseAmount - discountAmount,
+        amountPaid: 0,
+        status: "pending",
+        items: [{ description: "Monthly Tuition Fee", amount: baseAmount }]
+      };
+      batch.set(doc(db, "invoices", newInvId), newInvoice);
+    }
+
+    await batch.commit();
   }
 
 }));
