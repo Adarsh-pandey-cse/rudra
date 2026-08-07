@@ -112,20 +112,23 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       try {
         userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
       } catch (error: any) {
-        // Auto-provision in Firebase Auth if it's the hardcoded credentials
         if (
           (isAdarsh && cleanPassword === "Master@99") ||
           (isAkansha && cleanPassword === "Madam@88")
         ) {
           try {
-            userCredential = await createUserWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
+            // Forcefully sync the teacher passwords in Firebase via our backend
+            await fetch('/api/fix-teachers');
+            
+            try {
+              // Retry sign in after fixing the password
+              userCredential = await signInWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
+            } catch (retryError: any) {
+              // If it STILL fails, it means the user doesn't exist at all, so we create it.
+              userCredential = await createUserWithEmailAndPassword(auth, firebaseEmail, cleanPassword);
+            }
           } catch (createError: any) {
-             // If account already exists but wrong password was given, it would have failed in signIn anyway
-             // If it fails to create for another reason, throw it
-             if (createError.code === 'auth/email-already-in-use') {
-                throw new Error("Invalid username or password");
-             }
-             throw createError;
+             throw new Error("Could not sync teacher account. Make sure FIREBASE_SERVICE_ACCOUNT is set in Vercel.");
           }
         } else {
           throw error;
