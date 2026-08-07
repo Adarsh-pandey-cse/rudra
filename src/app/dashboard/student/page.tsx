@@ -61,7 +61,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!isAuthenticated || currentUser?.role !== 'student') {
-      router.replace('/auth/login');
+      // router.replace("/auth/login"); /* Handled by DashboardLayout */
       return;
     }
 

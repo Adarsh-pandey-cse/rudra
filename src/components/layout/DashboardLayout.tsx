@@ -91,13 +91,12 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const { currentUser, isAuthenticated, isLoading, logout } = useAuthStore();
   
   const [mounted, setMounted] = useState(false);
-  const { lastVisited, visitRoute, getLastVisited } = useBadgeStore();
+  const { visitRoute } = useBadgeStore(state => ({ visitRoute: state.visitRoute }));
   
-  // Data stores for badge counting
-  const { assignments } = useHomeworkStore();
-  const { doubts } = useDoubtStore();
-  const { notices } = useNoticeStore();
-  const feeState = useFeeStore();
+  // Minimal data selectors for badge counting to prevent excessive re-renders
+  const assignmentsLength = useHomeworkStore(state => state.assignments.length);
+  const doubtsLength = useDoubtStore(state => state.doubts.length);
+  const noticesLength = useNoticeStore(state => state.notices.length);
 
   useEffect(() => {
     setMounted(true);
@@ -139,7 +138,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     
     if (role === "student") {
       if (href === "/dashboard/student/homework") {
-        const myAssignments = (assignments || []).filter(h => 
+        const assignments = useHomeworkStore.getState().assignments || [];
+        const myAssignments = assignments.filter(h => 
           ((h as any).targetClassId && (h as any).targetClassId !== "-" ? (h as any).targetClassId === (currentUser as any).classId : true) || 
           (h as any).assignedTo?.includes(currentUser.id) || 
           (h as any).recipientStudentIds?.includes(currentUser.id)
@@ -147,6 +147,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
         return myAssignments.some(h => new Date((h as any).createdAt).getTime() > lastVisit);
       }
       if (href === "/dashboard/student/doubts") {
+        const doubts = useDoubtStore.getState().doubts || [];
         return doubts.some(d => 
           d.studentId === currentUser.id && 
           (d.status === 'teacher_answered' || d.status === 'ai_answered' || (d as any).status === 'answered') &&
@@ -154,6 +155,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
         );
       }
       if (href === "/dashboard/student/notices") {
+        const notices = useNoticeStore.getState().notices || [];
         return notices.some(n => 
           ((n as any).targetAudience === 'all' || (n as any).targetAudience === 'students' || (n as any).targetClass === (currentUser as any).classId) &&
           new Date(n.createdAt).getTime() > lastVisit
@@ -161,6 +163,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       }
     } else {
       if (href === "/dashboard/teacher/doubts") {
+        const doubts = useDoubtStore.getState().doubts || [];
         return doubts.some(d => {
           const timestamp = d.updatedAt ? new Date(d.updatedAt).getTime() : new Date(d.createdAt).getTime();
           return timestamp > lastVisit &&

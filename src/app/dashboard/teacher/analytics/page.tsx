@@ -37,7 +37,7 @@ export default function TeacherAnalyticsPage() {
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!isAuthenticated || currentUser?.role !== "teacher") {
-      router.replace("/auth/login");
+      // router.replace("/auth/login"); /* Handled by DashboardLayout */
       return;
     }
     setMounted(true);

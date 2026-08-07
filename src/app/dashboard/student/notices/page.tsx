@@ -31,7 +31,7 @@ export default function StudentNoticesPage() {
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!isAuthenticated || currentUser?.role !== "student") {
-      router.replace("/auth/login");
+      // router.replace("/auth/login"); /* Handled by DashboardLayout */
       return;
     }
     setMounted(true);
