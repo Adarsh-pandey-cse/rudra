@@ -124,9 +124,9 @@ export default function NoticesPage() {
             className="space-y-4"
           >
             <AnimatePresence mode="popLayout">
-              {filteredNotices.map((notice) => (
+              {filteredNotices.map((notice, idx) => (
                 <motion.div 
-                  key={notice.id} 
+                  key={`${notice.id}-${idx}`} 
                   variants={itemVariants} 
                   layout
                   initial={{ opacity: 0, y: 20 }}
