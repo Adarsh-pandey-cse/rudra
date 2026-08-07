@@ -114,7 +114,6 @@ export const useNoticeStore = create<NoticeState>((set, get) => ({
 
       getTeacherNotices: (teacherId) => {
         return get().notices
-          .filter((n) => n.teacherId === teacherId)
           .sort((a, b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
@@ -222,7 +221,7 @@ export const useNoticeStore = create<NoticeState>((set, get) => ({
       },
 
       getTeacherNoticeStats: (teacherId) => {
-        const teacherNotices = get().notices.filter(n => n.teacherId === teacherId);
+        const teacherNotices = get().notices;
         
         const now = new Date();
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
