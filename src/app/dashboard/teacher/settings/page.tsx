@@ -399,7 +399,7 @@ export default function TeacherSettingsPage() {
                         try {
                           alert("Wiping started. Please wait, do not close the window...");
                           const { getDocs, deleteDoc, collection } = await import('firebase/firestore');
-                          const { db } = await import('@/lib/firebase/config');
+                          const { db } = await import('@/lib/firebase/firebase');
                           
                           // 1. Wipe Users
                           const usersSnap = await getDocs(collection(db, 'users'));
