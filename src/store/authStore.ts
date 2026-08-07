@@ -96,8 +96,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ isLoading: true });
     try {
       let firebaseEmail = emailOrUsername.trim();
-      let isAdarsh = firebaseEmail === "Adarsh@77" || firebaseEmail === "adarsh@rudra.edu";
-      let isAkansha = firebaseEmail === "Akansha@27" || firebaseEmail === "akansha@rudra.edu";
+      let normalizedUsername = firebaseEmail.toLowerCase();
+      
+      let isAdarsh = normalizedUsername === "adarsh@77" || normalizedUsername === "adarsh@rudra.edu";
+      let isAkansha = normalizedUsername === "akansha@27" || normalizedUsername === "akansha@rudra.edu";
 
       if (isAdarsh) firebaseEmail = "adarsh@rudra.edu";
       else if (isAkansha) firebaseEmail = "akansha@rudra.edu";
