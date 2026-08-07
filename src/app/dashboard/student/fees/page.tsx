@@ -84,8 +84,15 @@ export default function StudentFeesPage() {
   const handleDownloadClick = async (payment: Payment, invoice: Invoice) => {
     if (!currentUser || currentUser.role !== "student") return;
     setIsLoadingReceipt(payment.id);
+    
+    // First, check if receipt exists
+    let record = null;
     try {
-      let record = await receiptService.getReceiptByPaymentId(payment.id);
+      record = await receiptService.getReceiptByPaymentId(payment.id);
+    } catch (e) {
+      console.error(e);
+    }
+    try {
       if (!record) {
         record = await receiptService.createReceiptRecord(payment.id, invoice.id, currentUser.id, "system");
       }

@@ -229,6 +229,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         username: email,
         name,
         role: "student" as UserRole,
+        password: cleanPassword, // Stored to allow teachers to view and share with students
         createdAt: new Date().toISOString(),
         classId: `class-${grade.replace(/\s+/g, '-').toLowerCase()}`,
         grade,

@@ -295,7 +295,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
       },
 
       getTeacherAssignments: (teacherId) => {
-        return get().assignments.filter(a => a.teacherId === teacherId || (a as any).assignedBy === teacherId).sort((a, b) => {
+        return get().assignments.sort((a, b) => {
           const tA = (a as any).createdAt?.seconds ? (a as any).createdAt.seconds * 1000 : new Date(a.createdAt || 0).getTime();
           const tB = (b as any).createdAt?.seconds ? (b as any).createdAt.seconds * 1000 : new Date(b.createdAt || 0).getTime();
           return tB - tA;
@@ -782,7 +782,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
 
       getTeacherHomeworkStats: (teacherId) => {
         const { assignments, submissions } = get();
-        const teacherAssignments = assignments.filter(a => a.teacherId === teacherId || (a as any).assignedBy === teacherId);
+        const teacherAssignments = assignments;
         const teacherSubmissions = submissions.filter(s =>
           teacherAssignments.some(a => a.id === s.assignmentId)
         );

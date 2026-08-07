@@ -505,7 +505,25 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
         {/* Scrollable Main Content */}
         <main className="flex-1 overflow-y-auto bg-[#07111F] p-4 sm:p-6 lg:p-8 pb-32 lg:pb-8 scroll-smooth relative z-0">
-          <Toaster position="top-right" theme="dark" richColors toastOptions={{ style: { background: '#131D2E', border: '1px solid rgba(255,255,255,0.08)' } }} />
+          <Toaster 
+            position="top-center" 
+            theme="dark" 
+            richColors 
+            expand={false}
+            toastOptions={{ 
+              style: { 
+                background: 'linear-gradient(145deg, rgba(19, 29, 46, 0.95), rgba(7, 17, 31, 0.98))', 
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(16px)',
+                borderRadius: '16px',
+                color: '#fff',
+                padding: '16px',
+                fontFamily: 'var(--font-sans)',
+              },
+              className: "toast-royal"
+            }} 
+          />
           {children}
         </main>
       </div>
