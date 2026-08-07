@@ -30,7 +30,9 @@ interface AuthState {
     password: string,
     grade: string,
     parentPhone?: string,
-    fatherName?: string
+    fatherName?: string,
+    status?: 'active' | 'archived',
+    leaveDate?: string
   ) => Promise<{ success: boolean; error?: string; studentId?: string }>;
   
   getStudentUsers: () => User[];
@@ -39,6 +41,8 @@ interface AuthState {
   
   deleteStudent: (studentId: string) => Promise<void>;
   updateStudent: (studentId: string, name: string, email: string) => Promise<{ success: boolean; error?: string }>;
+  archiveStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>;
+  restoreStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>;
   updateAvatar: (userId: string, avatarData: string) => Promise<void>;
 }
 
@@ -166,7 +170,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
   },
 
-  registerStudent: async (name, email, password, grade, parentPhone, fatherName) => {
+  registerStudent: async (name, email, password, grade, parentPhone, fatherName, status = 'active', leaveDate) => {
     const { currentUser } = get();
     if (!currentUser || currentUser.role !== "teacher") {
       return { success: false, error: "Only teachers can add students" };
@@ -195,6 +199,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         addedByTeacherId: currentUser.id,
         parentPhone: parentPhone || "",
         fatherName: fatherName || "",
+        status,
+        leaveDate: leaveDate || ""
       };
 
       // Create document in Firestore
@@ -255,11 +261,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   getStudentUsers: () => {
-    return get().getAllUsers().filter(u => u.role === "student" && (u as any).status !== "archived");
+    return get().users.filter(u => u.role === "student" && (u as any).status !== "archived" && (u as any).status !== "deleted");
   },
   
   getArchivedStudents: () => {
-    return get().getAllUsers().filter(u => u.role === "student" && ((u as any).status === "archived" || (u as any).status === "deleted"));
+    return get().users.filter(u => u.role === "student" && ((u as any).status === "archived" || (u as any).status === "deleted"));
   },
 
   getAllUsers: () => {
@@ -289,6 +295,53 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
     } catch (error) {
       console.error("Error deleting student:", error);
+    }
+  },
+
+  archiveStudent: async (studentId: string) => {
+    try {
+      const { users } = get();
+      const userRef = doc(db, 'users', studentId);
+      
+      const leaveDate = new Date().toISOString();
+      await updateDoc(userRef, {
+        status: "archived",
+        leaveDate
+      });
+
+      const updatedUsers = users.map(user => 
+        user.id === studentId 
+          ? { ...user, status: "archived", leaveDate } as User
+          : user
+      );
+      set({ users: updatedUsers });
+      return { success: true };
+    } catch (error: any) {
+      console.error("Archive error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  restoreStudent: async (studentId: string) => {
+    try {
+      const { users } = get();
+      const userRef = doc(db, 'users', studentId);
+      
+      await updateDoc(userRef, {
+        status: "active",
+        leaveDate: ""
+      });
+
+      const updatedUsers = users.map(user => 
+        user.id === studentId 
+          ? { ...user, status: "active", leaveDate: "" } as User
+          : user
+      );
+      set({ users: updatedUsers });
+      return { success: true };
+    } catch (error: any) {
+      console.error("Restore error:", error);
+      return { success: false, error: error.message };
     }
   },
 

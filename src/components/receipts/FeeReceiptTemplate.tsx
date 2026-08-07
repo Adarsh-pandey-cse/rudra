@@ -109,12 +109,15 @@ export const FeeReceiptTemplate = forwardRef<HTMLDivElement, FeeReceiptTemplateP
                 <InfoRow icon="id" label="Student ID" value={data.student.studentId} />
                 <InfoRow icon="phone" label="Phone Number" value={data.student.phone} />
               </div>
-              {data.student.photoUrl && (
-                <div className="w-28 h-36 rounded-xl border-4 border-slate-100 overflow-hidden shrink-0 shadow-sm ml-6">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="w-28 h-36 rounded-xl border-4 border-slate-100 overflow-hidden shrink-0 shadow-sm ml-6 bg-slate-50 flex items-center justify-center">
+                {data.student.photoUrl ? (
                   <img src={data.student.photoUrl} alt="Student" className="w-full h-full object-cover" />
-                </div>
-              )}
+                ) : (
+                  <svg className="w-12 h-12 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                )}
+              </div>
             </div>
           </div>
 
@@ -162,16 +165,16 @@ export const FeeReceiptTemplate = forwardRef<HTMLDivElement, FeeReceiptTemplateP
         <div className="flex justify-between items-end px-12 mt-auto mb-16 relative">
           
           {/* PAID Stamp Graphic */}
-          <div className="relative w-40 h-40">
-            <svg viewBox="0 0 200 200" className="w-full h-full text-[#2563EB] opacity-90 transform -rotate-12">
-              <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray="8 4" />
+          <div className="relative w-40 h-40 shrink-0 ml-8">
+            <svg viewBox="0 0 200 200" className="w-full h-full text-[#16A34A] opacity-75 transform -rotate-[15deg]">
+              <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" strokeWidth="5" strokeDasharray="8 4" />
               <circle cx="100" cy="100" r="85" fill="none" stroke="currentColor" strokeWidth="2" />
-              <circle cx="100" cy="100" r="75" fill="none" stroke="currentColor" strokeWidth="1" />
-              <path id="curve" d="M 30 100 A 70 70 0 1 1 170 100 A 70 70 0 1 1 30 100" fill="transparent" />
-              <text fill="currentColor" fontSize="22" fontWeight="bold" letterSpacing="6">
-                <textPath href="#curve" startOffset="50%" textAnchor="middle">THANK YOU • THANK YOU • </textPath>
+              <circle cx="100" cy="100" r="72" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 2" />
+              <path id="curve" d="M 25 100 A 75 75 0 1 1 175 100 A 75 75 0 1 1 25 100" fill="transparent" />
+              <text fill="currentColor" fontSize="20" fontWeight="bold" letterSpacing="4">
+                <textPath href="#curve" startOffset="50%" textAnchor="middle">★ THANK YOU ★ THANK YOU </textPath>
               </text>
-              <text x="100" y="115" fontSize="46" fontWeight="900" textAnchor="middle" fill="currentColor">PAID</text>
+              <text x="100" y="118" fontSize="52" fontWeight="900" textAnchor="middle" fill="currentColor" style={{ fontFamily: 'Impact, sans-serif' }}>PAID</text>
             </svg>
           </div>
 

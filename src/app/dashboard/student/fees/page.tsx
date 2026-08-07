@@ -140,8 +140,8 @@ export default function StudentFeesPage() {
       // Show notification to student
       useNotificationStore.getState().addNotification({
         recipientId: currentUser.id,
-        title: "Verification Requested",
-        message: "The request to verify the fees is sent to your teacher.",
+        title: "Receipt Requested",
+        message: "Your request for the receipt has been sent to the teacher.",
         link: "/dashboard/student/fees"
       });
     }, 1000);
@@ -235,7 +235,7 @@ export default function StudentFeesPage() {
                       ) : isOverdue ? (
                         <StatusBadge variant="error">Overdue</StatusBadge>
                       ) : pendingPayment ? (
-                        <StatusBadge variant="warning">Pending Verification</StatusBadge>
+                        <StatusBadge variant="warning">Receipt Requested</StatusBadge>
                       ) : (
                         <StatusBadge variant="info">Pending</StatusBadge>
                       )}
@@ -378,9 +378,9 @@ export default function StudentFeesPage() {
                             <div className="flex items-center gap-2 mb-1.5">
                               <p className="font-semibold text-white text-base">{monthText} Fee</p>
                               {isPaid ? (
-                                <StatusBadge variant="success">Paid</StatusBadge>
+                                <StatusBadge variant="success">Verified</StatusBadge>
                               ) : isPendingVerification ? (
-                                <StatusBadge variant="warning">Pending Verification</StatusBadge>
+                                <StatusBadge variant="warning">Receipt Requested</StatusBadge>
                               ) : isRejected ? (
                                 <StatusBadge variant="error">Rejected</StatusBadge>
                               ) : isOverdueItem ? (
@@ -394,7 +394,10 @@ export default function StudentFeesPage() {
                               {invoicePayment?.remark && (
                                 <>
                                   <span>•</span>
-                                  <span className="text-[#EF4444]">Note: {invoicePayment.remark}</span>
+                                  <span className="text-[#EF4444]">
+                                    {isRejected ? "Your request for the receipt is rejected, kindly contact the teacher. " : "Note: "}
+                                    {invoicePayment.remark}
+                                  </span>
                                 </>
                               )}
                             </div>
@@ -413,13 +416,13 @@ export default function StudentFeesPage() {
                                   loading={isSubmitting}
                                   className="w-full sm:w-auto py-2 px-4 text-xs"
                                 >
-                                  Fees Paid
+                                  I have paid the fees, request receipt
                                 </GradientButton>
                               )}
                               
                               {!isPaid && isPendingVerification && (
                                 <button disabled className="px-4 py-2 rounded-xl border border-white/[0.08] bg-white/[0.02] text-[#7B8798] text-xs font-medium w-full sm:w-auto cursor-not-allowed">
-                                  Verification Requested
+                                  Receipt Requested
                                 </button>
                               )}
 
