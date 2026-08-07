@@ -96,7 +96,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       let isAkansha = firebaseEmail === "Akansha@27" || firebaseEmail === "akansha@rudra.edu";
 
       if (isAdarsh) firebaseEmail = "adarsh@rudra.edu";
-      if (isAkansha) firebaseEmail = "akansha@rudra.edu";
+      else if (isAkansha) firebaseEmail = "akansha@rudra.edu";
+      else if (!firebaseEmail.includes('@')) {
+        firebaseEmail = `${firebaseEmail}@rudra.edu`.toLowerCase();
+      }
 
       let userCredential;
       try {
@@ -174,7 +177,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
       const secondaryAuth = getAuth(secondaryApp);
       
-      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const firebaseEmail = email.includes('@') ? email : `${email}@rudra.edu`.toLowerCase();
+      
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, password);
       const studentId = userCredential.user.uid;
       
       // Sign out of the secondary app so it doesn't persist
