@@ -313,7 +313,7 @@ export default function StudentDashboard() {
             </div>
             <div>
               <div className="text-xl font-bold text-white flex items-baseline gap-1">
-                {leaderboardEntries.find(e => e.studentId === currentUser.id)?.points || 0}
+                {(currentUser as any).points || 0}
                 <span className="text-sm text-[#7B8798] font-normal">XP</span>
               </div>
               <div className="text-[13px] text-[#7B8798]">Total Points</div>

@@ -124,7 +124,19 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           if (reset) {
             await updateDoc(userRef, { streak: 0 });
           } else {
-            await updateDoc(userRef, { streak: increment(1) });
+            const authState = useAuthStore.getState();
+            const student = authState.users.find(u => u.id === studentId);
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            if (student && (student as any).lastStreakDate === todayStr) {
+              // Already incremented today, SaaS logic prevents double increment
+              return;
+            }
+            
+            await updateDoc(userRef, { 
+              streak: increment(1),
+              lastStreakDate: todayStr 
+            });
           }
         } catch (error) {
           console.error("Failed to update streak in Firestore", error);
@@ -132,55 +144,48 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
       },
 
       validateStreaks: () => {
-        // Dynamic import to avoid circular dependencies
         import('./homeworkStore').then(({ useHomeworkStore }) => {
           const { assignments, submissions } = useHomeworkStore.getState();
-          const now = new Date();
+          const authState = useAuthStore.getState();
+          const users = typeof authState.getAllUsers === 'function' ? authState.getAllUsers() : authState.users;
+          const students = users.filter(u => u.role === "student" && (u as any).status !== "archived");
           
-          set(state => {
-            const entries = [...state.entries];
-            let changed = false;
-            
-            entries.forEach(entry => {
-              if (entry.streak > 0) {
-                // Find all assignments assigned to this student
-                const studentAssignments = assignments.filter(a => {
-                  if ((a as any).targetClassId && (a as any).targetClassId !== "-") {
-                    const authState = useAuthStore.getState();
-                    const student = (authState.getAllUsers ? authState.getAllUsers() : authState.users).find(u => u.id === entry.studentId);
-                    const studentClassId = (student as any)?.classId || (student as any)?.grade;
-                    return studentClassId === (a as any).targetClassId;
-                  }
-                  return (a as any).assignedTo?.includes(entry.studentId) || (a as any).recipientStudentIds?.includes(entry.studentId);
-                });
-                
-                // Check if any assignment is past due and NOT submitted
-                const hasMissedAssignment = studentAssignments.some(a => {
-                  const dueDate = new Date(a.dueDate);
-                  if (now > dueDate) {
-                    const sub = submissions.find(s => s.assignmentId === a.id && s.studentId === entry.studentId);
-                    return !sub; // Not submitted and past due date
-                  }
-                  return false;
-                });
-                
-                if (hasMissedAssignment) {
-                  entry.streak = 0;
-                  changed = true;
-                  
-                  // Sync to auth store
-                  const authStore = useAuthStore.getState();
-                  const studentIndex = authStore.users.findIndex(u => u.id === entry.studentId);
-                  if (studentIndex >= 0) {
-                    const updatedUsers = [...authStore.users];
-                    updatedUsers[studentIndex] = { ...updatedUsers[studentIndex], streak: 0 } as any;
-                    useAuthStore.setState({ users: updatedUsers });
-                  }
+          const now = new Date().getTime();
+          
+          students.forEach(async student => {
+            const currentStreak = (student as any).streak || 0;
+            if (currentStreak > 0) {
+              // Find all assignments for this student
+              const studentAssignments = assignments.filter(a => {
+                const targetClass = (a as any).targetClassId;
+                if (targetClass && targetClass !== "-") {
+                  const studentClassId = (student as any)?.classId || (student as any)?.grade;
+                  return studentClassId === targetClass;
+                }
+                return (a as any).assignedTo?.includes(student.id) || (a as any).recipientStudentIds?.includes(student.id);
+              });
+              
+              // Check if any assignment is past due and NOT submitted
+              const hasMissedAssignment = studentAssignments.some(a => {
+                const dueDate = new Date(a.dueDate).getTime();
+                if (now > dueDate) {
+                  // It's past due. Did they submit?
+                  const submission = submissions.find(s => s.assignmentId === a.id && s.studentId === student.id);
+                  const isSubmitted = submission && !["pending", "draft"].includes(submission.status);
+                  return !isSubmitted; // Missed if not submitted
+                }
+                return false;
+              });
+              
+              if (hasMissedAssignment) {
+                // Reset streak in Firestore!
+                try {
+                  await updateDoc(doc(db, "users", student.id), { streak: 0 });
+                } catch(e) {
+                  console.error("Failed to reset missed streak", e);
                 }
               }
-            });
-            
-            return changed ? { entries } : state;
+            }
           });
         });
       },
