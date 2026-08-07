@@ -396,8 +396,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   updateAvatar: async (userId: string, avatarData: string) => {
     try {
       await updateDoc(doc(db, "users", userId), { avatar: avatarData });
+      const { currentUser } = get();
+      if (currentUser && currentUser.id === userId) {
+        set({ currentUser: { ...currentUser, avatar: avatarData } });
+      }
     } catch (error) {
       console.error("Firebase update failed for avatar", error);
     }
-  }
+  },
 }));
