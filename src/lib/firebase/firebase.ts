@@ -15,7 +15,10 @@ export const firebaseConfig = {
 
 // Initialize Firebase only if it hasn't been initialized already
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+import { browserLocalPersistence, setPersistence } from "firebase/auth";
 const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence).catch(console.error);
 const storage = getStorage(app);
 
 // Initialize Firestore with offline persistence enabled
