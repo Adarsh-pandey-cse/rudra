@@ -287,7 +287,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                       icon: '/icon512_maskable.png',
                       badge: '/icon512_maskable.png',
                       vibrate: [200, 100, 200]
-                    });
+                    } as any);
                     return;
                   }
                 }
