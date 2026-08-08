@@ -277,10 +277,14 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       if (recentNotifs.length > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         recentNotifs.forEach(n => {
           if (!n.read) {
-            new Notification(n.title, {
-              body: n.message,
-              icon: '/favicon.ico'
-            });
+            try {
+              new Notification(n.title, {
+                body: n.message,
+                icon: '/favicon.ico'
+              });
+            } catch (err) {
+              console.warn("Browser push notification failed (expected on mobile):", err);
+            }
           }
         });
       }
