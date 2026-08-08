@@ -326,8 +326,20 @@ export default function CreateHomeworkPage() {
             status: "published", // now fully published
             attachments: uploadedAttachments
           };
-          
           await createRemoteAssignment(finalAssignment as any);
+
+          // Emit event to notify students
+          import("@/lib/eventBus").then(({ eventBus }) => {
+            eventBus.emit({
+              type: 'HOMEWORK_ASSIGNED',
+              payload: {
+                assignmentId: finalAssignment.id,
+                teacherId: finalAssignment.teacherId,
+                studentIds: finalAssignment.recipientStudentIds,
+                title: finalAssignment.title
+              }
+            });
+          });
 
         } catch (err: any) {
           console.error("[Upload Pipeline] Background upload failed:", err);

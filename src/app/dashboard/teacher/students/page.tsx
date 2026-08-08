@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Search, UserPlus, Users2, Eye, EyeOff, Edit, Trash2, AlertCircle, BellRing, CheckCircle2, TrendingUp, IndianRupee } from "lucide-react";
+import { Search, UserPlus, Users2, Eye, EyeOff, Edit, Trash2, AlertCircle, BellRing, CheckCircle2, TrendingUp, IndianRupee, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useDataStore } from "@/store/dataStore";
 import { useFeeStore } from "@/store/feeStore";
@@ -224,53 +225,56 @@ export default function StudentListPage() {
           </GlassCard>
         </motion.div>
 
-        {/* View Avatar Modal */}
-        <AnimatePresence>
-          {avatarToView && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-              onClick={() => setAvatarToView(null)}
-            >
+        {/* Avatar View Modal via Portal */}
+        {mounted && createPortal(
+          <AnimatePresence>
+            {avatarToView && (
               <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col items-center gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                onClick={() => setAvatarToView(null)}
               >
-                <div className="flex justify-between w-full items-center">
-                  <h3 className="text-lg font-bold text-white">{avatarToView.name}'s Profile Picture</h3>
-                  <button onClick={() => setAvatarToView(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white">
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-white/10 shadow-[0_0_30px_rgba(91,92,255,0.3)]">
-                  {avatarToView.url.length < 10 ? (
-                    <div className="w-full h-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center text-6xl font-bold">
-                      {avatarToView.url}
-                    </div>
-                  ) : (
-                    <img src={avatarToView.url} alt="Profile" className="w-full h-full object-cover" />
-                  )}
-                </div>
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col items-center gap-6"
+                >
+                  <div className="flex justify-between w-full items-center">
+                    <h3 className="text-lg font-bold text-white">{avatarToView.name}'s Profile Picture</h3>
+                    <button onClick={() => setAvatarToView(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-white/10 shadow-[0_0_30px_rgba(91,92,255,0.3)]">
+                    {avatarToView.url.length < 10 ? (
+                      <div className="w-full h-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center text-6xl font-bold">
+                        {avatarToView.url}
+                      </div>
+                    ) : (
+                      <img src={avatarToView.url} alt="Profile" className="w-full h-full object-cover" />
+                    )}
+                  </div>
 
-                <div className="w-full flex gap-3">
-                  <button 
-                    onClick={() => handleRemoveAvatar(avatarToView.id)}
-                    className="flex-1 py-3 px-4 bg-[#EF4444]/10 hover:bg-[#EF4444]/20 text-[#EF4444] rounded-xl font-medium flex items-center justify-center gap-2 transition-colors border border-[#EF4444]/20"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Remove Picture
-                  </button>
-                </div>
+                  <div className="w-full flex gap-3">
+                    <button 
+                      onClick={() => handleRemoveAvatar(avatarToView.id)}
+                      className="flex-1 py-3 px-4 bg-[#EF4444]/10 hover:bg-[#EF4444]/20 text-[#EF4444] rounded-xl font-medium flex items-center justify-center gap-2 transition-colors border border-[#EF4444]/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove Picture
+                    </button>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* Edit Modal */}
         <AnimatePresence>
@@ -434,6 +438,9 @@ export default function StudentListPage() {
                               <td className="px-6 py-4">
                                 <div className="flex flex-col gap-1 text-[13px] text-[#B6C2D9]">
                                   <div>Grade: <span className="text-white">{(s as Student).grade || 'N/A'}</span></div>
+                                  {(s as Student).parentName && (
+                                    <div>Parent: <span className="text-white">{(s as Student).parentName}</span></div>
+                                  )}
                                   {(s as Student).parentPhone && (
                                     <div>Phone: <span className="text-white">{(s as Student).parentPhone}</span></div>
                                   )}
@@ -592,6 +599,12 @@ export default function StudentListPage() {
                                     <span className="text-[#22C55E] font-semibold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Clear</span>
                                   )}
                                 </div>
+                                {(s as Student).parentName && (
+                                  <div className="flex flex-col gap-1 col-span-2">
+                                    <span className="text-[#7B8798] text-[10px] uppercase">Parent Name</span>
+                                    <span className="text-white">{(s as Student).parentName}</span>
+                                  </div>
+                                )}
                                 {(s as Student).parentPhone && (
                                   <div className="flex flex-col gap-1 col-span-2">
                                     <span className="text-[#7B8798] text-[10px] uppercase">Parent Phone</span>

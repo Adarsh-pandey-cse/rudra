@@ -64,7 +64,6 @@ const STUDENT_NAV: NavItem[] = [
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
   { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: Trophy },
   { label: "My Progress", href: "/dashboard/student/progress", icon: TrendingUp },
-  { label: "AI Tutor", href: "/dashboard/student/ai-tutor", icon: Bot, comingSoon: true },
   { label: "Doubts", href: "/dashboard/student/doubts", icon: MessageCircleQuestion },
   { label: "Notices", href: "/dashboard/student/notices", icon: Megaphone },
   { label: "Fees", href: "/dashboard/student/fees", icon: CreditCard },
@@ -75,12 +74,14 @@ const TEACHER_BOTTOM_NAV = [
   { label: "Home", href: "/dashboard/teacher", icon: LayoutDashboard },
   { label: "Students", href: "/dashboard/teacher/students", icon: Users },
   { label: "Homework", href: "/dashboard/teacher/homework", icon: BookOpen },
+  { label: "Leaderboard", href: "/dashboard/teacher/leaderboard", icon: Trophy },
   { label: "Profile", href: "/dashboard/teacher/settings", icon: Settings },
 ];
 
 const STUDENT_BOTTOM_NAV = [
   { label: "Home", href: "/dashboard/student", icon: LayoutDashboard },
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
+  { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: Trophy },
   { label: "Doubts", href: "/dashboard/student/doubts", icon: MessageCircleQuestion },
   { label: "Profile", href: "/dashboard/student/settings", icon: Settings },
 ];
@@ -510,6 +511,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             theme="dark" 
             richColors 
             expand={false}
+            offset="80px"
             toastOptions={{ 
               style: { 
                 background: 'linear-gradient(145deg, rgba(19, 29, 46, 0.95), rgba(7, 17, 31, 0.98))', 
@@ -521,7 +523,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                 padding: '16px',
                 fontFamily: 'var(--font-sans)',
               },
-              className: "toast-royal"
+              className: "toast-royal relative z-[999999]"
             }} 
           />
           {children}

@@ -134,6 +134,15 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               return;
             }
             
+            // Optimistic update to prevent double firing before Firestore syncs back
+            useAuthStore.setState((state) => ({
+              users: state.users.map((u) => 
+                u.id === studentId 
+                  ? { ...u, streak: ((u as any).streak || 0) + 1, lastStreakDate: todayStr } 
+                  : u
+              )
+            }));
+            
             await updateDoc(userRef, { 
               streak: increment(1),
               lastStreakDate: todayStr 
@@ -207,7 +216,6 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         
         const unsub2 = eventBus.on("HOMEWORK_SUBMITTED", (event) => {
           if (event.payload && event.payload.studentId) {
-            get().addPoints(event.payload.studentId, 10, "Homework submitted");
             get().updateStreak(event.payload.studentId, !!(event.payload as any).isLate);
           }
         });

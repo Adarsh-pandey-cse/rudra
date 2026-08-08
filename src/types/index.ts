@@ -23,6 +23,7 @@ export interface Student extends User {
   classId: string;
   addedByTeacherId: string;
   grade: string;
+  parentName?: string;
   parentPhone?: string;
   fatherName?: string;
   status?: "active" | "archived" | "deleted";

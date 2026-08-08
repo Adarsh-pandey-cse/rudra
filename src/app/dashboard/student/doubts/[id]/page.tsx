@@ -7,7 +7,7 @@ import {
   ArrowLeft, CheckCircle2, Clock, Send,
   User, GraduationCap, Star, AlertCircle,
   Paperclip, Camera, UploadCloud, X, Download,
-  MessageCircleQuestion, Loader2
+  MessageCircleQuestion, Loader2, Bot
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GlassCard from "@/components/ui/GlassCard";
