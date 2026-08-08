@@ -42,28 +42,30 @@ export async function GET() {
       deletedCount += uids.length;
     }
 
-    // 3. Delete from Firestore 'users' collection
+    // 3. Archive student documents in Firestore (instead of deleting)
     const usersSnapshot = await db.collection('users').get();
-    let firestoreDeleted = 0;
+    let firestoreArchived = 0;
     const batch = db.batch();
     
     usersSnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.email !== 'adarsh@rudra.edu' && data.email !== 'akansha@rudra.edu') {
-        batch.delete(doc.ref);
-        firestoreDeleted++;
+      // Archive anyone who isn't Adarsh or Akansha
+      if (data.username !== 'Adarsh@77' && data.username !== 'Akansha@27' && data.role !== 'teacher') {
+        batch.update(doc.ref, { status: 'archived' });
+        firestoreArchived++;
       }
     });
 
-    if (firestoreDeleted > 0) {
+    if (firestoreArchived > 0) {
       await batch.commit();
-      results.push(`Deleted ${firestoreDeleted} student documents from Firestore 'users' collection.`);
+      results.push(`Archived ${firestoreArchived} student documents in Firestore 'users' collection.`);
     }
 
-    // 4. (Optional) Let's also wipe collections that contain test data
+    // 4. Wipe operational test data, BUT preserve feedback, homeworkSubmissions, and doubts for past students
     const collectionsToClear = [
-      'doubts', 'receipts', 'feeProfiles', 'invoices', 'payments',
-      'homeworks', 'homeworkSubmissions', 'notices', 'noticeReads', 'notifications'
+      'receipts', 'feeProfiles', 'invoices', 'payments',
+      'notices', 'noticeReads', 'notifications'
+      // deliberately keeping 'doubts', 'homeworks', and 'homeworkSubmissions' to preserve student feedback/ratings
     ];
 
     for (const colName of collectionsToClear) {
@@ -72,7 +74,7 @@ export async function GET() {
         const colBatch = db.batch();
         colSnapshot.docs.forEach((d) => colBatch.delete(d.ref));
         await colBatch.commit();
-        results.push(`Cleared test data from collection: ${colName} (${colSnapshot.size} documents)`);
+        results.push(`Cleared operational data from collection: ${colName} (${colSnapshot.size} documents)`);
       }
     }
 

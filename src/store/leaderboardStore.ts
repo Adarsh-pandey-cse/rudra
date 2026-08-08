@@ -29,7 +29,8 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         const students = users.filter(u => u.role === "student" && (u as any).status !== "archived");
         
         set(state => {
-          const currentEntries = [...state.entries];
+          const activeStudentIds = students.map(s => s.id);
+          const currentEntries = state.entries.filter(e => activeStudentIds.includes(e.studentId));
           
           students.forEach(s => {
             const existingIndex = currentEntries.findIndex(e => e.studentId === s.id);
