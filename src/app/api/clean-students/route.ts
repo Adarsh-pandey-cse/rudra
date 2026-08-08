@@ -42,30 +42,30 @@ export async function GET() {
       deletedCount += uids.length;
     }
 
-    // 3. Archive student documents in Firestore (instead of deleting)
+    // 3. Delete student documents in Firestore (instead of archiving)
     const usersSnapshot = await db.collection('users').get();
-    let firestoreArchived = 0;
+    let firestoreDeleted = 0;
     const batch = db.batch();
     
     usersSnapshot.forEach((doc) => {
       const data = doc.data();
-      // Archive anyone who isn't Adarsh or Akansha
+      // Delete anyone who isn't Adarsh or Akansha
       if (data.username !== 'Adarsh@77' && data.username !== 'Akansha@27' && data.role !== 'teacher') {
-        batch.update(doc.ref, { status: 'archived' });
-        firestoreArchived++;
+        batch.delete(doc.ref);
+        firestoreDeleted++;
       }
     });
 
-    if (firestoreArchived > 0) {
+    if (firestoreDeleted > 0) {
       await batch.commit();
-      results.push(`Archived ${firestoreArchived} student documents in Firestore 'users' collection.`);
+      results.push(`Deleted ${firestoreDeleted} student documents from Firestore 'users' collection.`);
     }
 
-    // 4. Wipe operational test data, BUT preserve feedback, homeworkSubmissions, and doubts for past students
+    // 4. Wipe all operational data, including homeworks, submissions, and doubts
     const collectionsToClear = [
       'receipts', 'feeProfiles', 'invoices', 'payments',
-      'notices', 'noticeReads', 'notifications'
-      // deliberately keeping 'doubts', 'homeworks', and 'homeworkSubmissions' to preserve student feedback/ratings
+      'notices', 'noticeReads', 'notifications',
+      'doubts', 'homeworks', 'homeworkSubmissions'
     ];
 
     for (const colName of collectionsToClear) {
@@ -74,7 +74,7 @@ export async function GET() {
         const colBatch = db.batch();
         colSnapshot.docs.forEach((d) => colBatch.delete(d.ref));
         await colBatch.commit();
-        results.push(`Cleared operational data from collection: ${colName} (${colSnapshot.size} documents)`);
+        results.push(`Cleared ALL data from collection: ${colName} (${colSnapshot.size} documents)`);
       }
     }
 
