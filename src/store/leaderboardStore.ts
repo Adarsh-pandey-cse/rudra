@@ -7,6 +7,7 @@ import { eventBus } from "@/lib/eventBus";
 
 export interface LeaderboardState {
   entries: LeaderboardEntry[];
+  isInitialized: boolean;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
   
@@ -20,6 +21,7 @@ export interface LeaderboardState {
 
 export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
       entries: [],
+      isInitialized: false,
       _hasHydrated: true,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       
@@ -61,7 +63,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           });
           currentEntries.forEach((e, i) => e.rank = i + 1);
           
-          return { entries: currentEntries };
+          return { entries: currentEntries, isInitialized: true };
         });
         get().validateStreaks();
       },

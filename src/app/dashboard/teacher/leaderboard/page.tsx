@@ -11,7 +11,7 @@ import { CLASSES } from "@/data/curriculum-index";
 import type { LeaderboardEntry } from "@/types/homework-types";
 
 export default function LeaderboardPage() {
-  const { entries, initializeLeaderboard, getLeaderboard, _hasHydrated } = useLeaderboardStore();
+  const { entries, initializeLeaderboard, getLeaderboard, _hasHydrated, isInitialized } = useLeaderboardStore();
   const { currentUser } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [classFilter, setClassFilter] = useState<string>("");
@@ -23,13 +23,13 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     if (mounted) {
-      if (entries.length === 0) {
+      if (!isInitialized) {
         initializeLeaderboard();
       } else {
         setLeaderboard(getLeaderboard(classFilter ? `class-${classFilter}` : undefined));
       }
     }
-  }, [mounted, classFilter, entries, initializeLeaderboard, getLeaderboard]);
+  }, [mounted, classFilter, isInitialized, initializeLeaderboard, getLeaderboard, entries]);
 
   if (!mounted) return null;
 
