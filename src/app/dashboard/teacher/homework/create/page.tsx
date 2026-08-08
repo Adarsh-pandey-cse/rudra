@@ -118,7 +118,7 @@ export default function CreateHomeworkPage() {
   useEffect(() => {
     if (!currentUser) return;
     const allStudentsInClass = getAllUsers().filter(
-      (u): u is Student => u.role === "student" && ((u as Student).grade === `Class ${selectedClass}` || (u as Student).classId === `class-${selectedClass}`)
+      (u): u is Student => u.role === "student" && u.status !== "archived" && u.status !== "deleted" && ((u as Student).grade === `Class ${selectedClass}` || (u as Student).classId === `class-${selectedClass}`)
     );
     setSelectedStudentIds(allStudentsInClass.map(s => s.id));
     const subjectsForClass = getSubjectsForClass(selectedClass);
@@ -134,6 +134,8 @@ export default function CreateHomeworkPage() {
     (u): u is Student => {
       if (u.role !== "student") return false;
       const s = u as Student;
+      if (s.status === "archived" || s.status === "deleted") return false;
+      
       const sClassId = String(s.classId || "").toLowerCase();
       const sGrade = String(s.grade || "").toLowerCase();
       const selected = String(selectedClass).toLowerCase();
