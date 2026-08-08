@@ -55,9 +55,9 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           
           // Sort and assign ranks
           currentEntries.sort((a, b) => {
-            if (b.points !== a.points) return b.points - a.points;
-            if (b.streak !== a.streak) return b.streak - a.streak;
-            return a.name.localeCompare(b.name);
+            if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
+            if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
+            return (a.name || "").localeCompare(b.name || "");
           });
           currentEntries.forEach((e, i) => e.rank = i + 1);
           
@@ -85,9 +85,9 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         }
         
         currentEntries.sort((a, b) => {
-          if (b.points !== a.points) return b.points - a.points;
-          if (b.streak !== a.streak) return b.streak - a.streak;
-          return a.name.localeCompare(b.name);
+          if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
+          if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
+          return (a.name || "").localeCompare(b.name || "");
         });
         currentEntries.forEach((e, i) => e.rank = i + 1);
         
