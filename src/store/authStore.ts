@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword
 } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, where } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
@@ -313,22 +313,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   deleteStudent: async (studentId: string) => {
     try {
       const { users } = get();
-      const leaveDate = new Date().toISOString();
-      await updateDoc(doc(db, "users", studentId), {
-        status: "deleted",
-        username: `deleted_${Date.now()}`,
-        leaveDate
-      });
       
-      // Optimistic UI update to instantly remove from active and move to past students
-      const updatedUsers = users.map(user => 
-        user.id === studentId 
-          ? { ...user, status: "deleted", username: `deleted_${Date.now()}`, leaveDate } as User
-          : user
-      );
+      // Permanently remove from Firestore
+      await deleteDoc(doc(db, "users", studentId));
+      
+      // Remove from local state
+      const updatedUsers = users.filter(user => user.id !== studentId);
       set({ users: updatedUsers });
-      
-      // Removed purge calls to preserve student data (points, homeworks, fees) in Past Students
     } catch (error) {
       console.error("Error deleting student:", error);
     }
