@@ -150,14 +150,14 @@ export default function LeaderboardPage() {
                         <span className="text-sm font-bold text-white">{student.avatar}</span>
                       ) : (
                         <span className="bg-clip-text text-transparent bg-gradient-to-br from-white to-[#B6C2D9]">
-                          {student.name.substring(0, 2).toUpperCase()}
+                          {(student.name || "ST").substring(0, 2).toUpperCase()}
                         </span>
                       )}
                     </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-bold text-lg md:text-xl truncate group-hover:text-[#EAB308] transition-colors">{student.name}</h3>
+                    <h3 className="text-white font-bold text-lg md:text-xl truncate group-hover:text-[#EAB308] transition-colors">{student.name || "Unknown Student"}</h3>
                     <p className="text-white/50 text-xs mt-0.5">Class {student.class || "-"}</p>
                     <div className="flex items-center gap-3 md:gap-5 mt-1">
                       <span className="text-[11px] md:text-xs font-semibold text-[#7B8798] flex items-center gap-1.5 uppercase tracking-wider">

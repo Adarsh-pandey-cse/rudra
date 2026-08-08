@@ -110,11 +110,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
               const isRecent = (new Date().getTime() - new Date(notif.createdAt).getTime()) < 10000;
               
               if (isRecent && currentUser && (notif.recipientId === currentUser.id || (notif.recipientId === 'all_teachers' && currentUser.role === 'teacher'))) {
-                const { toast } = await import("sonner");
-                toast.success(notif.title, {
-                  description: notif.message,
-                  duration: 6000,
-                });
+                try {
+                  const { toast } = await import("sonner");
+                  if (toast && toast.success) {
+                    toast.success(notif.title, {
+                      description: notif.message,
+                      duration: 6000,
+                    });
+                  }
+                } catch (err) {
+                  console.warn("Failed to trigger toast on mobile", err);
+                }
               }
             }
           });

@@ -312,25 +312,23 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   deleteStudent: async (studentId: string) => {
     try {
+      const { users } = get();
+      const leaveDate = new Date().toISOString();
       await updateDoc(doc(db, "users", studentId), {
         status: "deleted",
-        username: `deleted_${Date.now()}`
+        username: `deleted_${Date.now()}`,
+        leaveDate
       });
       
-      // Dynamic imports to avoid circular dependencies
-      const { useHomeworkStore } = await import("./homeworkStore");
-      const { useFeeStore } = await import("./feeStore");
-      const { useDoubtStore } = await import("./doubtStore");
+      // Optimistic UI update to instantly remove from active and move to past students
+      const updatedUsers = users.map(user => 
+        user.id === studentId 
+          ? { ...user, status: "deleted", username: `deleted_${Date.now()}`, leaveDate } as User
+          : user
+      );
+      set({ users: updatedUsers });
       
-      if (useHomeworkStore.getState().purgeStudentSubmissions) {
-         useHomeworkStore.getState().purgeStudentSubmissions(studentId);
-      }
-      if (useFeeStore.getState().purgeStudentFees) {
-         useFeeStore.getState().purgeStudentFees(studentId);
-      }
-      if (useDoubtStore.getState().purgeStudentDoubts) {
-         useDoubtStore.getState().purgeStudentDoubts(studentId);
-      }
+      // Removed purge calls to preserve student data (points, homeworks, fees) in Past Students
     } catch (error) {
       console.error("Error deleting student:", error);
     }

@@ -100,17 +100,24 @@ export default function HomeworkPage() {
     }
   };
 
-  const handleExtendSave = () => {
+  const handleExtendSave = async () => {
     if (assignmentToExtend) {
-      const currentDue = new Date(assignmentToExtend.dueDate);
-      const newDue = new Date(currentDue.getTime() + parseInt(extendHours) * 60 * 60 * 1000);
-      updateAssignment(assignmentToExtend.id, {
-        dueDate: newDue.toISOString(),
-        dueTime: `${newDue.getHours().toString().padStart(2, '0')}:${newDue.getMinutes().toString().padStart(2, '0')}`
-      });
-      setExtendModalOpen(false);
-      setAssignmentToExtend(null);
-      setExtendHours("1");
+      try {
+        const currentDue = assignmentToExtend.dueDate ? new Date(assignmentToExtend.dueDate) : new Date();
+        const hours = parseFloat(extendHours) || 0;
+        const newDue = new Date(currentDue.getTime() + hours * 60 * 60 * 1000);
+        
+        await updateAssignment(assignmentToExtend.id, {
+          dueDate: newDue.toISOString(),
+          dueTime: `${newDue.getHours().toString().padStart(2, '0')}:${newDue.getMinutes().toString().padStart(2, '0')}`
+        });
+        
+        setExtendModalOpen(false);
+        setAssignmentToExtend(null);
+        setExtendHours("1");
+      } catch (err) {
+        console.error("Error extending deadline:", err);
+      }
     }
   };
 
@@ -220,7 +227,13 @@ export default function HomeworkPage() {
               const isMenuOpen = openMenuId === assignment.id;
               
               return (
-                <motion.div key={assignment.id} variants={itemVariants} layout onClick={() => router.push(`/dashboard/teacher/homework/analytics/${assignment.id}`)} className="cursor-pointer">
+                <motion.div 
+                  key={assignment.id} 
+                  variants={itemVariants} 
+                  layout 
+                  onClick={() => router.push(`/dashboard/teacher/homework/analytics/${assignment.id}`)} 
+                  className={`cursor-pointer ${isMenuOpen ? 'relative z-50' : ''}`}
+                >
                   <GlassCard hoverEffect className="p-6 flex flex-col h-full group relative overflow-visible border-white/[0.08] hover:border-[#5B5CFF]/40 transition-colors">
                     {/* Background decoration */}
                     <div className="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-[#5B5CFF]/10 to-transparent rounded-full blur-2xl pointer-events-none group-hover:from-[#5B5CFF]/20 transition-colors" />
