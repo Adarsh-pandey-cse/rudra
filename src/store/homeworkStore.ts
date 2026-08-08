@@ -247,6 +247,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
             studentIds = users
               .filter(u => {
                 if (u.role !== "student") return false;
+                if ((u as any).status === "archived" || (u as any).status === "deleted") return false;
                 const sClassNum = String((u as any).grade || (u as any).classId || "").replace(/\D/g, '');
                 return (u as any).classId === assignment.classId || (aClassNum && aClassNum === sClassNum);
               })
