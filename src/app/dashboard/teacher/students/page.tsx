@@ -40,6 +40,7 @@ export default function StudentListPage() {
   
   const [showPasswordId, setShowPasswordId] = useState<string | null>(null);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [avatarToView, setAvatarToView] = useState<{id: string, url: string, name: string} | null>(null);
   
   // Edit form state
   const [editName, setEditName] = useState("");
@@ -140,6 +141,19 @@ export default function StudentListPage() {
     setShowPasswordId(prev => prev === id ? null : id);
   };
 
+  const handleRemoveAvatar = async (studentId: string) => {
+    if (confirm("Are you sure you want to remove this student's profile picture? This action cannot be undone and will remove the picture everywhere.")) {
+      try {
+        const { updateAvatar } = useAuthStore.getState();
+        await updateAvatar(studentId, "");
+        setAvatarToView(null);
+      } catch (error) {
+        console.error("Failed to remove avatar", error);
+        alert("Failed to remove avatar. Please try again.");
+      }
+    }
+  };
+
   const handleSendReminder = (studentId: string, studentName: string, amount: number) => {
     const reminder = {
       id: `rem_${Date.now()}`,
@@ -209,6 +223,54 @@ export default function StudentListPage() {
             </div>
           </GlassCard>
         </motion.div>
+
+        {/* View Avatar Modal */}
+        <AnimatePresence>
+          {avatarToView && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+              onClick={() => setAvatarToView(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col items-center gap-6"
+              >
+                <div className="flex justify-between w-full items-center">
+                  <h3 className="text-lg font-bold text-white">{avatarToView.name}'s Profile Picture</h3>
+                  <button onClick={() => setAvatarToView(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white">
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-white/10 shadow-[0_0_30px_rgba(91,92,255,0.3)]">
+                  {avatarToView.url.length < 10 ? (
+                    <div className="w-full h-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center text-6xl font-bold">
+                      {avatarToView.url}
+                    </div>
+                  ) : (
+                    <img src={avatarToView.url} alt="Profile" className="w-full h-full object-cover" />
+                  )}
+                </div>
+
+                <div className="w-full flex gap-3">
+                  <button 
+                    onClick={() => handleRemoveAvatar(avatarToView.id)}
+                    className="flex-1 py-3 px-4 bg-[#EF4444]/10 hover:bg-[#EF4444]/20 text-[#EF4444] rounded-xl font-medium flex items-center justify-center gap-2 transition-colors border border-[#EF4444]/20"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Remove Picture
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Edit Modal */}
         <AnimatePresence>
@@ -333,7 +395,14 @@ export default function StudentListPage() {
                             <tr key={s.id} className="hover:bg-white/[0.02] transition-colors group">
                               <td className="px-6 py-4 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-lg border border-white/10">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (s.avatar) setAvatarToView({ id: s.id, url: s.avatar, name: s.name });
+                                    }}
+                                    className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-lg border border-white/10 ${s.avatar ? 'cursor-pointer hover:ring-2 hover:ring-[#5B5CFF] transition-all' : ''}`}
+                                    title={s.avatar ? "View Profile Picture" : ""}
+                                  >
                                     {s.avatar ? (
                                       s.avatar.length < 10 ? (
                                         <span className="text-xl">{s.avatar}</span>
@@ -343,7 +412,7 @@ export default function StudentListPage() {
                                     ) : (
                                       s.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
                                     )}
-                                  </div>
+                                  </button>
                                   <div>
                                     <div className="text-sm font-semibold text-white">{s.name}</div>
                                   </div>
@@ -458,19 +527,26 @@ export default function StudentListPage() {
                           return (
                             <div key={`mobile-${s.id}`} className="p-4 flex flex-col gap-4 hover:bg-white/[0.02] transition-colors">
                               <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
-                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden shadow-lg border border-white/10">
+                                <div className="flex items-center gap-4">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (s.avatar) setAvatarToView({ id: s.id, url: s.avatar, name: s.name });
+                                    }}
+                                    className={`w-12 h-12 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] text-white flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden shadow-lg border border-white/10 ${s.avatar ? 'cursor-pointer hover:ring-2 hover:ring-[#5B5CFF] transition-all' : ''}`}
+                                    title={s.avatar ? "View Profile Picture" : ""}
+                                  >
                                     {s.avatar ? (
                                       s.avatar.length < 10 ? (
-                                        <span>{s.avatar}</span>
+                                        <span className="text-2xl">{s.avatar}</span>
                                       ) : (
                                         <img src={s.avatar} alt="Avatar" className="w-full h-full object-cover" />
                                       )
                                     ) : (
                                       s.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
                                     )}
-                                  </div>
-                                  <div>
+                                  </button>
+                                  <div className="cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
                                     <div className="text-sm font-bold text-white mb-0.5">{s.name}</div>
                                     <span className="text-[12px] text-[#B6C2D9] font-mono">@{s.username}</span>
                                   </div>

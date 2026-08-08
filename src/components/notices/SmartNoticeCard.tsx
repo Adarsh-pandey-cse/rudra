@@ -5,6 +5,7 @@ import { Notice } from "@/types/notice-types";
 import BlackboardNotice from "./BlackboardNotice";
 import CombinedNotice from "./CombinedNotice";
 import FullScreenViewer from "./FullScreenViewer";
+import { useAuthStore } from "@/store/authStore";
 
 interface SmartNoticeCardProps {
   notice: Notice;
@@ -23,6 +24,11 @@ export default function SmartNoticeCard({
 }: SmartNoticeCardProps) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerImage, setViewerImage] = useState("");
+  const { users } = useAuthStore();
+
+  const authorUser = users.find(u => u.id === notice.teacherId);
+  const authorAvatar = authorUser?.avatar || null;
+  const authorName = authorUser?.name || notice.teacherName || "Admin";
 
   const handleImageClick = (url: string) => {
     setViewerImage(url);
@@ -64,6 +70,8 @@ export default function SmartNoticeCard({
         onImageClick={handleImageClick}
         onAcknowledge={requiresAck ? handleAcknowledge : undefined}
         hasAcknowledged={hasAcknowledged}
+        authorAvatar={authorAvatar}
+        authorName={authorName}
       />
       <FullScreenViewer 
         isOpen={viewerOpen} 
@@ -71,7 +79,8 @@ export default function SmartNoticeCard({
         imageUrl={viewerImage}
         title={notice.title}
         date={new Date(notice.createdAt).toLocaleDateString()}
-        author={notice.teacherName || "Admin"}
+        author={authorName}
+        authorAvatar={authorAvatar}
       />
     </>
   );

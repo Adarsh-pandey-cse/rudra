@@ -58,6 +58,7 @@ const statusConfig: Record<string, { color: string; bg: string; label: string }>
 export default function StudentDoubtChatPage() {
   const router = useRouter();
   const params = useParams();
+  const { users } = useAuthStore();
   const doubtId = params.id as string;
 
   const { currentUser, isAuthenticated, _hasHydrated } = useAuthStore();
@@ -331,10 +332,18 @@ export default function StudentDoubtChatPage() {
                     transition={{ duration: 0.2 }}
                     className={`flex mb-1.5 ${isMe ? "justify-end" : "justify-start"}`}
                   >
-                    {/* Avatar (teacher only) */}
+                    {/* Avatar (teacher/AI only) */}
                     {!isMe && (
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#4F9DFF] to-[#5B5CFF] flex items-center justify-center shrink-0 mr-2 mt-1 shadow-md">
-                        <GraduationCap className="w-3.5 h-3.5 text-white" />
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#4F9DFF] to-[#5B5CFF] flex items-center justify-center shrink-0 mr-2 mt-1 shadow-md overflow-hidden">
+                        {(() => {
+                          if (msg.isAI) return <Bot className="w-4 h-4 text-white" />;
+                          const teacher = users.find(u => u.id === msg.authorId);
+                          if (teacher?.avatar) {
+                            if (teacher.avatar.length < 10) return <span className="text-sm">{teacher.avatar}</span>;
+                            return <img src={teacher.avatar} alt="Avatar" className="w-full h-full object-cover" />;
+                          }
+                          return <span className="text-[11px] font-bold text-white">{msg.authorName?.[0]?.toUpperCase() || "T"}</span>;
+                        })()}
                       </div>
                     )}
 

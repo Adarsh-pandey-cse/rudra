@@ -11,9 +11,10 @@ interface FullScreenViewerProps {
   title?: string;
   date?: string;
   author?: string;
+  authorAvatar?: string | null;
 }
 
-export default function FullScreenViewer({ isOpen, onClose, imageUrl, title, date, author }: FullScreenViewerProps) {
+export default function FullScreenViewer({ isOpen, onClose, imageUrl, title, date, author, authorAvatar }: FullScreenViewerProps) {
   
   useEffect(() => {
     if (isOpen) {
@@ -37,9 +38,20 @@ export default function FullScreenViewer({ isOpen, onClose, imageUrl, title, dat
           onClick={onClose}
         >
           <div className="absolute top-6 flex justify-between w-full px-6 z-[101]">
-            <div className="text-white">
-              <h3 className="font-bold text-lg">{title || "Image Viewer"}</h3>
-              <p className="text-sm opacity-70">{author} • {date}</p>
+            <div className="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-xl backdrop-blur-md border border-white/10">
+              {authorAvatar && (
+                authorAvatar.length < 10 ? (
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white border border-white/20">
+                    {authorAvatar}
+                  </div>
+                ) : (
+                  <img src={authorAvatar} alt={author} className="w-10 h-10 rounded-full object-cover border border-white/20" />
+                )
+              )}
+              <div className="text-white">
+                <h3 className="font-bold text-lg leading-tight">{title || "Image Viewer"}</h3>
+                <p className="text-sm opacity-80">{author} • {date}</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <button className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
