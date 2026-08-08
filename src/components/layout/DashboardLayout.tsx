@@ -277,14 +277,30 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       if (recentNotifs.length > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         recentNotifs.forEach(n => {
           if (!n.read) {
-            try {
-              new Notification(n.title, {
-                body: n.message,
-                icon: '/favicon.ico'
-              });
-            } catch (err) {
-              console.warn("Browser push notification failed (expected on mobile):", err);
-            }
+            const showPwaNotification = async () => {
+              try {
+                if ('serviceWorker' in navigator) {
+                  const registration = await navigator.serviceWorker.ready;
+                  if (registration && registration.showNotification) {
+                    await registration.showNotification(n.title, {
+                      body: n.message,
+                      icon: '/icon512_maskable.png',
+                      badge: '/icon512_maskable.png',
+                      vibrate: [200, 100, 200]
+                    });
+                    return;
+                  }
+                }
+                // Fallback for desktop browsers
+                new Notification(n.title, {
+                  body: n.message,
+                  icon: '/icon512_maskable.png'
+                });
+              } catch (err) {
+                console.warn("Browser push notification failed (expected on some mobile browsers):", err);
+              }
+            };
+            showPwaNotification();
           }
         });
       }
@@ -412,6 +428,28 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
   return (
     <div className="min-h-screen bg-[#07111F] text-white flex overflow-hidden">
+      <Toaster 
+        position="top-center" 
+        theme="dark" 
+        richColors 
+        expand={false}
+        offset="80px"
+        toastOptions={{ 
+          style: { 
+            background: 'linear-gradient(145deg, rgba(19, 29, 46, 0.95), rgba(7, 17, 31, 0.98))', 
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: '16px',
+            color: '#fff',
+            padding: '16px',
+            fontFamily: 'var(--font-sans)',
+            zIndex: 999999,
+          },
+          className: "toast-royal relative z-[999999]"
+        }} 
+      />
+
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block shrink-0 w-[260px] z-20">
         <SidebarContent />
@@ -510,26 +548,6 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
         {/* Scrollable Main Content */}
         <main className="flex-1 overflow-y-auto bg-[#07111F] p-4 sm:p-6 lg:p-8 pb-32 lg:pb-8 scroll-smooth relative z-0">
-          <Toaster 
-            position="top-center" 
-            theme="dark" 
-            richColors 
-            expand={false}
-            offset="80px"
-            toastOptions={{ 
-              style: { 
-                background: 'linear-gradient(145deg, rgba(19, 29, 46, 0.95), rgba(7, 17, 31, 0.98))', 
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(16px)',
-                borderRadius: '16px',
-                color: '#fff',
-                padding: '16px',
-                fontFamily: 'var(--font-sans)',
-              },
-              className: "toast-royal relative z-[999999]"
-            }} 
-          />
           {children}
         </main>
       </div>

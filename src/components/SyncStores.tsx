@@ -89,22 +89,13 @@ export default function SyncStores() {
 
     window.addEventListener("storage", handleStorage);
 
-    let cleanupLeaderboard: (() => void) | undefined;
-    let cleanupNotification: (() => void) | undefined;
-
     const leaderboardStore = useLeaderboardStore.getState() as any;
     leaderboardStore.initializeLeaderboard();
-    if (typeof leaderboardStore.setupEventListeners === 'function') {
-      cleanupLeaderboard = leaderboardStore.setupEventListeners();
-    }
     
     const analyticsStore = useAnalyticsStore.getState() as any;
     analyticsStore.initializeAnalytics();
     
-    const notificationStore = useNotificationStore.getState() as any;
-    if (typeof notificationStore.setupEventListeners === 'function') {
-      cleanupNotification = notificationStore.setupEventListeners();
-    }
+    // Notification setup is handled in DashboardLayout
 
     return () => {
       window.removeEventListener("storage", handleStorage);
@@ -112,8 +103,6 @@ export default function SyncStores() {
       unsubs.forEach(unsub => {
         if (typeof unsub === 'function') unsub();
       });
-      if (cleanupLeaderboard) cleanupLeaderboard();
-      if (cleanupNotification) cleanupNotification();
     };
   }, []);
 
