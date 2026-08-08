@@ -24,7 +24,7 @@ export default function StudentSelection({ classId, selectedStudentIds, onChange
   // Fetch all students for this class and mock some dynamic stats for UI demonstration
   const allStudents = useMemo(() => {
     return getAllUsers()
-      .filter((u): u is Student => u.role === "student" && (u as Student).classId === classId)
+      .filter((u): u is Student => u.role === "student" && u.status !== "archived" && u.status !== "deleted" && (u as Student).classId === classId)
       .map(s => {
         // Mock data for UI demonstration based on user id length to make it deterministic
         const mockScore = (s.id.length * 7) % 100;

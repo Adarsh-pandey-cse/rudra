@@ -492,11 +492,13 @@ export default function StudentListPage() {
                                     </>
                                   ) : (
                                     <>
-                                      <button onClick={() => handleRestore(s.id)} className="p-2 text-[#7B8798] hover:text-[#2DD4BF] hover:bg-[#2DD4BF]/10 rounded-xl transition-colors" title="Restore Student">
-                                        <UserPlus className="w-4 h-4" />
+                                      <button onClick={() => handleRestore(s.id)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#2DD4BF] hover:bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 rounded-lg transition-colors">
+                                        <UserPlus className="w-3.5 h-3.5" />
+                                        Restore to Class
                                       </button>
-                                      <button onClick={() => handleDelete(s.id, true)} className="p-2 text-[#7B8798] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-xl transition-colors" title="Permanently Delete">
-                                        <Trash2 className="w-4 h-4" />
+                                      <button onClick={() => handleDelete(s.id, true)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#EF4444] hover:bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-lg transition-colors">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Delete Permanently
                                       </button>
                                     </>
                                   )}
@@ -569,14 +571,16 @@ export default function StudentListPage() {
                                       </button>
                                     </>
                                   ) : (
-                                    <>
-                                      <button onClick={() => handleRestore(s.id)} className="p-2 bg-white/5 text-[#2DD4BF] rounded-[10px]">
-                                        <UserPlus className="w-4 h-4" />
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                      <button onClick={() => handleRestore(s.id)} className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#2DD4BF] bg-white/5 hover:bg-[#2DD4BF]/10 rounded-xl transition-colors">
+                                        <UserPlus className="w-4 h-4 shrink-0" />
+                                        Restore
                                       </button>
-                                      <button onClick={() => handleDelete(s.id, true)} className="p-2 bg-white/5 text-[#EF4444] rounded-[10px]">
-                                        <Trash2 className="w-4 h-4" />
+                                      <button onClick={() => handleDelete(s.id, true)} className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#EF4444] bg-white/5 hover:bg-[#EF4444]/10 rounded-xl transition-colors">
+                                        <Trash2 className="w-4 h-4 shrink-0" />
+                                        Delete
                                       </button>
-                                    </>
+                                    </div>
                                   )}
                                 </div>
                               </div>

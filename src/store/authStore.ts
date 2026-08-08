@@ -156,10 +156,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        if (userData.status === "deleted") {
+        if (userData.status === "deleted" || userData.status === "archived") {
           await signOut(auth);
           set({ isLoading: false });
-          return { success: false, error: "This account has been deleted" };
+          return { success: false, error: "This account has been disabled or deleted." };
         }
         
         try {
