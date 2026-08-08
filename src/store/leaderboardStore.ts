@@ -125,16 +125,30 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           if (reset) {
             await updateDoc(userRef, { streak: 0 });
           } else {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const cacheKey = `${studentId}_${todayStr}`;
+            
+            // 1. Check in-memory cache to strictly prevent double-clicks or duplicate events
+            if (!(window as any)._streakCache) {
+              (window as any)._streakCache = new Set();
+            }
+            if ((window as any)._streakCache.has(cacheKey)) {
+              return; // Already incremented in this session
+            }
+
+            // 2. Check Firestore state
             const authState = useAuthStore.getState();
             const student = authState.users.find(u => u.id === studentId);
-            const todayStr = new Date().toISOString().split('T')[0];
             
             if (student && (student as any).lastStreakDate === todayStr) {
-              // Already incremented today, SaaS logic prevents double increment
+              // Already incremented today in DB
               return;
             }
             
-            // Optimistic update to prevent double firing before Firestore syncs back
+            // 3. Mark as incremented locally
+            (window as any)._streakCache.add(cacheKey);
+            
+            // 4. Optimistic update to UI
             useAuthStore.setState((state) => ({
               users: state.users.map((u) => 
                 u.id === studentId 
@@ -143,6 +157,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               )
             }));
             
+            // 5. Send to Firestore
             await updateDoc(userRef, { 
               streak: increment(1),
               lastStreakDate: todayStr 
