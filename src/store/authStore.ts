@@ -41,6 +41,7 @@ interface AuthState {
   
   deleteStudent: (studentId: string) => Promise<void>;
   updateStudent: (studentId: string, name: string, email: string) => Promise<{ success: boolean; error?: string }>;
+  updateStudentProfile: (studentId: string, updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   archiveStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>;
   restoreStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>;
   updateAvatar: (userId: string, avatarData: string) => Promise<void>;
@@ -391,6 +392,15 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message || "Failed to update student" };
+    }
+  },
+
+  updateStudentProfile: async (studentId: string, updates: Partial<User>) => {
+    try {
+      await updateDoc(doc(db, "users", studentId), updates);
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Failed to update profile" };
     }
   },
 

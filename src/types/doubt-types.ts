@@ -55,6 +55,7 @@ export interface DoubtReply {
   
   // Meta
   createdAt: string;
+  isAI?: boolean;
 }
 
 // ─── Doubt Stats (for teacher dashboard) ───────────────────────

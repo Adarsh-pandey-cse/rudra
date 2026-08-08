@@ -21,7 +21,7 @@ type Tab = "profile" | "ai_preferences" | "notifications";
 
 export default function StudentSettingsPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, _hasHydrated, updateAvatar, logout } = useAuthStore();
+  const { currentUser, isAuthenticated, _hasHydrated, updateAvatar, updateStudentProfile, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [isSaving, setIsSaving] = useState(false);
@@ -52,11 +52,29 @@ export default function StudentSettingsPage() {
 
   if (!mounted || !currentUser) return null;
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     
+    const formData = new FormData(e.currentTarget);
+    const updates: any = {};
+    const name = formData.get("name") as string;
+    const parentPhone = formData.get("parentPhone") as string;
+    const parentName = formData.get("parentName") as string;
+    
+    if (name && name !== currentUser.name) updates.name = name;
+    if (parentPhone !== null) updates.parentPhone = parentPhone;
+    if (parentName !== null) updates.parentName = parentName;
+
     try {
+      if (Object.keys(updates).length > 0) {
+        await updateStudentProfile(currentUser.id, updates);
+        // Optimistically update current user state
+        useAuthStore.setState((state) => ({
+          currentUser: { ...state.currentUser, ...updates } as any
+        }));
+      }
+
       if (tempAvatar && currentUser) {
         await updateAvatar(currentUser.id, tempAvatar);
       }
@@ -181,6 +199,7 @@ export default function StudentSettingsPage() {
                     <span className="text-sm font-medium text-white">Full Name</span>
                     <input 
                       type="text" 
+                      name="name"
                       defaultValue={currentUser.name}
                       className="w-full sm:w-1/2 bg-transparent text-right text-[#B6C2D9] focus:outline-none placeholder:text-[#7B8798]" 
                     />
@@ -195,10 +214,22 @@ export default function StudentSettingsPage() {
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                    <span className="text-sm font-medium text-white">Parent Name</span>
+                    <input 
+                      type="text" 
+                      name="parentName"
+                      placeholder="Enter parent's name"
+                      defaultValue={(currentUser as any).parentName || ""}
+                      className="w-full sm:w-1/2 bg-transparent text-right text-[#B6C2D9] focus:outline-none placeholder:text-[#7B8798]" 
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
                     <span className="text-sm font-medium text-white">Parent Phone</span>
                     <input 
                       type="tel" 
-                      defaultValue="+91 98765 43210"
+                      name="parentPhone"
+                      placeholder="Enter parent's phone"
+                      defaultValue={(currentUser as any).parentPhone || ""}
                       className="w-full sm:w-1/2 bg-transparent text-right text-[#B6C2D9] focus:outline-none placeholder:text-[#7B8798]" 
                     />
                   </div>
@@ -206,39 +237,7 @@ export default function StudentSettingsPage() {
               </GlassCard>
             </motion.div>
 
-            {/* AI Tutor Behavior */}
-            <motion.div variants={itemVariants}>
-              <GlassCard className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                  <BrainCircuit className="w-5 h-5 text-[#8B5CF6]" />
-                  AI Tutor Behavior
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { id: 'socratic', label: 'Socratic Method', desc: 'Ask me guiding questions' },
-                    { id: 'direct', label: 'Direct Answers', desc: 'Give me the final answer immediately' },
-                    { id: 'eli5', label: 'Explain Like I\'m 5', desc: 'Use simple analogies' },
-                  ].map((style) => (
-                    <label key={style.id} className={`flex items-center justify-between p-4 rounded-xl border transition-colors cursor-pointer ${learningStyle === style.id ? 'bg-[#8B5CF6]/10 border-[#8B5CF6]/30' : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.06]'}`}>
-                      <div className="flex items-center gap-3">
-                        <input 
-                          type="radio" 
-                          name="learning" 
-                          value={style.id} 
-                          checked={learningStyle === style.id} 
-                          onChange={() => setLearningStyle(style.id)} 
-                          className="w-4 h-4 accent-[#8B5CF6]" 
-                        />
-                        <div>
-                          <span className="block text-sm font-medium text-white">{style.label}</span>
-                          <span className="block text-[13px] text-[#7B8798]">{style.desc}</span>
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </GlassCard>
-            </motion.div>
+
 
             {/* Account Security */}
             <motion.div variants={itemVariants}>

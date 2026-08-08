@@ -322,9 +322,9 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Main Content Column */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8">
             
             {/* Action Center */}
             <motion.div variants={itemVariants} className="space-y-4">
@@ -440,69 +440,7 @@ export default function StudentDashboard() {
             </motion.div>
           </div>
 
-          {/* Right Column */}
-          <div className="lg:col-span-1 space-y-8">
-            {/* AI Learning Insights */}
-            <motion.div className="space-y-4" variants={itemVariants}>
-              <h2 className="text-lg font-semibold text-white">AI Learning Insights</h2>
-              <GlassCard className="p-5 border-[#5B5CFF]/20 relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
-                  <Bot size={150} />
-                </div>
-                
-                <div className="flex justify-between items-center mb-6 relative z-10">
-                  <span className="text-sm font-semibold text-white">Your Overview</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 relative z-10">
-                  <div className="flex flex-col gap-2 p-3 rounded-[14px] bg-[#07111F]/50 border border-white/[0.05]">
-                    <div className="flex items-center gap-2 text-[#4F9DFF]">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-[11px] uppercase tracking-wider font-medium">Study Time</span>
-                    </div>
-                    <span className="text-xl font-bold text-white">{stats?.studyHoursToday || '0h'}</span>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 p-3 rounded-[14px] bg-[#07111F]/50 border border-white/[0.05]">
-                    <div className="flex items-center gap-2 text-[#2DD4BF]">
-                      <Target className="w-4 h-4" />
-                      <span className="text-[11px] uppercase tracking-wider font-medium">Accuracy</span>
-                    </div>
-                    <span className="text-xl font-bold text-white">{stats?.masteryScore || 0}%</span>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 p-3 rounded-[14px] bg-[#07111F]/50 border border-white/[0.05]">
-                    <div className="flex items-center gap-2 text-[#22C55E]">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="text-[11px] uppercase tracking-wider font-medium">Strong Concepts</span>
-                    </div>
-                    <span className="text-xl font-bold text-white">{progress?.strongTopics.length || 0}</span>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 p-3 rounded-[14px] bg-[#07111F]/50 border border-white/[0.05]">
-                    <div className="flex items-center gap-2 text-[#EF4444]">
-                      <Brain className="w-4 h-4" />
-                      <span className="text-[11px] uppercase tracking-wider font-medium">Weak Concepts</span>
-                    </div>
-                    <span className="text-xl font-bold text-white">{weakTopics.length || 0}</span>
-                  </div>
-                </div>
-
-                {weakTopics.length > 0 && (
-                  <div className="mt-6 pt-4 border-t border-white/5 relative z-10">
-                    <h4 className="text-[12px] uppercase tracking-wider font-semibold text-[#7B8798] mb-3">Focus Areas</h4>
-                    <div className="space-y-2">
-                      {weakTopics.map((topic, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm">
-                          <span className="text-[#B6C2D9] truncate pr-4">{topic}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </GlassCard>
-            </motion.div>
-          </div>
+          {/* Removed Right Column */}
         </div>
 
       </motion.div>
