@@ -18,6 +18,8 @@ interface CombinedNoticeProps {
   onImageClick: (url: string) => void;
   onAcknowledge?: (e: React.MouseEvent) => void;
   hasAcknowledged?: boolean;
+  authorAvatar?: string | null;
+  authorName?: string;
 }
 
 export default function CombinedNotice({
@@ -28,7 +30,9 @@ export default function CombinedNotice({
   onExpand,
   onImageClick,
   onAcknowledge,
-  hasAcknowledged
+  hasAcknowledged,
+  authorAvatar,
+  authorName
 }: CombinedNoticeProps) {
   
   const formattedBody = autoFormatNoticeText(notice.body);
@@ -73,9 +77,27 @@ export default function CombinedNotice({
         </div>
 
         {/* Top Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div className={cn("px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border backdrop-blur-sm", getBadgeColor(badgeVariant))}>
-            {badgeLabel}
+        <div className="flex items-start justify-between mb-6 relative z-10">
+          <div className="flex items-center gap-3">
+            {authorAvatar ? (
+              authorAvatar.length < 10 ? (
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-white text-xs border border-white/20">
+                  {authorAvatar}
+                </div>
+              ) : (
+                <img src={authorAvatar} alt={authorName} className="w-8 h-8 rounded-full object-cover border border-white/20" />
+              )
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-white text-xs border border-white/20">
+                {authorName?.substring(0, 2).toUpperCase() || "AD"}
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="text-white/90 text-[11px] font-bold tracking-wider uppercase">{authorName}</span>
+              <div className={cn("px-2 py-0.5 mt-1 w-max rounded text-[10px] font-bold tracking-wider uppercase border backdrop-blur-sm", getBadgeColor(badgeVariant))}>
+                {badgeLabel}
+              </div>
+            </div>
           </div>
           {isPinned && (
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#FCD34D] uppercase tracking-widest drop-shadow-md">

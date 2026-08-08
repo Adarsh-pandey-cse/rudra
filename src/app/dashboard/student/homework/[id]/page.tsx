@@ -26,7 +26,7 @@ export default function StudentHomeworkDetailsPage() {
   const params = useParams();
   const homeworkId = params.id as string;
 
-  const { currentUser, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { currentUser, isAuthenticated, _hasHydrated, users } = useAuthStore();
   const { getAssignment, getSubmission, submitMCQAnswers, saveSubmissionDraft, submitHomework } = useHomeworkStore();
 
   const [mounted, setMounted] = useState(false);
@@ -48,8 +48,9 @@ export default function StudentHomeworkDetailsPage() {
   const allAssignments = useHomeworkStore(state => state.assignments);
   const allSubmissions = useHomeworkStore(state => state.submissions);
   
-  const homework = allAssignments.find(a => a.id === homeworkId);
-  const submission = allSubmissions.find(s => s.assignmentId === homeworkId && s.studentId === currentUser?.id);
+  const homework = getAssignment(homeworkId);
+  const submission = getSubmission(homeworkId, currentUser?.id || "");
+  const teacher = homework ? users.find(u => u.id === homework.teacherId) : null;
   const isStarted = started || submission?.status === "resubmission_requested" || submission?.status === "rejected";
 
   useEffect(() => {
@@ -387,8 +388,26 @@ export default function StudentHomeworkDetailsPage() {
             {/* Teacher Feedback (if available) */}
             {isCompleted && isSubjective && submission?.teacherFeedback && (
               <GlassCard className="p-6 border-[#5B5CFF]/30 bg-[#5B5CFF]/5">
-                <h2 className="text-sm font-semibold text-[#5B5CFF] mb-2 uppercase tracking-wider">Teacher Feedback</h2>
-                <p className="text-[#E2E8F0] whitespace-pre-wrap leading-relaxed">{submission.teacherFeedback}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  {teacher?.avatar ? (
+                    teacher.avatar.length < 10 ? (
+                      <div className="w-10 h-10 rounded-full bg-[#5B5CFF]/20 border border-[#5B5CFF]/30 flex items-center justify-center font-bold text-white shadow-sm">
+                        {teacher.avatar}
+                      </div>
+                    ) : (
+                      <img src={teacher.avatar} alt={teacher.name} className="w-10 h-10 rounded-full object-cover border border-[#5B5CFF]/30 shadow-sm" />
+                    )
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#5B5CFF]/20 border border-[#5B5CFF]/30 flex items-center justify-center font-bold text-white shadow-sm">
+                      {teacher?.name?.substring(0, 2).toUpperCase() || "T"}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-sm font-semibold text-[#5B5CFF] uppercase tracking-wider">Teacher Feedback</h2>
+                    <p className="text-xs text-[#B6C2D9] font-medium">{teacher?.name || "Teacher"}</p>
+                  </div>
+                </div>
+                <p className="text-[#E2E8F0] whitespace-pre-wrap leading-relaxed bg-[#0B0F19]/40 p-4 rounded-xl border border-white/5">{submission.teacherFeedback}</p>
               </GlassCard>
             )}
 
