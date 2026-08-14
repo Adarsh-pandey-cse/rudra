@@ -48,8 +48,16 @@ export const getFCMToken = async () => {
       });
       return token;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("An error occurred while retrieving token. ", error);
+    if (typeof window !== "undefined") {
+       import("sonner").then(({ toast }) => {
+         toast.error("FCM Token Error", {
+           description: error.message || "Failed to generate device token.",
+           duration: 8000
+         });
+       });
+    }
   }
   return null;
 };

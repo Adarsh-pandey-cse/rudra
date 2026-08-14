@@ -30,6 +30,10 @@ export interface Doubt {
   aiResponse: string | null;
   needsTeacher: boolean;
   
+  // Responders
+  lastResponderId?: string;
+  lastResponderName?: string;
+  
   // Resolution
   resolvedAt: string | null;
   resolvedBy?: string;           // userId

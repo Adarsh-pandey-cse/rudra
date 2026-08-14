@@ -157,6 +157,11 @@ export default function DoubtsPage() {
                           <StatusBadge variant={getStatusVariant(doubt.status)} className="uppercase text-[10px] sm:text-[11px] px-2 sm:px-2.5">
                             {doubt.status}
                           </StatusBadge>
+                          {doubt.lastResponderName && (
+                            <div className="flex items-center bg-[#5B5CFF]/10 text-[#5B5CFF] border border-[#5B5CFF]/20 px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-medium whitespace-nowrap">
+                              Responded by {doubt.lastResponderName.split(' ')[0]}
+                            </div>
+                          )}
                           {doubt.studentRating && (
                             <div className="flex items-center gap-1 bg-gradient-to-r from-[#FBBF24]/20 to-[#F59E0B]/10 border border-[#FBBF24]/30 px-2.5 py-0.5 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.15)]">
                               <Star className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24] drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]" />

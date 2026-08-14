@@ -277,11 +277,11 @@ export const useDoubtStore = create<DoubtState>((set, get) => ({
         // Optimistic UI update first!
         set(state => ({
           replies: [...state.replies, reply],
-          doubts: state.doubts.map(d => d.id === doubtId ? { ...d, status: "teacher_answered", updatedAt: now } : d)
+          doubts: state.doubts.map(d => d.id === doubtId ? { ...d, status: "teacher_answered", updatedAt: now, lastResponderId: teacherId, lastResponderName: teacherName } : d)
         }));
 
         await doubtRepository.createReply(doubtId, reply);
-        await doubtRepository.update(doubtId, { status: "teacher_answered", updatedAt: now });
+        await doubtRepository.update(doubtId, { status: "teacher_answered", updatedAt: now, lastResponderId: teacherId, lastResponderName: teacherName });
 
         if (doubt) {
           const { addNotification } = useNotificationStore.getState();
