@@ -116,6 +116,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                     toast.success(notif.title, {
                       description: notif.message,
                       duration: 6000,
+                      action: notif.link ? {
+                        label: 'View',
+                        onClick: () => {
+                          window.location.href = notif.link as string;
+                        }
+                      } : undefined,
                     });
                   }
                 } catch (err) {
