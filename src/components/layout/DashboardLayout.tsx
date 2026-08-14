@@ -116,7 +116,21 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   }, [mounted, isLoading, isAuthenticated, currentUser, role, router]);
 
   useEffect(() => {
-    if (currentUser && pathname) {
+    // Unregister legacy sw.js if it exists to prevent conflicts
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (const registration of registrations) {
+          if (registration.active?.scriptURL.includes('sw.js') && !registration.active?.scriptURL.includes('firebase')) {
+            registration.unregister();
+            console.log('Unregistered conflicting sw.js');
+          }
+        }
+      });
+    }
+
+    if (!currentUser) return;
+    
+    if (pathname) {
       // Find the base href (e.g. /dashboard/teacher/doubts instead of /dashboard/teacher/doubts/123)
       const nav = role === "teacher" ? TEACHER_NAV : STUDENT_NAV;
       const matchedNav = [...nav].sort((a, b) => b.href.length - a.href.length).find(n => pathname.startsWith(n.href));
