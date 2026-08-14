@@ -283,6 +283,11 @@ export default function HomeworkAnalyticsPage() {
                   let gradeColor = "text-[#5B5CFF]";
                   let borderColor = "border-[#5B5CFF]";
                   
+                  if (sub?.isLate) {
+                    cardBorder = "border-[#EF4444]/40";
+                    cardBg = "bg-[#EF4444]/5 hover:bg-[#EF4444]/10";
+                  }
+                  
                   if (isSubjective && sub && sub.teacherGrade !== null && sub.teacherGrade !== undefined && sub.status !== "resubmission_requested" && sub.status !== "rejected") {
                     const grade = sub.teacherGrade;
                     if (grade < 10) { cardBorder = "border-[#EF4444]/40"; cardBg = "bg-[#EF4444]/5 hover:bg-[#EF4444]/10"; gradeColor = "text-[#EF4444]"; borderColor = "border-[#EF4444]"; }
@@ -292,10 +297,15 @@ export default function HomeworkAnalyticsPage() {
                   }
                   
                   return (
-                    <div key={studentId} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-[14px] transition-colors ${cardBg} ${cardBorder}`}>
-                      <div className="flex items-center gap-3 mb-3 sm:mb-0">
+                    <div key={studentId} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-[14px] transition-colors relative overflow-hidden ${cardBg} ${cardBorder}`}>
+                      {sub?.isLate && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-[#EF4444] text-[#EF4444] uppercase font-black text-xl tracking-[0.2em] px-3 py-1 rounded-sm transform -rotate-[15deg] opacity-20 pointer-events-none z-0">
+                          LATE
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 mb-3 sm:mb-0 relative z-10">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] flex items-center justify-center text-white font-bold shrink-0">
-                          {student.avatar ? <img src={student.avatar} alt="" className="w-full h-full rounded-full" /> : (student.name || "S").substring(0, 2).toUpperCase()}
+                          {student.avatar ? <img src={student.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : (student.name || "S").substring(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-white">{student.name}</p>
