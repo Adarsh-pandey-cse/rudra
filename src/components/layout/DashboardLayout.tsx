@@ -609,27 +609,64 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               className="fixed bottom-24 left-4 right-4 lg:absolute lg:top-16 lg:right-8 lg:bottom-auto lg:left-auto lg:w-80 max-h-[60vh] lg:max-h-[400px] rounded-[18px] border border-white/[0.08] bg-[#131D2E] backdrop-blur-[28px] shadow-2xl overflow-hidden z-50 flex flex-col"
             >
-              <div className="p-4 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02]">
-                <h3 className="text-sm font-semibold text-white">Notifications</h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] bg-white/[0.06] px-2 py-0.5 rounded-full text-[#B6C2D9] font-medium">
-                    {inAppNotifs.length} new
-                  </span>
-                  {inAppNotifs.length > 0 && (
+              <div className="p-4 border-b border-white/[0.08] flex flex-col bg-white/[0.02]">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white">Notifications</h3>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] bg-white/[0.06] px-2 py-0.5 rounded-full text-[#B6C2D9] font-medium">
+                      {inAppNotifs.length} new
+                    </span>
+                    {inAppNotifs.length > 0 && (
+                      <button 
+                        onClick={() => currentUser && clearAll(currentUser.id, currentUser.role)}
+                        className="text-[11px] text-[#EF4444] hover:text-white bg-[#EF4444]/10 hover:bg-[#EF4444]/30 px-2 py-0.5 rounded-full transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    )}
                     <button 
-                      onClick={() => currentUser && clearAll(currentUser.id, currentUser.role)}
-                      className="text-[11px] text-[#EF4444] hover:text-white bg-[#EF4444]/10 hover:bg-[#EF4444]/30 px-2 py-0.5 rounded-full transition-colors"
+                      onClick={() => setShowNotifications(false)}
+                      className="text-[#7B8798] hover:text-white transition-colors ml-1"
                     >
-                      Clear All
+                      <X className="w-4 h-4" />
                     </button>
-                  )}
-                  <button 
-                    onClick={() => setShowNotifications(false)}
-                    className="text-[#7B8798] hover:text-white transition-colors ml-1"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  </div>
                 </div>
+                
+                {/* Push Notification Status Banner */}
+                {typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted' && (
+                  <div className="mt-3 p-3 bg-[#5B5CFF]/10 border border-[#5B5CFF]/20 rounded-xl flex flex-col gap-2">
+                    <p className="text-[11px] text-[#B6C2D9] leading-relaxed">Enable push notifications to get alerts when the app is closed.</p>
+                    {Notification.permission === 'default' ? (
+                      <button 
+                        onClick={() => {
+                          Notification.requestPermission().then(perm => {
+                            if (perm === 'granted' && (window as any)._syncFCMToken) {
+                              (window as any)._syncFCMToken();
+                            }
+                            // Force re-render of this banner
+                            setShowNotifications(false);
+                            setTimeout(() => setShowNotifications(true), 50);
+                          });
+                        }}
+                        className="text-[11px] font-semibold bg-[#5B5CFF] hover:bg-[#4F46E5] transition-colors text-white py-1.5 rounded-lg w-full"
+                      >
+                        Enable Notifications
+                      </button>
+                    ) : (
+                      <p className="text-[11px] text-[#EF4444] font-medium bg-[#EF4444]/10 p-2 rounded-md">
+                        Notifications are blocked in your browser settings.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {typeof window !== 'undefined' && !('Notification' in window) && (
+                  <div className="mt-3 p-3 bg-[#FB923C]/10 border border-[#FB923C]/20 rounded-xl">
+                    <p className="text-[11px] text-[#FB923C] leading-relaxed">
+                      To get notifications on iPhone/iPad, tap Share <span className="inline-block px-1 border border-[#FB923C]/30 rounded">⎙</span> and select "Add to Home Screen".
+                    </p>
+                  </div>
+                )}
               </div>
             <div className="overflow-y-auto flex-1 p-2">
               {inAppNotifs.length === 0 ? (
