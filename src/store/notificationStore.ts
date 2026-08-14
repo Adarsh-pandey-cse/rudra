@@ -52,7 +52,25 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                     message: newNotif.message,
                     link: newNotif.link
                   })
-                }).catch(e => console.error("FCM Fetch Error:", e));
+                }).then(async res => {
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    import("sonner").then(({ toast }) => {
+                      toast.error("Push Notification Failed", { 
+                        description: err.error || "Server error in /api/notify. Check Vercel logs.",
+                        duration: 8000
+                      });
+                    });
+                  }
+                }).catch(e => {
+                  console.error("FCM Fetch Error:", e);
+                  import("sonner").then(({ toast }) => {
+                    toast.error("Push Notification Network Error", { 
+                      description: "Failed to connect to /api/notify",
+                      duration: 8000
+                    });
+                  });
+                });
               }
             }
           } catch(e) {
