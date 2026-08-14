@@ -40,11 +40,12 @@ export const getFCMToken = async () => {
       const { getToken } = await import("firebase/messaging");
       
       const swUrl = `/firebase-messaging-sw.js?apiKey=${firebaseConfig.apiKey}&authDomain=${firebaseConfig.authDomain}&projectId=${firebaseConfig.projectId}&storageBucket=${firebaseConfig.storageBucket}&messagingSenderId=${firebaseConfig.messagingSenderId}&appId=${firebaseConfig.appId}`;
-      const registration = await navigator.serviceWorker.register(swUrl);
+      await navigator.serviceWorker.register(swUrl);
+      const readyRegistration = await navigator.serviceWorker.ready;
       
       const token = await getToken(messaging, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-        serviceWorkerRegistration: registration
+        serviceWorkerRegistration: readyRegistration
       });
       return token;
     }
