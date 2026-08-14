@@ -250,14 +250,37 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       };
     }
   }, [currentUser?.id, currentUser?.role]);
-  // Request Notification Permission
+  // Sync FCM token logic
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "default") {
-        Notification.requestPermission();
+    const syncToken = async () => {
+      if (currentUser?.id && typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+          try {
+            const { getFCMToken } = await import("@/lib/firebase/firebase");
+            const { doc, updateDoc } = await import("firebase/firestore");
+            const { db } = await import("@/lib/firebase/firebase");
+            
+            const token = await getFCMToken();
+            if (token && currentUser.fcmToken !== token) {
+              await updateDoc(doc(db, "users", currentUser.id), { fcmToken: token });
+              // Also update the local store so we don't spam the DB
+              useAuthStore.setState(state => ({
+                 currentUser: state.currentUser ? { ...state.currentUser, fcmToken: token } : null
+              }));
+            }
+          } catch (e) {
+            console.error("Failed to sync FCM token", e);
+          }
+        }
       }
-    }
-  }, []);
+    };
+    
+    // Auto-sync on load if permission is already granted
+    syncToken();
+    
+    // Expose syncToken to the window for the bell icon click handler
+    (window as any)._syncFCMToken = syncToken;
+  }, [currentUser?.id, currentUser?.fcmToken]);
 
   // Watch for new notifications and trigger push
   const prevNotifCount = useRef(0);
@@ -515,6 +538,15 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                 onClick={() => {
                   setShowNotifications(!showNotifications);
                   if (!showNotifications && unreadCount > 0 && currentUser) markAllAsRead(currentUser.id);
+                  
+                  // Request permission on user interaction (Required for iOS Safari/Mobile)
+                  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission().then(perm => {
+                      if (perm === 'granted' && (window as any)._syncFCMToken) {
+                        (window as any)._syncFCMToken();
+                      }
+                    });
+                  }
                 }}
               >
                 <Bell className="w-5 h-5" />
