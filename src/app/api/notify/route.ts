@@ -39,8 +39,14 @@ export async function POST(request: Request) {
         link: link || '/'
       },
       webpush: {
+        headers: {
+          Urgency: 'high'
+        },
         fcmOptions: {
           link: link || '/'
+        },
+        notification: {
+          icon: '/icons/icon-192x192.png'
         }
       }
     };
