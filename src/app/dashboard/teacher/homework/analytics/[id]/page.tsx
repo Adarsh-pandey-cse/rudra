@@ -302,7 +302,12 @@ export default function HomeworkAnalyticsPage() {
                           <div className="text-xs text-[#7B8798]">
                             {isSubmitted ? (
                               <div className="flex flex-col gap-1 mt-1">
-                                <span className="flex items-center gap-1.5"><CheckCircle className="w-3 h-3 text-[#22C55E]" /> Submitted {new Date(sub.submittedAt || "").toLocaleDateString()}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="flex items-center gap-1.5"><CheckCircle className="w-3 h-3 text-[#22C55E]" /> Submitted {new Date(sub.submittedAt || "").toLocaleDateString()}</span>
+                                  {sub.isLate && (
+                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/30 uppercase">Late</span>
+                                  )}
+                                </div>
                               </div>
                             ) : (
                               <span className="flex items-center gap-1.5 mt-1"><Clock className="w-3 h-3 text-[#FB923C]" /> Not submitted yet</span>
@@ -436,7 +441,12 @@ export default function HomeworkAnalyticsPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-white">{selectedSubmission.student.name}'s Submission</h2>
-                    <p className="text-xs text-[#7B8798]">Submitted: {new Date(selectedSubmission.sub.submittedAt || "").toLocaleString()}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-[#7B8798]">Submitted: {new Date(selectedSubmission.sub.submittedAt || "").toLocaleString()}</p>
+                      {selectedSubmission.sub.isLate && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/30 uppercase">Late</span>
+                      )}
+                    </div>
                     {selectedSubmission.sub.status === "accepted" && selectedSubmission.sub.teacherReviewedAt && (
                       <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="text-xs font-bold text-[#22C55E] mt-0.5 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" /> Accepted: {new Date(selectedSubmission.sub.teacherReviewedAt).toLocaleString()}

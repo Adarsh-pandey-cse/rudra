@@ -221,6 +221,11 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
         unsubLeaderboard = useLeaderboardStore.getState().setupEventListeners();
       });
       
+      let unsubNotifications: (() => void) | undefined;
+      import("@/store/notificationStore").then(({ useNotificationStore }) => {
+        unsubNotifications = useNotificationStore.getState().setupEventListeners();
+      });
+      
       const unsubUsers = initializeUsersListener();
       const unsubNotices = initializeNoticeListener();
       const unsubAssignments = initializeAssignmentsListener();
@@ -240,6 +245,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
         unsubDoubts();
         if (unsubFees) unsubFees();
         if (unsubLeaderboard) unsubLeaderboard();
+        if (unsubNotifications) unsubNotifications();
         if (unsubReads) unsubReads();
       };
     }

@@ -103,9 +103,7 @@ export default function EditAssignmentWizardV2() {
       }
 
       // Find which students have this assignment
-      const assignedStudentIds = useHomeworkStore.getState().submissions
-        .filter((sub: any) => sub.assignmentId === assignmentId)
-        .map((sub: any) => sub.studentId);
+      const assignedStudentIds = (master as any).recipientStudentIds || (master as any).assignedTo || [];
       setSelectedStudentIds(assignedStudentIds);
       
       const dateObj = new Date(master.dueDate);

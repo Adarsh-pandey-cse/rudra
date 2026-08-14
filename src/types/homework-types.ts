@@ -68,6 +68,8 @@ export interface Assignment {
   // Scheduling
   dueDate: string;
   dueTime: string;
+  isExtended?: boolean;
+  originalDueDate?: string;
   publishMode: PublishMode;
   scheduledDate?: string;
   
