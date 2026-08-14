@@ -189,10 +189,18 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
           ...updates,
           updatedAt: now
         };
-        await homeworkRepository.update(id, { ...updates, updatedAt: now } as any);
+        
+        // Optimistic UI update
         set(state => ({
           assignments: state.assignments.map(a => a.id === id ? { ...a, ...updates, updatedAt: now } : a)
         }));
+        
+        try {
+          await homeworkRepository.update(id, { ...updates, updatedAt: now } as any);
+        } catch (error) {
+          console.error("Failed to update assignment on server:", error);
+          // In a production app, you might want to revert the state here
+        }
       },
 
       deleteAssignment: async (id) => {
@@ -393,7 +401,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
         const nowIso = now.toISOString();
         const existing = get().submissions.find(s => s.assignmentId === assignmentId && s.studentId === studentId);
         const assignment = get().assignments.find(a => a.id === assignmentId);
-        const isLate = assignment ? now > new Date(assignment.dueDate) : false;
+        const isLate = assignment ? now > new Date((assignment as any).originalDueDate || assignment.dueDate) : false;
 
         if (existing) {
             let updatedVersions = existing.versions || [];
@@ -588,7 +596,8 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                 grade: score,
                 maxMarks: assignment.maxMarks,
                 feedback: "Auto-evaluated MCQ",
-                title: assignment.title
+                title: assignment.title,
+                isLate: !!existing.isLate
               }
             });
             eventBus.emit({
@@ -638,7 +647,8 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                 grade: score,
                 maxMarks: assignment.maxMarks,
                 feedback: "Auto-evaluated MCQ",
-                title: assignment.title
+                title: assignment.title,
+                isLate: !!newSub.isLate
               }
             });
             eventBus.emit({
@@ -746,7 +756,8 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                  grade: grade || 0,
                  maxMarks: sub.maxMarks || (assignment?.maxMarks || 0),
                  feedback,
-                 title
+                 title,
+                 isLate: !!sub.isLate
                }
             });
           }, 0);

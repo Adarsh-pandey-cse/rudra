@@ -45,7 +45,7 @@ export default function HomeworkPage() {
   const [assignmentToDelete, setAssignmentToDelete] = useState<any>(null);
   
   const [extendModalOpen, setExtendModalOpen] = useState(false);
-  const [extendHours, setExtendHours] = useState("1");
+  const [extendDateTime, setExtendDateTime] = useState("");
   const [assignmentToExtend, setAssignmentToExtend] = useState<any>(null);
   
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -101,20 +101,40 @@ export default function HomeworkPage() {
   };
 
   const handleExtendSave = async () => {
-    if (assignmentToExtend) {
+    if (assignmentToExtend && extendDateTime) {
       try {
-        const currentDue = assignmentToExtend.dueDate ? new Date(assignmentToExtend.dueDate) : new Date();
-        const hours = parseFloat(extendHours) || 0;
-        const newDue = new Date(currentDue.getTime() + hours * 60 * 60 * 1000);
+        const newDue = new Date(extendDateTime);
+        const originalDue = assignmentToExtend.originalDueDate || assignmentToExtend.dueDate;
         
         await updateAssignment(assignmentToExtend.id, {
           dueDate: newDue.toISOString(),
-          dueTime: `${newDue.getHours().toString().padStart(2, '0')}:${newDue.getMinutes().toString().padStart(2, '0')}`
+          dueTime: `${newDue.getHours().toString().padStart(2, '0')}:${newDue.getMinutes().toString().padStart(2, '0')}`,
+          isExtended: true,
+          originalDueDate: originalDue
         });
+        
+        const { eventBus } = await import("@/lib/eventBus");
+        
+        const submissions = getAssignmentSubmissions(assignmentToExtend.id);
+        const submittedStudentIds = submissions.map(s => s.studentId);
+        const assignedStudentIds = assignmentToExtend.recipientStudentIds || assignmentToExtend.assignedTo || [];
+        const unsubmittedStudentIds = assignedStudentIds.filter((id: string) => !submittedStudentIds.includes(id));
+        
+        if (unsubmittedStudentIds.length > 0) {
+          eventBus.emit({
+            type: 'HOMEWORK_DEADLINE_EXTENDED',
+            payload: {
+              assignmentId: assignmentToExtend.id,
+              title: assignmentToExtend.title,
+              studentIds: unsubmittedStudentIds,
+              newDate: newDue.toISOString()
+            }
+          });
+        }
         
         setExtendModalOpen(false);
         setAssignmentToExtend(null);
-        setExtendHours("1");
+        setExtendDateTime("");
       } catch (err) {
         console.error("Error extending deadline:", err);
       }
@@ -238,7 +258,7 @@ export default function HomeworkPage() {
                     {/* Background decoration */}
                     <div className="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-[#5B5CFF]/10 to-transparent rounded-full blur-2xl pointer-events-none group-hover:from-[#5B5CFF]/20 transition-colors" />
                     
-                    <div className="flex justify-between items-start mb-6 relative z-10">
+                    <div className={`flex justify-between items-start mb-6 relative ${isMenuOpen ? 'z-30' : 'z-10'}`}>
                       <div className="flex gap-4">
                         <div className="w-12 h-12 rounded-[14px] bg-white/[0.06] flex items-center justify-center text-2xl border border-white/[0.08] shrink-0 group-hover:scale-105 transition-transform shadow-sm">
                           <SubjectIcon iconName={subject?.icon || 'book'} className="w-6 h-6 text-[#B6C2D9]" />
@@ -301,11 +321,12 @@ export default function HomeworkPage() {
                                     e.stopPropagation();
                                     setOpenMenuId(null);
                                     setAssignmentToExtend(assignment);
+                                    setExtendDateTime(new Date(assignment.dueDate).toISOString().slice(0, 16));
                                     setExtendModalOpen(true);
                                   }}
                                   className="w-full text-left px-4 py-2 text-sm text-[#B6C2D9] hover:bg-[#5B5CFF]/10 hover:text-[#5B5CFF] flex items-center gap-2"
                                 >
-                                  <Clock className="w-4 h-4" /> Extend Deadline
+                                  <Clock className="w-4 h-4" /> {new Date(assignment.dueDate) < new Date() ? 'Reopen Submission' : 'Extend Deadline'}
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -341,8 +362,9 @@ export default function HomeworkPage() {
                     <div className="mt-auto pt-4 border-t border-white/[0.08] flex items-center justify-between relative z-10">
                       <div className="flex items-center gap-2 text-[13px] text-[#7B8798]">
                         <Calendar className="w-4 h-4 text-[#5B5CFF]" />
-                        <span className={cn("font-medium", new Date(assignment.dueDate) < new Date() ? 'text-[#EF4444]' : '')}>
+                        <span className={cn("font-medium", new Date(assignment.dueDate) < new Date() ? 'text-[#EF4444]' : '', (assignment as any).isExtended ? 'text-[#F59E0B]' : '')}>
                           {new Date(assignment.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at {new Date(assignment.dueDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          {(assignment as any).isExtended && " (Extended)"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-[13px] text-[#7B8798] bg-white/[0.04] px-3 py-1.5 rounded-xl border border-white/[0.05]">
@@ -437,16 +459,13 @@ export default function HomeworkPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#B6C2D9] mb-1.5">Extend by (Hours)</label>
-                  <select
-                    value={extendHours}
-                    onChange={(e) => setExtendHours(e.target.value)}
+                  <label className="block text-sm font-medium text-[#B6C2D9] mb-1.5">New Deadline</label>
+                  <input
+                    type="datetime-local"
+                    value={extendDateTime}
+                    onChange={(e) => setExtendDateTime(e.target.value)}
                     className="w-full px-4 py-3 bg-[#0B1527] border border-white/[0.08] rounded-xl text-white outline-none focus:border-[#5B5CFF]/50 transition-all"
-                  >
-                    {[...Array(24)].map((_, i) => (
-                      <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'Hour' : 'Hours'}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 

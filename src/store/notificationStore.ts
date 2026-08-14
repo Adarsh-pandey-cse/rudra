@@ -204,6 +204,24 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           }
         }));
 
+        // Subscribes to HOMEWORK_DEADLINE_EXTENDED: notify unsubmitted students
+        unsubs.push(eventBus.on('HOMEWORK_DEADLINE_EXTENDED', (event) => {
+          const { assignmentId, title, studentIds, newDate } = event.payload;
+          if (studentIds && Array.isArray(studentIds)) {
+            const dateStr = new Date(newDate).toLocaleString(undefined, { 
+              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+            studentIds.forEach(studentId => {
+              get().addNotification({
+                recipientId: studentId,
+                title: 'Deadline Extended',
+                message: `The deadline for "${title}" has been extended to ${dateStr}.`,
+                link: `/dashboard/student/homework/${assignmentId}`
+              });
+            });
+          }
+        }));
+
         return () => {
           unsubs.forEach(unsub => unsub());
         };

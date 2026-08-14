@@ -216,6 +216,18 @@ export default function StudentHomeworkPage() {
                           </div>
                         )}
 
+                        {(() => {
+                           const sub = getSubmission(hw.id, currentUser.id);
+                           if (sub?.isLate && getComputedStatus(hw.id) !== "missed") {
+                              return (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-[#EF4444] text-[#EF4444] uppercase font-black text-xl tracking-[0.2em] px-3 py-1 rounded-sm transform -rotate-[15deg] opacity-80 pointer-events-none z-10 shadow-sm shadow-red-500/20 bg-[#EF4444]/10">
+                                  LATE
+                                </div>
+                              );
+                           }
+                           return null;
+                        })()}
+
                         {/* Feedback snippet */}
                         {(() => {
                           const sub = getSubmission(hw.id, currentUser.id);

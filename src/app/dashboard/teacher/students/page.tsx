@@ -31,7 +31,7 @@ const itemVariants: Variants = {
 
 export default function StudentListPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, _hasHydrated, getStudentUsers, getArchivedStudents, deleteStudent, updateStudent, archiveStudent, restoreStudent } = useAuthStore();
+  const { currentUser, isAuthenticated, _hasHydrated, getStudentUsers, getArchivedStudents, deleteStudent, updateStudent, archiveStudent, restoreStudent, users } = useAuthStore();
   const { getAllStudentProgress } = useDataStore();
   const { invoices, isInitialized, initializeMockData } = useFeeStore();
   
@@ -59,7 +59,7 @@ export default function StudentListPage() {
     setMounted(true);
   }, [isAuthenticated, currentUser, router, initializeMockData, _hasHydrated]);
 
-  const students = useMemo(() => activeTab === "active" ? getStudentUsers() : getArchivedStudents(), [getStudentUsers, getArchivedStudents, editingStudentId, activeTab]); 
+  const students = useMemo(() => activeTab === "active" ? getStudentUsers() : getArchivedStudents(), [getStudentUsers, getArchivedStudents, editingStudentId, activeTab, users]);
   const allProgress = getAllStudentProgress();
 
   const filteredStudents = useMemo(() => {

@@ -257,6 +257,12 @@ export default function StudentHomeworkDetailsPage() {
                     <span className="text-sm text-white">Auto Evaluated</span>
                   </div>
                 )}
+                {submission?.isLate && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-[#EF4444]/10 rounded-[12px] border border-[#EF4444]/30">
+                    <AlertTriangle className="w-4 h-4 text-[#EF4444]" />
+                    <span className="text-sm font-bold text-[#EF4444] uppercase tracking-wider">Late</span>
+                  </div>
+                )}
               </div>
 
               {needsResubmission && (
@@ -314,7 +320,12 @@ export default function StudentHomeworkDetailsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/[0.04] p-4 rounded-[16px] border border-white/[0.08]">
               <div>
-                <h1 className="text-xl font-bold text-white mb-1">{homework.title}</h1>
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-xl font-bold text-white">{homework.title}</h1>
+                  {submission?.isLate && (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/30 uppercase">Late</span>
+                  )}
+                </div>
                 <p className="text-sm text-[#B6C2D9]">
                   {isSubjective ? 'Subjective Assignment' : `Question ${currentQuestionIndex + 1} of ${mcqQuestions.length}`}
                 </p>

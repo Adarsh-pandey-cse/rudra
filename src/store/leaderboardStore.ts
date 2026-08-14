@@ -28,7 +28,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
       initializeLeaderboard: () => {
         const authState = useAuthStore.getState();
         const users = typeof authState.getAllUsers === 'function' ? authState.getAllUsers() : authState.users;
-        const students = users.filter(u => u.role === "student" && (u as any).status !== "archived");
+        const students = users.filter(u => u.role === "student" && (u as any).status !== "archived" && (u as any).status !== "deleted");
         
         set(state => {
           const activeStudentIds = students.map(s => s.id);
@@ -175,7 +175,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           const { assignments, submissions } = useHomeworkStore.getState();
           const authState = useAuthStore.getState();
           const users = typeof authState.getAllUsers === 'function' ? authState.getAllUsers() : authState.users;
-          const students = users.filter(u => u.role === "student" && (u as any).status !== "archived");
+          const students = users.filter(u => u.role === "student" && (u as any).status !== "archived" && (u as any).status !== "deleted");
           
           const now = new Date().getTime();
           
@@ -226,14 +226,16 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         });
 
         const unsub1 = eventBus.on("HOMEWORK_GRADED", (event) => {
-          if (event.payload && event.payload.studentId && event.payload.grade !== undefined) {
-            get().addPoints(event.payload.studentId, event.payload.grade, "Homework graded");
+          const payload = event.payload as any;
+          if (payload && payload.studentId && payload.grade !== undefined && !payload.isLate) {
+            get().addPoints(payload.studentId, payload.grade, "Homework graded");
           }
         });
         
         const unsub2 = eventBus.on("HOMEWORK_SUBMITTED", (event) => {
-          if (event.payload && event.payload.studentId) {
-            get().updateStreak(event.payload.studentId, !!(event.payload as any).isLate);
+          const payload = event.payload as any;
+          if (payload && payload.studentId && !payload.isLate) {
+            get().updateStreak(payload.studentId, false);
           }
         });
         
