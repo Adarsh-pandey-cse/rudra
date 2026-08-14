@@ -10,6 +10,7 @@ export interface User {
   avatar?: string;
   createdAt: string;
   password?: string;
+  fcmToken?: string;
 }
 
 export interface Teacher extends User {
