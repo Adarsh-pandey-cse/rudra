@@ -64,35 +64,23 @@ export function useNotifications() {
     }
   }, [currentUser]);
 
-  // Register Service Worker and subscribe to Push API
+  // Request Notification Permission
   const subscribeToPush = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (!('Notification' in window)) {
       console.warn("Push notifications are not supported by the browser.");
       return;
     }
 
     try {
-      // Register the service worker
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered successfully:', registration.scope);
-
-      // Request Notification Permission
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
+      if (permission === 'granted') {
+        // If permission granted, force sync the Firebase token via the global hook
+        if (typeof window !== 'undefined' && (window as any)._syncFCMToken) {
+          (window as any)._syncFCMToken();
+        }
+      } else {
         console.warn("Notification permission denied.");
-        return;
       }
-
-      // Subscribe to Push API
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-      });
-
-      console.log("Push Subscription Object (Send this to your backend):", JSON.stringify(subscription));
-      // NOTE: In a real app, you would POST this `subscription` object to your backend here
-      // so the backend knows where to send the web push events.
-      
     } catch (error) {
       console.error("Error setting up push notifications:", error);
     }
@@ -105,7 +93,7 @@ export function useNotifications() {
       localStorage.setItem(`notif_prefs_${currentUser.id}`, JSON.stringify(newPrefs));
     }
     
-    // Request OS permission and subscribe if any pref is turned on
+    // Request OS permission if any pref is turned on
     if (Object.values(newPrefs).some(v => v)) {
       subscribeToPush();
     }
