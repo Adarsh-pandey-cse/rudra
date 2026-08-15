@@ -90,7 +90,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { currentUser, isAuthenticated, isLoading, logout } = useAuthStore();
+  const { currentUser, isAuthenticated, isLoading, logout, isPinVerified } = useAuthStore();
   
   const [mounted, setMounted] = useState(false);
   const visitRoute = useBadgeStore(state => state.visitRoute);
@@ -104,16 +104,21 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     setMounted(true);
   }, []);
 
-  // GLOBAL AUTH GUARD: Prevents the flash-logout race condition on refresh
   useEffect(() => {
     if (!mounted || isLoading) return;
     
     if (!isAuthenticated) {
       router.replace("/auth/login");
+    } else if (currentUser?.role === 'student' && !isPinVerified) {
+      if (!currentUser.pin) {
+        router.replace("/auth/setup-pin");
+      } else {
+        router.replace("/auth/verify-pin");
+      }
     } else if (currentUser && currentUser.role !== role) {
       router.replace(`/dashboard/${currentUser.role}`);
     }
-  }, [mounted, isLoading, isAuthenticated, currentUser, role, router]);
+  }, [mounted, isLoading, isAuthenticated, isPinVerified, currentUser, role, router]);
 
   useEffect(() => {
     // Unregister legacy sw.js if it exists to prevent conflicts

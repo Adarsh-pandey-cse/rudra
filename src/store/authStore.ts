@@ -17,7 +17,9 @@ interface AuthState {
   isLoading: boolean;
   users: User[];
   _hasHydrated: boolean;
+  isPinVerified: boolean;
   setHasHydrated: (state: boolean) => void;
+  setPinVerified: (state: boolean) => void;
 
   initializeAuthListener: () => () => void;
   initializeUsersListener: () => () => void;
@@ -54,7 +56,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   isLoading: true,
   users: [],
   _hasHydrated: true,
+  isPinVerified: typeof window !== "undefined" ? sessionStorage.getItem("isPinVerified") === "true" : false,
   setHasHydrated: (state) => set({ _hasHydrated: state }),
+  setPinVerified: (state) => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("isPinVerified", String(state));
+    }
+    set({ isPinVerified: state });
+  },
 
   initializeAuthListener: () => {
     set({ isLoading: true });
@@ -63,10 +72,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         try {
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
+            const userData = userDoc.data() as User;
+            let pinStatus = get().isPinVerified;
+            if (userData.role === "teacher") {
+              pinStatus = true;
+            }
             set({
-              currentUser: { id: firebaseUser.uid, ...userDoc.data() } as User,
+              currentUser: { ...userData, id: firebaseUser.uid },
               isAuthenticated: true,
-              isLoading: false
+              isLoading: false,
+              isPinVerified: pinStatus
             });
           } else {
             set({ currentUser: null, isAuthenticated: false, isLoading: false });
@@ -87,7 +102,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const allUsers: User[] = [];
       snapshot.forEach((docSnap) => {
-        allUsers.push({ id: docSnap.id, ...docSnap.data() } as User);
+        allUsers.push({ ...docSnap.data(), id: docSnap.id } as User);
       });
       set({ users: allUsers });
     });
@@ -156,8 +171,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
 
       if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.status === "deleted" || userData.status === "archived") {
+        const userData = userDoc.data() as User;
+        if ((userData as any).status === "deleted" || (userData as any).status === "archived") {
           await signOut(auth);
           set({ isLoading: false });
           return { success: false, error: "This account has been disabled or deleted." };
@@ -174,10 +189,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           console.error("Failed to save FCM token", e);
         }
 
+        let pinStatus = get().isPinVerified;
+        if (userData.role === "teacher") {
+          pinStatus = true;
+        }
+
         set({ 
-          currentUser: { id: userCredential.user.uid, ...userData } as User,
+          currentUser: { ...userData, id: userCredential.user.uid },
           isAuthenticated: true,
-          isLoading: false
+          isLoading: false,
+          isPinVerified: pinStatus
         });
         return { success: true };
       } else {
@@ -199,7 +220,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   logout: async () => {
     try {
       await signOut(auth);
-      set({ currentUser: null, isAuthenticated: false });
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("isPinVerified");
+      }
+      set({ currentUser: null, isAuthenticated: false, isPinVerified: false });
     } catch (error) {
       console.error("Logout error:", error);
     }
