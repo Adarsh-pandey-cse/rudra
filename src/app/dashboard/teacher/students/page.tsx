@@ -15,7 +15,7 @@ import GlassButton from "@/components/ui/GlassButton";
 import EmptyState from "@/components/ui/EmptyState";
 import Link from "next/link";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { getMasteryColor, getMasteryLevel, Student } from "@/types";
 
 const containerVariants: Variants = {
@@ -183,54 +183,67 @@ export default function StudentListPage() {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.setTextColor(91, 92, 255); // Custom blue color
-    doc.text("Student Data Export", 14, 22);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.setTextColor(91, 92, 255); // Custom blue color
+      doc.text("Student Data Export", 14, 22);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
 
-    const tableColumn = ["Class", "Name", "Father's Name", "User ID", "Password", "Phone No"];
-    const tableRows: any[] = [];
+      const tableColumn = ["Class", "Name", "Father's Name", "User ID", "Password", "Phone No"];
+      const tableRows: any[] = [];
 
-    // Make sure we export active or all based on what they want. The user said "contain all student data class wise".
-    // We will use the groupedStudents to ensure it's class-wise.
-    Object.keys(groupedStudents).forEach(className => {
-      groupedStudents[className].forEach(student => {
-        const studentData = [
-          className,
-          student.name || "-",
-          (student as any).fatherName || "-",
-          student.username || "-",
-          (student as any).password || "-",
-          (student as any).phone || "-"
-        ];
-        tableRows.push(studentData);
+      // Get all students regardless of active tab or search
+      const allActiveStudents = getStudentUsers() as Student[];
+      
+      const exportGrouped: Record<string, Student[]> = {};
+      allActiveStudents.forEach(s => {
+        const cls = s.classId || s.grade || "Unassigned";
+        if (!exportGrouped[cls]) exportGrouped[cls] = [];
+        exportGrouped[cls].push(s);
       });
-    });
 
-    (doc as any).autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 40,
-      theme: 'grid',
-      headStyles: { fillColor: [91, 92, 255] },
-      styles: { fontSize: 9, cellPadding: 3 },
-      columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 45 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 25 },
-      },
-    });
+      Object.keys(exportGrouped).sort().forEach(className => {
+        exportGrouped[className].forEach(student => {
+          const studentData = [
+            className,
+            student.name || "-",
+            student.parentName || student.fatherName || "-",
+            student.username || "-",
+            student.password || "-",
+            student.parentPhone || "-"
+          ];
+          tableRows.push(studentData);
+        });
+      });
 
-    doc.save(`student_data_export_${new Date().toISOString().split('T')[0]}.pdf`);
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 40,
+        theme: 'grid',
+        headStyles: { fillColor: [91, 92, 255] },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 45 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 25 },
+        },
+      });
+
+      doc.save(`student_data_export_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("PDF Export Error: ", error);
+      alert("Failed to export PDF. Please check the console for details.");
+    }
   };
 
   return (
