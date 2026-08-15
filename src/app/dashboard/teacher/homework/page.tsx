@@ -285,7 +285,7 @@ export default function HomeworkPage() {
                         </div>
                       </div>
                       
-                      <div className="relative">
+                      <div className="relative z-50">
                         <button 
                           onClick={(e) => {
                             e.preventDefault();

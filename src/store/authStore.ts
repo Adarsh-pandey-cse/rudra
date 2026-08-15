@@ -42,6 +42,7 @@ interface AuthState {
   deleteStudent: (studentId: string) => Promise<void>;
   updateStudent: (studentId: string, name: string, email: string) => Promise<{ success: boolean; error?: string }>;
   updateStudentProfile: (studentId: string, updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  updateStudentPassword: (studentId: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   archiveStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>;
   restoreStudent: (studentId: string) => Promise<{ success: boolean; error?: string }>;
   updateAvatar: (userId: string, avatarData: string) => Promise<void>;

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Search, UserPlus, Users2, Eye, EyeOff, Edit, Trash2, AlertCircle, BellRing, CheckCircle2, TrendingUp, IndianRupee, X } from "lucide-react";
+import { Search, UserPlus, Users2, Eye, EyeOff, Edit, Trash2, AlertCircle, BellRing, CheckCircle2, TrendingUp, IndianRupee, X, Download } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useDataStore } from "@/store/dataStore";
 import { useFeeStore } from "@/store/feeStore";
@@ -14,6 +14,8 @@ import GradientButton from "@/components/ui/GradientButton";
 import GlassButton from "@/components/ui/GlassButton";
 import EmptyState from "@/components/ui/EmptyState";
 import Link from "next/link";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { getMasteryColor, getMasteryLevel, Student } from "@/types";
 
 const containerVariants: Variants = {
@@ -112,12 +114,25 @@ export default function StudentListPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStudentId) return;
+    
+    // First update the name and email
     const res = await updateStudent(editingStudentId, editName, editUsername);
-    if (res.success) {
-      setEditingStudentId(null);
-    } else {
-      setEditError(res.error || "Failed to update");
+    if (!res.success) {
+      setEditError(res.error || "Failed to update profile");
+      return;
     }
+
+    // Then update the password if it was changed
+    if (editPassword && editPassword !== "????????") {
+      const { updateStudentPassword } = useAuthStore.getState();
+      const pwRes = await updateStudentPassword(editingStudentId, editPassword);
+      if (!pwRes.success) {
+        setEditError(pwRes.error || "Failed to update password");
+        return;
+      }
+    }
+
+    setEditingStudentId(null);
   };
 
   const handleDelete = async (id: string, isArchived: boolean) => {
@@ -167,6 +182,57 @@ export default function StudentListPage() {
     alert(`Push notification sent to ${studentName}!`);
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(91, 92, 255); // Custom blue color
+    doc.text("Student Data Export", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    const tableColumn = ["Class", "Name", "Father's Name", "User ID", "Password", "Phone No"];
+    const tableRows: any[] = [];
+
+    // Make sure we export active or all based on what they want. The user said "contain all student data class wise".
+    // We will use the groupedStudents to ensure it's class-wise.
+    Object.keys(groupedStudents).forEach(className => {
+      groupedStudents[className].forEach(student => {
+        const studentData = [
+          className,
+          student.name || "-",
+          (student as any).fatherName || "-",
+          student.username || "-",
+          (student as any).password || "-",
+          (student as any).phone || "-"
+        ];
+        tableRows.push(studentData);
+      });
+    });
+
+    (doc as any).autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: 'grid',
+      headStyles: { fillColor: [91, 92, 255] },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 45 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 25 },
+      },
+    });
+
+    doc.save(`student_data_export_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <DashboardLayout role="teacher">
       <motion.div 
@@ -180,12 +246,18 @@ export default function StudentListPage() {
             <h1 className="text-2xl font-bold text-white mb-1">My Students</h1>
             <p className="text-sm text-[#B6C2D9]">Manage your classroom, track progress, and view balances.</p>
           </div>
-          <Link href="/dashboard/teacher/students/add">
-            <GradientButton className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              <span>Add Student</span>
-            </GradientButton>
-          </Link>
+          <div className="flex items-center gap-3">
+            <GlassButton onClick={handleExportPDF} className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export Data</span>
+            </GlassButton>
+            <Link href="/dashboard/teacher/students/add">
+              <GradientButton className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                <span>Add Student</span>
+              </GradientButton>
+            </Link>
+          </div>
         </motion.div>
 
         {/* Stats Row */}
@@ -304,7 +376,7 @@ export default function StudentListPage() {
                     </div>
                     <div>
                       <label className="block text-sm text-[#B6C2D9] mb-1">Password</label>
-                      <input type="text" value={editPassword} disabled className="w-full bg-white/[0.02] border border-white/[0.04] rounded-xl px-4 py-2 text-[#7B8798] cursor-not-allowed" title="Update password feature coming soon" />
+                      <input type="text" value={editPassword} onChange={e => setEditPassword(e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors" placeholder="Leave unchanged or type new password" />
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-2">

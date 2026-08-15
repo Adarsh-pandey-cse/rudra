@@ -195,8 +195,9 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               // Check if any assignment is past due and NOT submitted
               const hasMissedAssignment = studentAssignments.some(a => {
                 const dueDate = new Date(a.dueDate).getTime();
-                if (now > dueDate) {
-                  // It's past due. Did they submit?
+                const gracePeriod = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+                if (now > dueDate + gracePeriod) {
+                  // It's past grace period. Did they submit?
                   const submission = submissions.find(s => s.assignmentId === a.id && s.studentId === student.id);
                   const isSubmitted = submission && !["pending", "draft"].includes(submission.status);
                   return !isSubmitted; // Missed if not submitted
@@ -234,7 +235,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         
         const unsub2 = eventBus.on("HOMEWORK_SUBMITTED", (event) => {
           const payload = event.payload as any;
-          if (payload && payload.studentId && !payload.isLate) {
+          if (payload && payload.studentId) {
             get().updateStreak(payload.studentId, false);
           }
         });
