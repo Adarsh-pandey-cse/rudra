@@ -394,6 +394,61 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
   },
 
+  updateStudentPassword: async (studentId: string, newPassword: string) => {
+    const { currentUser } = get();
+    if (!currentUser || currentUser.role !== "teacher") {
+      return { success: false, error: "Only teachers can update passwords" };
+    }
+
+    set({ isLoading: true });
+    try {
+      const studentRef = doc(db, "users", studentId);
+      const studentSnap = await getDoc(studentRef);
+      if (!studentSnap.exists()) {
+        throw new Error("Student not found in database.");
+      }
+      
+      const studentData = studentSnap.data();
+      const currentPassword = studentData.password;
+      const firebaseEmail = studentData.username.includes('@') ? studentData.username : `${studentData.username}@rudra.edu`.toLowerCase();
+
+      if (!currentPassword) {
+        throw new Error("Cannot update password because current password is unknown.");
+      }
+
+      let secondaryApp;
+      try {
+        secondaryApp = initializeApp(firebaseConfig, "SecondaryAuthApp_Update");
+      } catch (err: any) {
+        if (err.code === "app/duplicate-app") {
+          const apps = require("firebase/app").getApps();
+          secondaryApp = apps.find((app: any) => app.name === "SecondaryAuthApp_Update")!;
+        } else {
+          throw err;
+        }
+      }
+
+      const secondaryAuth = getAuth(secondaryApp);
+      const cleanNewPassword = newPassword.trim();
+      
+      const userCredential = await signInWithEmailAndPassword(secondaryAuth, firebaseEmail, currentPassword);
+      
+      const { updatePassword } = await import("firebase/auth");
+      await updatePassword(userCredential.user, cleanNewPassword);
+      
+      await updateDoc(studentRef, { password: cleanNewPassword });
+
+      await signOut(secondaryAuth);
+      
+      set({ isLoading: false });
+      return { success: true };
+    } catch (error: any) {
+      console.error("Failed to update password:", error);
+      set({ isLoading: false });
+      return { success: false, error: error.message || "Failed to update password." };
+    }
+  },
+
   updateAvatar: async (userId: string, avatarData: string) => {
     try {
       await updateDoc(doc(db, "users", userId), { avatar: avatarData });
