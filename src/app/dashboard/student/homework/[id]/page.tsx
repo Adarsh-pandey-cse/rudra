@@ -153,7 +153,7 @@ export default function StudentHomeworkDetailsPage() {
         id: `att_${Date.now()}_${i}`,
         name: f.name,
         url: f.url,
-        type: f.type ? (f.type.startsWith('image/') ? 'image' : f.type.includes('pdf') ? 'pdf' : 'docx') : 'image',
+        type: 'image',
         size: f.size || 0,
         uploadedAt: new Date().toISOString()
       }));
