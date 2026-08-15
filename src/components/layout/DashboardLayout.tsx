@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -34,6 +34,7 @@ import { useNotificationStore } from "@/store/notificationStore";
 import { useLeaderboardStore } from "@/store/leaderboardStore";
 import { useBadgeStore } from "@/store/badgeStore";
 import { useFeeStore } from "@/store/feeStore";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -204,10 +205,16 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
 
   // Use notifications hook only for student (for this prototype)
-  const { getUserNotifications, markAllAsRead, markAsRead, clearAll } = useNotificationStore();
-  const inAppNotifs = (mounted && currentUser) ? getUserNotifications(currentUser.id, currentUser.role) : [];
+  const notifications = useNotificationStore(state => state.notifications);
+  const { markAllAsRead, markAsRead, clearAll, getUserNotifications } = useNotificationStore();
+  const inAppNotifs = useMemo(() => {
+    return (mounted && currentUser) ? getUserNotifications(currentUser.id, currentUser.role) : [];
+  }, [mounted, currentUser, notifications, getUserNotifications]);
   const unreadCount = inAppNotifs.filter(n => !n.read).length;
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Mount background notification daemon
+  useNotifications();
 
   // Initialize Stores listeners and cross-tab syncing
   useEffect(() => {

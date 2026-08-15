@@ -118,6 +118,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         const unsubs: (() => void)[] = [];
 
         const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+        const displayedToasts = new Set<string>();
+
         const fbUnsub = onSnapshot(q, async (snapshot) => {
           const { useAuthStore } = await import("./authStore");
           const currentUser = useAuthStore.getState().currentUser;
@@ -125,25 +127,28 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           snapshot.docChanges().forEach(async (change) => {
             if (change.type === 'added') {
               const notif = change.doc.data() as AppNotification;
-              const isRecent = (new Date().getTime() - new Date(notif.createdAt).getTime()) < 10000;
+              const isRecent = (new Date().getTime() - new Date(notif.createdAt).getTime()) < 60000;
               
               if (isRecent && currentUser && (notif.recipientId === currentUser.id || (notif.recipientId === 'all_teachers' && currentUser.role === 'teacher'))) {
-                try {
-                  const { toast } = await import("sonner");
-                  if (toast && toast.success) {
-                    toast.success(notif.title, {
-                      description: notif.message,
-                      duration: 6000,
-                      action: notif.link ? {
-                        label: 'View',
-                        onClick: () => {
-                          window.location.href = notif.link as string;
-                        }
-                      } : undefined,
-                    });
+                if (!displayedToasts.has(notif.id)) {
+                  displayedToasts.add(notif.id);
+                  try {
+                    const { toast } = await import("sonner");
+                    if (toast && toast.success) {
+                      toast.success(notif.title, {
+                        description: notif.message,
+                        duration: 6000,
+                        action: notif.link ? {
+                          label: 'View',
+                          onClick: () => {
+                            window.location.href = notif.link as string;
+                          }
+                        } : undefined,
+                      });
+                    }
+                  } catch (err) {
+                    console.warn("Failed to trigger toast on mobile", err);
                   }
-                } catch (err) {
-                  console.warn("Failed to trigger toast on mobile", err);
                 }
               }
             }
