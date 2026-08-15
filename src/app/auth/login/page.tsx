@@ -35,7 +35,11 @@ export default function LoginPage() {
       if (currentUser?.role === "teacher") {
         router.push("/dashboard/teacher");
       } else {
-        router.push("/dashboard/student");
+        if (!currentUser?.pin) {
+          router.push("/auth/setup-pin");
+        } else {
+          router.push("/auth/verify-pin");
+        }
       }
     } else {
       setError(result.error || "Login failed");

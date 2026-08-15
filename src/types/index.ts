@@ -11,6 +11,7 @@ export interface User {
   createdAt: string;
   password?: string;
   fcmToken?: string;
+  pin?: string;
 }
 
 export interface Teacher extends User {
