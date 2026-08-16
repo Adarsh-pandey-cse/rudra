@@ -43,21 +43,29 @@ export default function ResetPinPage() {
       return;
     }
 
-    const student = currentUser as Student;
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Verify all 3 match the database exactly
-    if (student.username !== username) {
+    // Verify username and password first
+    if (currentUser.username !== username) {
       setError("Incorrect username.");
-    } else if (student.password !== password) {
+    } else if (currentUser.password !== password) {
       setError("Incorrect password.");
-    } else if (student.parentPhone !== parentPhone) {
-      setError("Incorrect parent phone number.");
     } else {
-      setIsVerified(true);
-      setError(null);
+      // Validate phone number based on role
+      if (currentUser.role === 'teacher') {
+        if (parentPhone !== "8800795476" && parentPhone !== "7011811671") {
+          setError("Incorrect authorized teacher phone number.");
+        } else {
+          setIsVerified(true);
+          setError(null);
+        }
+      } else {
+        const student = currentUser as Student;
+        if (student.parentPhone !== parentPhone) {
+          setError("Incorrect parent phone number.");
+        } else {
+          setIsVerified(true);
+          setError(null);
+        }
+      }
     }
     
     setIsLoading(false);
@@ -87,7 +95,7 @@ export default function ResetPinPage() {
       useAuthStore.setState({ currentUser: { ...currentUser, pin: newPin } });
       setPinVerified(true);
       
-      router.push("/dashboard/student");
+      router.push(`/dashboard/${currentUser.role}`);
     } catch (err: any) {
       console.error(err);
       setError("Failed to reset PIN. Please try again.");
@@ -187,11 +195,11 @@ export default function ResetPinPage() {
                     />
 
                     <GlassInput
-                      label="Parent Phone Number"
+                      label={currentUser?.role === 'teacher' ? "Authorized Phone Number" : "Parent Phone Number"}
                       icon={<Phone className="h-4 w-4" />}
-                      placeholder="e.g. 9876543210"
-                      type="tel"
-                      maxLength={10}
+                      placeholder="Enter 10-digit number"
+                      type="number"
+                      inputMode="numeric"
                       value={parentPhone}
                       onChange={(e) => setParentPhone(e.target.value.replace(/\D/g, ''))}
                       required
@@ -226,10 +234,11 @@ export default function ResetPinPage() {
                     </div>
 
                     <GlassInput
-                      label="New 6-Digit PIN"
+                      label="Create New 6-Digit PIN"
                       icon={<KeyRound className="h-4 w-4" />}
                       placeholder="••••••"
                       type="password"
+                      inputMode="numeric"
                       maxLength={6}
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
@@ -243,6 +252,7 @@ export default function ResetPinPage() {
                       icon={<KeyRound className="h-4 w-4" />}
                       placeholder="••••••"
                       type="password"
+                      inputMode="numeric"
                       maxLength={6}
                       value={confirmPin}
                       onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}

@@ -50,7 +50,7 @@ export default function SetupPinPage() {
       useAuthStore.setState({ currentUser: { ...currentUser, pin: pin } });
       setPinVerified(true);
       
-      router.push("/dashboard/student");
+      router.push(`/dashboard/${currentUser.role}`);
     } catch (err: any) {
       console.error(err);
       setError("Failed to set PIN. Please try again.");
@@ -131,6 +131,7 @@ export default function SetupPinPage() {
                   icon={<Shield className="h-4 w-4" />}
                   placeholder="••••••"
                   type="password"
+                  inputMode="numeric"
                   maxLength={6}
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
@@ -143,6 +144,7 @@ export default function SetupPinPage() {
                   icon={<Shield className="h-4 w-4" />}
                   placeholder="••••••"
                   type="password"
+                  inputMode="numeric"
                   maxLength={6}
                   value={confirmPin}
                   onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
