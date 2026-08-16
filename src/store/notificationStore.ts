@@ -127,7 +127,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           snapshot.docChanges().forEach(async (change) => {
             if (change.type === 'added') {
               const notif = change.doc.data() as AppNotification;
-              const isRecent = (new Date().getTime() - new Date(notif.createdAt).getTime()) < 60000;
+              
+              // 5-minute window to account for large clock drifts between devices
+              const fiveMinutesAgo = new Date();
+              fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+              const isRecent = new Date(notif.createdAt) > fiveMinutesAgo;
               
               if (isRecent && currentUser && (notif.recipientId === currentUser.id || (notif.recipientId === 'all_teachers' && currentUser.role === 'teacher'))) {
                 if (!displayedToasts.has(notif.id)) {

@@ -46,8 +46,6 @@ export function useNotifications() {
   const { getStudentHomework } = useDataStore();
   
   const [prefs, setPrefs] = useState<NotificationPref>(DEFAULT_PREFS);
-  const [inAppNotifs, setInAppNotifs] = useState<InAppNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Load preferences and history on mount
   useEffect(() => {
@@ -55,13 +53,6 @@ export function useNotifications() {
     
     const savedPrefs = localStorage.getItem(`notif_prefs_${currentUser.id}`);
     if (savedPrefs) setPrefs(JSON.parse(savedPrefs));
-
-    const savedNotifs = localStorage.getItem(`notif_history_${currentUser.id}`);
-    if (savedNotifs) {
-      const parsed = JSON.parse(savedNotifs);
-      setInAppNotifs(parsed);
-      setUnreadCount(parsed.filter((n: InAppNotification) => !n.read).length);
-    }
   }, [currentUser]);
 
   // Request Notification Permission
@@ -100,12 +91,7 @@ export function useNotifications() {
   };
 
   const markAllAsRead = () => {
-    const updated = inAppNotifs.map(n => ({ ...n, read: true }));
-    setInAppNotifs(updated);
-    setUnreadCount(0);
-    if (currentUser) {
-      localStorage.setItem(`notif_history_${currentUser.id}`, JSON.stringify(updated));
-    }
+    // Left empty for compatibility with Settings page if needed
   };
 
   // Trigger OS Notification and save In-App
@@ -122,22 +108,15 @@ export function useNotifications() {
     triggered[id] = true;
     localStorage.setItem(`notif_triggered_${currentUser.id}`, JSON.stringify(triggered));
 
-    // Add to in-app history
-    const newNotif: InAppNotification = {
-      id, title, body, type, date: new Date().toISOString(), read: false
-    };
-    
-    setInAppNotifs(prev => {
-      const updated = [newNotif, ...prev].slice(0, 50); // Keep last 50
-      localStorage.setItem(`notif_history_${currentUser.id}`, JSON.stringify(updated));
-      setUnreadCount(updated.filter(n => !n.read).length);
-      return updated;
+    // Delegate to the global unified notification store
+    import("@/store/notificationStore").then(({ useNotificationStore }) => {
+      useNotificationStore.getState().addNotification({
+        recipientId: currentUser.id,
+        title,
+        message: body,
+        link: type === "homework" || type === "assignment" ? "/dashboard/student/homework" : (type === "fee" ? "/dashboard/student/fees" : undefined)
+      });
     });
-
-    // Trigger OS Native Notification if permission granted
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title, { body, icon: "/favicon.ico" }); // Fallback icon
-    }
   };
 
   // Background Daemon
@@ -212,8 +191,6 @@ export function useNotifications() {
   return {
     prefs,
     updatePrefs,
-    inAppNotifs,
-    unreadCount,
     markAllAsRead,
     requestPermission: subscribeToPush
   };

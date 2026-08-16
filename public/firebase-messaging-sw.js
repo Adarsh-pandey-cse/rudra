@@ -16,6 +16,20 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
+messaging.onBackgroundMessage(function(payload) {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  const notificationTitle = payload.notification?.title || 'New Notification';
+  const notificationOptions = {
+    body: payload.notification?.body || '',
+    icon: '/icons/icon-192x192.png',
+    data: {
+      link: payload.data?.link || '/'
+    }
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
 // Firebase automatically displays the notification in the background because
 // we send a `notification` payload from the server.
 // We only need to handle the click event if we want custom behavior not covered by fcmOptions.

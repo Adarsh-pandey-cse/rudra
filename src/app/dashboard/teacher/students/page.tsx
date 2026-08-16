@@ -246,6 +246,24 @@ export default function StudentListPage() {
     }
   };
 
+  const handleWipeStudents = async () => {
+    if (confirm("Are you absolutely sure? This will wipe all students and student-related data. It will NOT touch notices, notifications, or settings.")) {
+      try {
+        alert("Wiping started. Please wait, do not close the window...");
+        const res = await fetch('/api/clean-students');
+        const data = await res.json();
+        if (res.ok) {
+          alert(`Success! ${data.message}\n` + (data.results?.join('\n') || ''));
+          window.location.reload();
+        } else {
+          alert("Wipe failed: " + data.error);
+        }
+      } catch (e: any) {
+        alert("Wipe failed: " + e.message);
+      }
+    }
+  };
+
   return (
     <DashboardLayout role="teacher">
       <motion.div 
@@ -260,6 +278,13 @@ export default function StudentListPage() {
             <p className="text-sm text-[#B6C2D9]">Manage your classroom, track progress, and view balances.</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+                onClick={handleWipeStudents}
+                className="flex items-center gap-2 px-4 py-2 bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20 hover:text-[#EF4444] rounded-xl font-medium transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Wipe All Students</span>
+              </button>
             <GlassButton onClick={handleExportPDF} className="flex items-center gap-2">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export Data</span>

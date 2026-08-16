@@ -389,47 +389,6 @@ export default function TeacherSettingsPage() {
                     </GradientButton>
                   </div>
                 </div>
-
-                <div className="bg-[#1A1D24] border border-white/5 rounded-2xl p-6 sm:p-8 mt-6">
-                  <h3 className="text-lg font-semibold text-white mb-6">Danger Zone</h3>
-                  <button 
-                    type="button" 
-                    onClick={async () => {
-                      if (confirm("Are you absolutely sure? This will wipe all students and test data from the database!")) {
-                        try {
-                          alert("Wiping started. Please wait, do not close the window...");
-                          const { getDocs, deleteDoc, collection } = await import('firebase/firestore');
-                          const { db } = await import('@/lib/firebase/firebase');
-                          
-                          // 1. Wipe Users
-                          const usersSnap = await getDocs(collection(db, 'users'));
-                          let delCount = 0;
-                          for (const doc of usersSnap.docs) {
-                            const data = doc.data();
-                            if (data.email !== 'adarsh@rudra.edu' && data.email !== 'akansha@rudra.edu') {
-                              await deleteDoc(doc.ref);
-                              delCount++;
-                            }
-                          }
-
-                          // 2. Wipe Collections
-                          const cols = ['doubts', 'receipts', 'feeProfiles', 'invoices', 'payments', 'homeworks', 'homeworkSubmissions', 'notices', 'notifications'];
-                          for (const c of cols) {
-                            const snap = await getDocs(collection(db, c));
-                            for (const d of snap.docs) await deleteDoc(d.ref);
-                          }
-                          
-                          alert(`Success! Wiped ${delCount} students and all test data. App is completely Production Ready.`);
-                        } catch (e: any) {
-                          alert("Client Wipe failed: " + e.message);
-                        }
-                      }
-                    }}
-                    className="w-full sm:w-auto px-6 py-3 bg-[#EF4444] text-white rounded-xl font-medium hover:bg-[#EF4444]/90 transition-colors"
-                  >
-                    WIPE DATABASE (MAKE PRODUCTION READY)
-                  </button>
-                </div>
               </form>
             </GlassCard>
           </div>
