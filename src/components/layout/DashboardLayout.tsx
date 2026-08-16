@@ -485,12 +485,16 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     <div className="min-h-screen bg-[#07111F] text-white flex overflow-hidden">
       <Toaster 
         position="top-center" 
-        theme="dark" 
         expand={false}
         offset="80px"
+        duration={4000}
         toastOptions={{ 
-          className: "font-sans border border-[#D4AF37]/30 bg-gradient-to-r from-[#07111F]/95 to-[#1A1140]/95 backdrop-blur-xl relative z-[999999] text-[#E5E7EB] shadow-[0_4px_24px_rgba(212,175,55,0.15)]",
-          duration: 4000
+          classNames: {
+            toast: "border border-[#D4AF37]/40 bg-gradient-to-br from-[#07111F] to-[#1A1140] backdrop-blur-2xl shadow-[0_8px_30px_rgba(212,175,55,0.2)] rounded-2xl w-full",
+            title: "text-[#D4AF37] font-bold text-base tracking-wide flex items-center gap-2",
+            description: "text-gray-300 text-sm mt-1 leading-relaxed",
+            actionButton: "bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] font-semibold border border-[#D4AF37]/30 rounded-xl transition-all shadow-none",
+          }
         }} 
       />
 
