@@ -23,13 +23,7 @@ const features = [
     title: "Smart Revision",
     desc: "Adaptive spaced repetition algorithms.",
     bg: "bg-[#2DD4BF]/10",
-  },
-  {
-    icon: <Target className="w-5 h-5 text-[#4F9DFF]" />,
-    title: "Complete Visibility",
-    desc: "Track progress and master subjects.",
-    bg: "bg-[#4F9DFF]/10",
-  },
+  }
 ];
 
 const containerVariants: any = {
@@ -79,23 +73,23 @@ export default function WelcomePage() {
           </p>
         </motion.div>
 
-        <div className="w-full space-y-4 mb-14">
+        <div className="w-full space-y-4 mb-8">
           {features.map((feat, idx) => (
             <motion.div key={idx} variants={itemVariants}>
-              <GlassCard hoverEffect className="flex items-center p-5 gap-4">
+              <GlassCard hoverEffect className="flex items-center p-4 gap-4">
                 <div className={`flex-shrink-0 p-3 rounded-xl border border-white/[0.08] ${feat.bg}`}>
                   {feat.icon}
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">{feat.title}</h3>
-                  <p className="text-[#B6C2D9] text-sm mt-0.5">{feat.desc}</p>
+                  <p className="text-[#B6C2D9] text-xs mt-0.5">{feat.desc}</p>
                 </div>
               </GlassCard>
             </motion.div>
           ))}
         </div>
 
-        <motion.div variants={itemVariants} className="w-full space-y-4 mt-auto">
+        <motion.div variants={itemVariants} className="w-full space-y-4 mt-4">
           <GradientButton 
             className="w-full py-4 text-base font-semibold min-h-[44px]"
             onClick={() => router.push("/auth/login")}

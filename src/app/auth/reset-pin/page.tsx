@@ -44,9 +44,21 @@ export default function ResetPinPage() {
     }
 
     // Verify username and password first
+    let isPasswordCorrect = false;
+    
+    if (currentUser.role === 'teacher' && !currentUser.password) {
+      const isAdarsh = currentUser.username.toLowerCase() === "adarsh@77";
+      const isAkansha = currentUser.username.toLowerCase() === "akansha@27";
+      
+      if (isAdarsh && password === "Master@99") isPasswordCorrect = true;
+      else if (isAkansha && password === "Madam@88") isPasswordCorrect = true;
+    } else {
+      isPasswordCorrect = currentUser.password === password;
+    }
+
     if (currentUser.username !== username) {
       setError("Incorrect username.");
-    } else if (currentUser.password !== password) {
+    } else if (!isPasswordCorrect) {
       setError("Incorrect password.");
     } else {
       // Validate phone number based on role
