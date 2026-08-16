@@ -64,12 +64,13 @@ export async function GET() {
       results.push(`Deleted ${firestoreDeleted} student documents from Firestore 'users' collection.`);
     }
 
-    // 4. Wipe all operational data, including homeworks, submissions, and doubts
+    // 4. Wipe all operational data related ONLY to students
     const collectionsToClear = [
       'receipts', 'feeProfiles', 'invoices', 'payments',
-      'notices', 'noticeReads', 'notifications',
-      'doubts', 'homeworks', 'homeworkSubmissions'
+      'doubts', 'homeworkSubmissions'
     ];
+    // We intentionally DO NOT clear 'notices', 'notifications', or 'homeworks'
+    // so that app settings and teacher configurations are preserved.
 
     for (const colName of collectionsToClear) {
       const colSnapshot = await db.collection(colName).get();
