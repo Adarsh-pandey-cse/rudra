@@ -41,7 +41,7 @@ export default function VerifyPinPage() {
 
     if (pin === currentUser.pin) {
       setPinVerified(true);
-      router.push("/dashboard/student");
+      router.push(`/dashboard/${currentUser.role}`);
     } else {
       setError("Incorrect PIN. Please try again.");
       setIsLoading(false);
@@ -120,6 +120,7 @@ export default function VerifyPinPage() {
                   icon={<KeyRound className="h-4 w-4" />}
                   placeholder="••••••"
                   type="password"
+                  inputMode="numeric"
                   maxLength={6}
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}

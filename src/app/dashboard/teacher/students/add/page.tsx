@@ -307,16 +307,18 @@ export default function AddStudentPage() {
                       />
                     </div>
 
-                    <div>
-                      <label className={labelClasses}>Parent Phone (Optional)</label>
-                      <input
-                        type="tel"
-                        value={parentPhone}
-                        onChange={(e) => setParentPhone(e.target.value)}
-                        className={inputClasses}
-                        placeholder="+91..."
-                      />
-                    </div>
+                      <div>
+                        <label className={labelClasses}>Parent Phone Number *</label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={parentPhone}
+                          onChange={(e) => setParentPhone(e.target.value.replace(/\D/g, ''))}
+                          className={inputClasses}
+                          placeholder="10-digit number"
+                          required
+                        />
+                      </div>
 
                     <div className="md:col-span-2">
                       <label className={labelClasses}>Admission Date *</label>

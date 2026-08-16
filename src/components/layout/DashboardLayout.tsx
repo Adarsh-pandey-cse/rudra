@@ -110,7 +110,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     
     if (!isAuthenticated) {
       router.replace("/auth/login");
-    } else if (currentUser?.role === 'student' && !isPinVerified) {
+    } else if (currentUser && !isPinVerified) {
       if (!currentUser.pin) {
         router.replace("/auth/setup-pin");
       } else {

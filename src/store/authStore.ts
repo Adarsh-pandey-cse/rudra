@@ -74,9 +74,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
             let pinStatus = get().isPinVerified;
-            if (userData.role === "teacher") {
-              pinStatus = true;
-            }
             set({
               currentUser: { ...userData, id: firebaseUser.uid },
               isAuthenticated: true,
@@ -190,10 +187,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
 
         let pinStatus = get().isPinVerified;
-        if (userData.role === "teacher") {
-          pinStatus = true;
-        }
-
         set({ 
           currentUser: { ...userData, id: userCredential.user.uid },
           isAuthenticated: true,
