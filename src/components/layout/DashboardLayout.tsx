@@ -486,11 +486,10 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       <Toaster 
         position="top-center" 
         theme="dark" 
-        richColors 
         expand={false}
         offset="80px"
         toastOptions={{ 
-          className: "font-sans border border-white/10 bg-[#07111F]/90 backdrop-blur-md relative z-[999999]",
+          className: "font-sans border border-[#D4AF37]/30 bg-gradient-to-r from-[#07111F]/95 to-[#1A1140]/95 backdrop-blur-xl relative z-[999999] text-[#E5E7EB] shadow-[0_4px_24px_rgba(212,175,55,0.15)]",
           duration: 4000
         }} 
       />

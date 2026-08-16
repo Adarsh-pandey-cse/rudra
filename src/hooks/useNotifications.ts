@@ -127,23 +127,7 @@ export function useNotifications() {
       const homework = getStudentHomework(currentUser.id) || [];
       const now = new Date();
 
-      // 1. New Assignments
-      if (prefs.newAssignments) {
-        homework.forEach(hw => {
-          if (hw.status === "pending") {
-            // Check if assigned in last 24h to avoid old notifications
-            // Trigger logic will prevent duplicates via notif_triggered
-            triggerNotification(
-              `new_hw_${hw.id}`, 
-              "New Assignment", 
-              `${currentUser.name}, you have got a new assignment: ${hw.title}. Please submit before the due date.`, 
-              "assignment"
-            );
-          }
-        });
-      }
-
-      // 2. Homework Due Soon (<= 24h)
+      // 1. Homework Due Soon (<= 24h)
       if (prefs.homeworkDueSoon) {
         homework.forEach(hw => {
           if (hw.status === "pending") {

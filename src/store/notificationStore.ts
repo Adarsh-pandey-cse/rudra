@@ -91,14 +91,33 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           (n.recipientId === recipientId || n.recipientId === 'all_teachers') ? { ...n, read: true } : n
         )
       })),
-      clearAll: (userId, role) => set((state) => ({
-        notifications: state.notifications.filter((n) => {
+      clearAll: (userId, role) => {
+        const { notifications } = get();
+        
+        // Delete from Firestore
+        notifications.forEach((n) => {
+          let shouldClear = false;
           if (role === 'teacher' || role === 'admin') {
-            return !(n.recipientId === 'all_teachers' || n.recipientId === userId);
+             if (n.recipientId === 'all_teachers' || n.recipientId === userId) shouldClear = true;
+          } else {
+             if (n.recipientId === userId) shouldClear = true;
           }
-          return n.recipientId !== userId;
-        })
-      })),
+          
+          if (shouldClear) {
+             deleteDoc(doc(db, "notifications", n.id)).catch(console.error);
+          }
+        });
+        
+        // Update local state immediately
+        set((state) => ({
+          notifications: state.notifications.filter((n) => {
+            if (role === 'teacher' || role === 'admin') {
+              return !(n.recipientId === 'all_teachers' || n.recipientId === userId);
+            }
+            return n.recipientId !== userId;
+          })
+        }));
+      },
       getUserNotifications: (userId, role) => {
         const { notifications } = get();
         const sevenDaysAgo = new Date();
@@ -124,6 +143,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           const { useAuthStore } = await import("./authStore");
           const currentUser = useAuthStore.getState().currentUser;
           
+          // 7-day auto-cleanup
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          
+          snapshot.docs.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.createdAt && new Date(data.createdAt) < sevenDaysAgo) {
+              deleteDoc(docSnap.ref).catch(console.error);
+            }
+          });
+          
           snapshot.docChanges().forEach(async (change) => {
             if (change.type === 'added') {
               const notif = change.doc.data() as AppNotification;
@@ -138,10 +168,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                   displayedToasts.add(notif.id);
                   try {
                     const { toast } = await import("sonner");
-                    if (toast && toast.success) {
-                      toast.success(notif.title, {
+                    if (toast) {
+                      toast(notif.title, {
                         description: notif.message,
-                        duration: 6000,
+                        duration: 4000,
                         action: notif.link ? {
                           label: 'View',
                           onClick: () => {
