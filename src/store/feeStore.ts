@@ -86,7 +86,7 @@ export interface FeeState {
   getStudentFeeProfile: (studentId: string) => FeeProfile | undefined;
   getStudentInvoices: (studentId: string) => Invoice[];
   getStudentPayments: (studentId: string) => Payment[];
-  getTeacherDashboardStats: (monthStr?: string) => {
+  getTeacherDashboardStats: (monthStr?: string, activeStudentIds?: string[]) => {
     expectedRevenue: number;
     collectedRevenue: number;
     pendingRevenue: number;
@@ -417,7 +417,7 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
     return get().payments.filter(p => p.studentId === studentId).sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
   },
 
-  getTeacherDashboardStats: (monthStr?: string) => {
+  getTeacherDashboardStats: (monthStr?: string, activeStudentIds?: string[]) => {
     const { invoices, payments } = get();
     
     let targetMonth = monthStr;
@@ -427,7 +427,11 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
       targetMonth = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
     }
     
-    const currentInvoices = invoices.filter(i => i.month === targetMonth);
+    let currentInvoices = invoices.filter(i => i.month === targetMonth);
+    
+    if (activeStudentIds) {
+      currentInvoices = currentInvoices.filter(i => activeStudentIds.includes(i.studentId));
+    }
     
     let expectedRevenue = 0;
     let collectedRevenue = 0;
@@ -439,9 +443,9 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
     currentInvoices.forEach(inv => {
       expectedRevenue += inv.totalAmount;
       collectedRevenue += inv.amountPaid;
-      pendingRevenue += (inv.totalAmount - inv.amountPaid);
+      pendingRevenue += Math.max(0, inv.totalAmount - inv.amountPaid);
       
-      if (inv.status === "overdue") {
+      if (inv.status === "overdue" && (inv.totalAmount - inv.amountPaid) > 0) {
         overdueSet.add(inv.studentId);
       }
     });

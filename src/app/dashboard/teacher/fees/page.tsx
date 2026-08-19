@@ -95,9 +95,10 @@ export default function TeacherFeesPage() {
     
     const allUsers = getAllUsers();
     const studentsList = allUsers.filter((u): u is Student => u.role === "student");
-    const dashStats = getTeacherDashboardStats(selectedMonth);
+    const activeStudentIds = studentsList.map(s => s.id);
+    const dashStats = getTeacherDashboardStats(selectedMonth, activeStudentIds);
     
-    const currInvoices = invoices.filter(i => i.month === selectedMonth);
+    const currInvoices = invoices.filter(i => i.month === selectedMonth && activeStudentIds.includes(i.studentId));
 
     return {
       students: studentsList,
