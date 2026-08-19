@@ -42,6 +42,7 @@ export default function StudentHomeworkDetailsPage() {
   const [studentAttachments, setStudentAttachments] = useState<Attachment[]>([]);
   const [textResponse, setTextResponse] = useState("");
   const [viewingAttachment, setViewingAttachment] = useState<Attachment | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -146,6 +147,7 @@ export default function StudentHomeworkDetailsPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    setIsUploading(true);
     try {
       const filesArray = Array.from(files);
       const uploadedFiles = await uploadService.uploadFiles(
@@ -174,6 +176,8 @@ export default function StudentHomeworkDetailsPage() {
     } catch (err: any) {
       console.error("Upload failed:", err);
       alert("Failed to upload files: " + (err.message || err.toString()));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -547,35 +551,48 @@ export default function StudentHomeworkDetailsPage() {
                 )}
 
                 {!isCompleted ? (
-                  <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                    <div
-                      onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={(e) => { e.preventDefault(); setIsDragging(false); const target = e.dataTransfer; if (target.files && target.files.length > 0) handleFileChange({ target } as any); }}
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`w-full flex-1 border-2 border-dashed rounded-[14px] p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isDragging ? "border-[#4F9DFF] bg-[#4F9DFF]/10" : "border-white/[0.12] hover:bg-white/[0.04]"}`}
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                  <div
+                    onDragOver={e => { e.preventDefault(); !isUploading && setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => { e.preventDefault(); setIsDragging(false); const target = e.dataTransfer; if (!isUploading && target.files && target.files.length > 0) handleFileChange({ target } as any); }}
+                    onClick={() => !isUploading && fileInputRef.current?.click()}
+                    className={`w-full flex-1 border-2 border-dashed rounded-[14px] p-6 flex flex-col items-center justify-center text-center transition-colors ${isUploading ? "cursor-not-allowed border-white/[0.1] bg-white/[0.02]" : isDragging ? "cursor-pointer border-[#4F9DFF] bg-[#4F9DFF]/10" : "cursor-pointer border-white/[0.12] hover:bg-white/[0.04]"}`}
+                  >
+                    {isUploading ? (
+                      <>
+                        <div className="p-3 bg-white/[0.04] rounded-full mb-3">
+                          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 border-2 border-[#4F9DFF]/30 border-t-[#4F9DFF] rounded-full" />
+                        </div>
+                        <p className="text-sm text-[#4F9DFF] mb-1 font-medium">Uploading images...</p>
+                        <p className="text-[11px] text-[#7B8798] uppercase tracking-wider">Please wait</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-3 bg-white/[0.04] rounded-full mb-3">
+                          <UploadCloud className={`w-5 h-5 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
+                        </div>
+                        <p className="text-sm text-white mb-1">Drag & drop images or click to upload</p>
+                        <p className="text-[11px] text-[#7B8798] uppercase tracking-wider font-medium">Images accepted</p>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-center mt-4">
+                    <GlassButton 
+                      onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
+                      disabled={isUploading}
+                      className="flex-1 sm:flex-none border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/10 text-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className="p-3 bg-white/[0.04] rounded-full mb-3">
-                        <UploadCloud className={`w-5 h-5 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
-                      </div>
-                      <p className="text-sm text-white mb-1">Drag & drop images or click to upload</p>
-                      <p className="text-[11px] text-[#7B8798] uppercase tracking-wider font-medium">Images accepted</p>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-center mt-4">
-                      <GlassButton 
-                        onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
-                        className="flex-1 sm:flex-none border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/10 text-[#8B5CF6]"
-                      >
-                        <Camera className="w-4 h-4 mr-2" /> Take Photo
-                      </GlassButton>
-                    </div>
-                    
-                    <GradientButton 
-                      onClick={handleSubmitSubjective} 
-                      disabled={isSubmitting} 
-                      className="w-full sm:w-auto px-8"
-                    >
+                      <Camera className="w-4 h-4 mr-2" /> Take Photo
+                    </GlassButton>
+                  </div>
+                  
+                  <GradientButton 
+                    onClick={handleSubmitSubjective} 
+                    disabled={isSubmitting || isUploading} 
+                    className="w-full sm:w-auto px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                       {isSubmitting ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mx-auto" />
                       ) : (

@@ -528,7 +528,7 @@ export default function HomeworkAnalyticsPage() {
                       <h3 className="text-sm font-bold text-[#B6C2D9] uppercase tracking-wider flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-[#4F9DFF]" /> Assignment Details
                       </h3>
-                      <p className="text-sm text-white leading-relaxed">{homework.description}</p>
+                      <div className="text-sm text-white leading-relaxed" dangerouslySetInnerHTML={{ __html: homework.description }} />
                       {homework.attachments && homework.attachments.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {homework.attachments.map(att => (
