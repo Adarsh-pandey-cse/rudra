@@ -270,12 +270,19 @@ export default function HomeworkAnalyticsPage() {
                   <div className="text-sm text-[#B6C2D9] leading-relaxed prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: homework.description }} />
                 )}
                 {homework.attachments && homework.attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {homework.attachments.map(att => (
-                      <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 border border-[#4F9DFF]/20">
-                        <Paperclip className="w-3 h-3" /> {att.name}
-                      </a>
-                    ))}
+                  <div className="flex flex-col gap-4 pt-2">
+                    {homework.attachments.map(att => {
+                      const isImage = att.type === 'image' || att.url.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+                      return isImage ? (
+                        <div key={att.id} className="relative group rounded-xl overflow-hidden border border-white/[0.1] bg-[#131D2E] inline-block max-w-[400px]">
+                          <img src={att.url} alt={att.name} className="w-full h-auto object-cover" />
+                        </div>
+                      ) : (
+                        <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-[#4F9DFF]/20 w-fit">
+                          <Paperclip className="w-4 h-4" /> {att.name}
+                        </a>
+                      );
+                    })}
                   </div>
                 )}
                 {homework.questions && homework.questions.length > 0 && (
@@ -568,12 +575,19 @@ export default function HomeworkAnalyticsPage() {
                       </h3>
                       <div className="text-sm text-white leading-relaxed" dangerouslySetInnerHTML={{ __html: homework.description }} />
                       {homework.attachments && homework.attachments.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {homework.attachments.map(att => (
-                            <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
-                              <Paperclip className="w-3 h-3" /> {att.name}
-                            </a>
-                          ))}
+                        <div className="flex flex-col gap-4 mt-2">
+                          {homework.attachments.map(att => {
+                            const isImage = att.type === 'image' || att.url.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+                            return isImage ? (
+                              <div key={att.id} className="relative group rounded-xl overflow-hidden border border-white/[0.1] bg-[#131D2E] inline-block max-w-full">
+                                <img src={att.url} alt={att.name} className="w-full h-auto object-cover" />
+                              </div>
+                            ) : (
+                              <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-[#4F9DFF]/20 w-fit">
+                                <Paperclip className="w-4 h-4" /> {att.name}
+                              </a>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
