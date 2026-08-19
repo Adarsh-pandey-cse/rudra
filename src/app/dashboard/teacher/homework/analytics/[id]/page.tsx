@@ -259,6 +259,44 @@ export default function HomeworkAnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main List */}
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* Assignment Context Card */}
+            <GlassCard className="p-6">
+              <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#4F9DFF]" /> Assignment Details & Questions
+              </h2>
+              <div className="space-y-4">
+                {homework.description && (
+                  <div className="text-sm text-[#B6C2D9] leading-relaxed prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: homework.description }} />
+                )}
+                {homework.attachments && homework.attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {homework.attachments.map(att => (
+                      <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 border border-[#4F9DFF]/20">
+                        <Paperclip className="w-3 h-3" /> {att.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {homework.questions && homework.questions.length > 0 && (
+                  <div className="mt-6 space-y-3">
+                    <h3 className="text-sm font-semibold text-white">Questions ({homework.questions.length})</h3>
+                    {homework.questions.map((q, i) => (
+                      <div key={q.id} className="p-4 bg-white/[0.02] border border-white/[0.06] rounded-xl">
+                        <p className="text-sm text-white font-medium mb-2">Q{i + 1}. {q.question}</p>
+                        {q.options && q.options.length > 0 && (
+                          <ul className="list-disc pl-5 text-sm text-[#B6C2D9] space-y-1 mt-2">
+                            {q.options.map((opt, oi) => <li key={oi}>{opt}</li>)}
+                          </ul>
+                        )}
+                        <p className="text-xs text-[#22C55E] mt-3 font-semibold">Correct Answer: {q.correctAnswer}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+
             <GlassCard className="p-6">
               <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#5B5CFF]" /> Student Submissions
