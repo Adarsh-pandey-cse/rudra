@@ -40,6 +40,7 @@ export default function StudentHomeworkDetailsPage() {
 
   // Subjective Assignment State
   const [studentAttachments, setStudentAttachments] = useState<Attachment[]>([]);
+  const [textResponse, setTextResponse] = useState("");
   const [viewingAttachment, setViewingAttachment] = useState<Attachment | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,8 +64,13 @@ export default function StudentHomeworkDetailsPage() {
   }, [isAuthenticated, currentUser, router, _hasHydrated]);
 
   useEffect(() => {
-    if (submission?.attachments) {
-      setStudentAttachments(submission.attachments);
+    if (submission) {
+      if (submission.attachments) {
+        setStudentAttachments(submission.attachments);
+      }
+      if (submission.textResponse) {
+        setTextResponse(submission.textResponse);
+      }
     }
   }, [submission]);
 
@@ -163,7 +169,7 @@ export default function StudentHomeworkDetailsPage() {
       
       // Auto-save draft
       if (!isCompleted) {
-        await saveSubmissionDraft(homework.id, currentUser.id, "", updatedAttachments);
+        await saveSubmissionDraft(homework.id, currentUser.id, textResponse, updatedAttachments);
       }
     } catch (err: any) {
       console.error("Upload failed:", err);
@@ -175,18 +181,26 @@ export default function StudentHomeworkDetailsPage() {
     const updatedAttachments = studentAttachments.filter(a => a.id !== id);
     setStudentAttachments(updatedAttachments);
     if (!isCompleted) {
-      await saveSubmissionDraft(homework.id, currentUser.id, "", updatedAttachments);
+      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, updatedAttachments);
+    }
+  };
+  
+  const handleTextChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setTextResponse(newText);
+    if (!isCompleted) {
+      await saveSubmissionDraft(homework.id, currentUser.id, newText, studentAttachments);
     }
   };
 
   const handleSubmitSubjective = async () => {
-    if (studentAttachments.length === 0) {
-      if (!confirm("You haven't attached any files. Submit anyway?")) return;
+    if (studentAttachments.length === 0 && !textResponse.trim()) {
+      if (!confirm("You haven't attached any files or written a response. Submit anyway?")) return;
     }
     setIsSubmitting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload
-      await saveSubmissionDraft(homework.id, currentUser.id, "", studentAttachments);
+      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, studentAttachments);
       await submitHomework(homework.id, currentUser.id);
       triggerSuccess();
     } catch (err: any) {
@@ -488,7 +502,21 @@ export default function StudentHomeworkDetailsPage() {
                   </div>
                 )}
 
-                {studentAttachments.length > 0 && (
+                {/* Text Response Area */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[#B6C2D9] mb-2 uppercase tracking-wider">
+                  Text Response (Optional)
+                </label>
+                <textarea
+                  value={textResponse}
+                  onChange={handleTextChange}
+                  disabled={isCompleted}
+                  placeholder={isCompleted ? "" : "Type your answer here..."}
+                  className="w-full bg-[#07111F] border border-white/[0.1] rounded-xl p-4 text-white placeholder-[#7B8798] min-h-[120px] focus:outline-none focus:border-[#4F9DFF]/50 transition-colors resize-y disabled:opacity-50"
+                />
+              </div>
+
+              {studentAttachments.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
                     {studentAttachments.map((att) => (
                       <div key={att.id} className="relative group">
@@ -530,8 +558,8 @@ export default function StudentHomeworkDetailsPage() {
                       <div className="p-3 bg-white/[0.04] rounded-full mb-3">
                         <UploadCloud className={`w-5 h-5 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
                       </div>
-                      <p className="text-sm text-white mb-1">Drag & drop files or click to upload</p>
-                      <p className="text-[11px] text-[#7B8798] uppercase tracking-wider font-medium">Images or PDFs accepted</p>
+                      <p className="text-sm text-white mb-1">Drag & drop images or click to upload</p>
+                      <p className="text-[11px] text-[#7B8798] uppercase tracking-wider font-medium">Images accepted</p>
                     </div>
                     
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-center mt-4">
@@ -580,7 +608,7 @@ export default function StudentHomeworkDetailsPage() {
                 )}
                 
                 {/* Hidden inputs for Subjective uploads */}
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*,.pdf,.doc,.docx" className="hidden" />
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*" className="hidden" />
                 <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
               </GlassCard>
             )}

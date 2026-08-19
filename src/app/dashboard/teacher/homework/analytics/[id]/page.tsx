@@ -523,6 +523,34 @@ export default function HomeworkAnalyticsPage() {
                 <div className="w-full lg:w-[40%] flex flex-col bg-[#0B1527] shrink-0 lg:flex-1 lg:overflow-hidden">
                   <div className="lg:flex-1 lg:overflow-y-auto p-4 lg:p-6 space-y-6">
 
+                    {/* Assignment Context */}
+                    <div className="p-4 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-3">
+                      <h3 className="text-sm font-bold text-[#B6C2D9] uppercase tracking-wider flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-[#4F9DFF]" /> Assignment Details
+                      </h3>
+                      <p className="text-sm text-white leading-relaxed">{homework.description}</p>
+                      {homework.attachments && homework.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {homework.attachments.map(att => (
+                            <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                              <Paperclip className="w-3 h-3" /> {att.name}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Student Text Response */}
+                    {selectedSubmission.sub.textResponse && (
+                      <div className="p-4 bg-[#4F9DFF]/5 border border-[#4F9DFF]/20 rounded-xl space-y-3">
+                        <h3 className="text-sm font-bold text-[#4F9DFF] uppercase tracking-wider flex items-center gap-2">
+                          <FileText className="w-4 h-4" /> Student Text Response
+                        </h3>
+                        <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{selectedSubmission.sub.textResponse}</p>
+                      </div>
+                    )}
+
+
                     {/* MCQ Question Results if available */}
                     {selectedSubmission.sub.aiEvaluation?.questionResults && (
                       <div>
