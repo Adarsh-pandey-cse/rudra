@@ -1,6 +1,6 @@
 import { useUploadStore, UploadTask, UploadStatus } from "@/store/uploadStore";
 
-const MAX_UPLOAD_DURATION_MS = 60000; // 60 seconds strict timeout
+const MAX_UPLOAD_DURATION_MS = 180000; // 3 minutes timeout (increased for slow mobile networks)
 
 // Module-level map to store non-serializable objects (prevents Zustand/React freezes)
 const activeUploads = new Map<string, { abortController: AbortController, uploadTask?: any }>();
@@ -15,6 +15,60 @@ export const cancelUploadById = (id: string) => {
       active.abortController.abort("UPLOAD_CANCELLED_BY_USER");
     }
   }
+};
+
+/**
+ * Compresses an image file natively in the browser using HTML5 Canvas.
+ * Significantly speeds up uploads from mobile devices (10MB -> ~500KB) and avoids ImgBB timeouts.
+ */
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    // Only compress images, skip SVGs or non-images
+    if (!file.type.startsWith('image/') || file.type.includes('svg')) {
+      return resolve(file);
+    }
+    
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      
+      const MAX_SIZE = 1920; 
+      if (width > height && width > MAX_SIZE) {
+        height = Math.round((height * MAX_SIZE) / width);
+        width = MAX_SIZE;
+      } else if (height > MAX_SIZE) {
+        width = Math.round((width * MAX_SIZE) / height);
+        height = MAX_SIZE;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file); 
+      
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob((blob) => {
+        if (!blob) return resolve(file); 
+        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpeg", {
+          type: 'image/jpeg',
+          lastModified: Date.now(),
+        });
+        resolve(newFile);
+      }, 'image/jpeg', 0.85); // 85% quality JPEG
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file); 
+    };
+    
+    img.src = objectUrl;
+  });
 };
 
 class UploadService {
@@ -45,7 +99,7 @@ class UploadService {
       abortController.signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         const reason = abortController.signal.reason === "UPLOAD_TIMEOUT_EXCEEDED" 
-          ? "Upload took too long (>60s). Please check your connection."
+          ? "Upload took too long (>3m). Please check your connection."
           : "Upload cancelled by user.";
           
         console.warn(`[UploadService] Upload aborted: ${reason}`);
@@ -57,7 +111,10 @@ class UploadService {
       try {
         if (abortController.signal.aborted) throw new Error(abortController.signal.reason as string);
 
-        const fileToUpload = task.file!;
+        store.setTaskStatus(task.id, "uploading", { progress: 10 });
+        
+        // Compress the image before uploading (especially for phone cameras)
+        const fileToUpload = await compressImage(task.file!);
         const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY || "YOUR_IMGBB_API_KEY_HERE";
         
         if (apiKey === "YOUR_IMGBB_API_KEY_HERE" || !apiKey) {
