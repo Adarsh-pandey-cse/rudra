@@ -16,6 +16,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import GlassCard from "@/components/ui/GlassCard";
 import GradientButton from "@/components/ui/GradientButton";
 import GlassButton from "@/components/ui/GlassButton";
+import ZoomableImage from "@/components/ui/ZoomableImage";
 import EmptyState from "@/components/ui/EmptyState";
 import CircularProgress from "@/components/dashboard/CircularProgress";
 import type { Attachment, Submission } from "@/types/homework-types";
@@ -275,7 +276,7 @@ export default function HomeworkAnalyticsPage() {
                       const isImage = att.type === 'image' || att.url.match(/\.(jpeg|jpg|gif|png)$/i) != null;
                       return isImage ? (
                         <div key={att.id} className="relative group rounded-xl overflow-hidden border border-white/[0.1] bg-[#131D2E] inline-block max-w-[400px]">
-                          <img src={att.url} alt={att.name} className="w-full h-auto object-cover" />
+                          <ZoomableImage src={att.url} alt={att.name} className="w-full h-auto object-cover" />
                         </div>
                       ) : (
                         <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-[#4F9DFF]/20 w-fit">
@@ -536,10 +537,11 @@ export default function HomeworkAnalyticsPage() {
                       <div className="flex-1 overflow-hidden p-4 flex items-center justify-center relative">
                         {viewingAttachment ? (
                           viewingAttachment.type === 'image' || viewingAttachment.url.startsWith('data:image/') ? (
-                            <img 
+                            <ZoomableImage 
                               src={viewingAttachment.url} 
                               alt={viewingAttachment.name} 
-                              className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-white/[0.1] absolute inset-4 m-auto" 
+                              className="absolute inset-4 m-auto w-full h-full"
+                              imageClassName="object-contain rounded-lg shadow-lg border border-white/[0.1]"
                             />
                           ) : viewingAttachment.url === "/" || viewingAttachment.url === "" ? (
                             <div className="text-center text-[#7B8798]">
@@ -580,7 +582,7 @@ export default function HomeworkAnalyticsPage() {
                             const isImage = att.type === 'image' || att.url.match(/\.(jpeg|jpg|gif|png)$/i) != null;
                             return isImage ? (
                               <div key={att.id} className="relative group rounded-xl overflow-hidden border border-white/[0.1] bg-[#131D2E] inline-block max-w-full">
-                                <img src={att.url} alt={att.name} className="w-full h-auto object-cover" />
+                                <ZoomableImage src={att.url} alt={att.name} className="w-full h-auto" />
                               </div>
                             ) : (
                               <a key={att.id} href={att.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-[#4F9DFF]/10 text-[#4F9DFF] hover:bg-[#4F9DFF]/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-[#4F9DFF]/20 w-fit">

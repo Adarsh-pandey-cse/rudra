@@ -23,6 +23,8 @@ interface NotificationState {
   setupEventListeners: () => () => void;
 }
 
+const displayedToasts = new Set<string>();
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
       notifications: [],
       addNotification: async (notification) => {
@@ -137,7 +139,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         const unsubs: (() => void)[] = [];
 
         const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
-        const displayedToasts = new Set<string>();
 
         const fbUnsub = onSnapshot(q, async (snapshot) => {
           const { useAuthStore } = await import("./authStore");
