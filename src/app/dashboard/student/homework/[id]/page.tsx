@@ -17,6 +17,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import GradientButton from "@/components/ui/GradientButton";
 import GlassButton from "@/components/ui/GlassButton";
 import EmptyState from "@/components/ui/EmptyState";
+import ZoomableImage from "@/components/ui/ZoomableImage";
 import type { GeneratedQuestion, Submission, Attachment } from "@/types/homework-types";
 import { format } from "date-fns";
 import { uploadService } from "@/lib/services/upload.service";
@@ -551,13 +552,13 @@ export default function StudentHomeworkDetailsPage() {
                 )}
 
                 {!isCompleted ? (
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="flex flex-col gap-5 mt-4 items-center">
                   <div
                     onDragOver={e => { e.preventDefault(); !isUploading && setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={(e) => { e.preventDefault(); setIsDragging(false); const target = e.dataTransfer; if (!isUploading && target.files && target.files.length > 0) handleFileChange({ target } as any); }}
                     onClick={() => !isUploading && fileInputRef.current?.click()}
-                    className={`w-full flex-1 border-2 border-dashed rounded-[14px] p-6 flex flex-col items-center justify-center text-center transition-colors ${isUploading ? "cursor-not-allowed border-white/[0.1] bg-white/[0.02]" : isDragging ? "cursor-pointer border-[#4F9DFF] bg-[#4F9DFF]/10" : "cursor-pointer border-white/[0.12] hover:bg-white/[0.04]"}`}
+                    className={`w-full max-w-2xl mx-auto border-2 border-dashed rounded-[14px] p-8 flex flex-col items-center justify-center text-center transition-colors ${isUploading ? "cursor-not-allowed border-white/[0.1] bg-white/[0.02]" : isDragging ? "cursor-pointer border-[#4F9DFF] bg-[#4F9DFF]/10" : "cursor-pointer border-white/[0.12] hover:bg-white/[0.04]"}`}
                   >
                     {isUploading ? (
                       <>
@@ -569,37 +570,37 @@ export default function StudentHomeworkDetailsPage() {
                       </>
                     ) : (
                       <>
-                        <div className="p-3 bg-white/[0.04] rounded-full mb-3">
-                          <UploadCloud className={`w-5 h-5 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
+                        <div className="p-4 bg-white/[0.03] border border-white/[0.05] shadow-lg rounded-full mb-4">
+                          <UploadCloud className={`w-6 h-6 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
                         </div>
-                        <p className="text-sm text-white mb-1">Drag & drop images or click to upload</p>
-                        <p className="text-[11px] text-[#7B8798] uppercase tracking-wider font-medium">Images accepted</p>
+                        <p className="text-[15px] text-white font-medium mb-1.5">Tap to Upload or Take a Photo</p>
+                        <p className="text-xs text-[#7B8798]">Supports JPG, PNG, HEIC</p>
                       </>
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-3 w-full sm:w-auto justify-center mt-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-2xl mx-auto">
                     <GlassButton 
                       onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
                       disabled={isUploading}
-                      className="flex-1 sm:flex-none border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/10 text-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:w-1/2 py-3.5 border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/10 text-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed justify-center"
                     >
                       <Camera className="w-4 h-4 mr-2" /> Take Photo
                     </GlassButton>
-                  </div>
                   
-                  <GradientButton 
-                    onClick={handleSubmitSubjective} 
-                    disabled={isSubmitting || isUploading} 
-                    className="w-full sm:w-auto px-8 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                    <GradientButton 
+                      onClick={handleSubmitSubjective} 
+                      disabled={isSubmitting || isUploading} 
+                      className="w-full sm:w-1/2 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed justify-center"
+                    >
                       {isSubmitting ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mx-auto" />
                       ) : (
-                        <span className="flex items-center justify-center">Submit Work <Send className="w-4 h-4 ml-2" /></span>
+                        <span className="flex items-center justify-center font-medium">Submit Work <Send className="w-4 h-4 ml-2" /></span>
                       )}
                     </GradientButton>
                   </div>
+                </div>
                 ) : (
                   <div className="flex flex-col gap-4">
                     <div className="p-4 bg-[#22C55E]/10 border border-[#22C55E]/30 rounded-xl text-center text-[#22C55E] flex flex-col items-center justify-center gap-2">
@@ -806,7 +807,14 @@ export default function StudentHomeworkDetailsPage() {
               </div>
               <div className="flex-1 overflow-auto bg-[#07111F] flex items-center justify-center p-4">
                 {viewingAttachment.type === 'image' || viewingAttachment.url.startsWith('data:image/') ? (
-                  <img src={viewingAttachment.url} alt={viewingAttachment.name} className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
+                  <div className="w-full h-full relative">
+                    <ZoomableImage 
+                      src={viewingAttachment.url} 
+                      alt={viewingAttachment.name} 
+                      className="absolute inset-0 m-auto w-full h-full"
+                      imageClassName="max-w-full max-h-full object-contain rounded-lg shadow-lg" 
+                    />
+                  </div>
                 ) : (
                   <iframe src={`${viewingAttachment.url}#navpanes=0`} className="w-full h-full border-0 rounded-lg bg-white" title={viewingAttachment.name} />
                 )}
