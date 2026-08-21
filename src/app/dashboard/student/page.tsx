@@ -254,7 +254,7 @@ export default function StudentDashboard() {
                     </defs>
                   </motion.svg>
                   <span className="text-[14px] font-bold bg-gradient-to-r from-[#FDE047] via-[#F59E0B] to-[#EF4444] bg-clip-text text-transparent drop-shadow-sm tracking-wide">
-                    {leaderboardEntries.find(e => e.studentId === currentUser.id)?.streak || 0} Day Streak
+                    {leaderboardEntries.find(e => e.studentId === currentUser.id)?.streak || 0} Streak
                   </span>
                 </div>
               </div>
@@ -516,3 +516,4 @@ export default function StudentDashboard() {
     </DashboardLayout>
   );
 }
+

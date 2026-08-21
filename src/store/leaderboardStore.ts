@@ -14,7 +14,7 @@ export interface LeaderboardState {
   initializeLeaderboard: () => void;
   getLeaderboard: (classId?: string, subjectId?: string, period?: "weekly" | "monthly" | "all_time") => LeaderboardEntry[];
   addPoints: (studentId: string, points: number, reason: string) => void;
-  updateStreak: (studentId: string, reset: boolean) => void;
+  updateStreak: (studentId: string, change: number | "reset") => void;
   validateStreaks: () => void;
   setupEventListeners: () => () => void;
 }
@@ -61,7 +61,13 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
             if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
             return (a.name || "").localeCompare(b.name || "");
           });
-          currentEntries.forEach((e, i) => e.rank = i + 1);
+          let currentRank = 1;
+currentEntries.forEach((e, i, arr) => {
+  if (i > 0 && (e.points !== arr[i-1].points || e.streak !== arr[i-1].streak)) {
+    currentRank++;
+  }
+  e.rank = currentRank;
+});
           
           return { entries: currentEntries, isInitialized: true };
         });
@@ -91,7 +97,13 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
           return (a.name || "").localeCompare(b.name || "");
         });
-        currentEntries.forEach((e, i) => e.rank = i + 1);
+        let currentRank = 1;
+currentEntries.forEach((e, i, arr) => {
+  if (i > 0 && (e.points !== arr[i-1].points || e.streak !== arr[i-1].streak)) {
+    currentRank++;
+  }
+  e.rank = currentRank;
+});
         
         return currentEntries;
       },
@@ -121,56 +133,35 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         }
       },
 
-      updateStreak: async (studentId, reset) => {
+      updateStreak: async (studentId, change) => {
         try {
           const userRef = doc(db, "users", studentId);
-          if (reset) {
+          if (change === "reset") {
             await updateDoc(userRef, { streak: 0 });
-          } else {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const cacheKey = `${studentId}_${todayStr}`;
-            
-            // 1. Check in-memory cache to strictly prevent double-clicks or duplicate events
-            if (!(window as any)._streakCache) {
-              (window as any)._streakCache = new Set();
-            }
-            if ((window as any)._streakCache.has(cacheKey)) {
-              return; // Already incremented in this session
-            }
-
-            // 2. Check Firestore state
+            useAuthStore.setState((state) => ({
+              users: state.users.map((u) => u.id === studentId ? { ...u, streak: 0 } : u)
+            }));
+          } else if (change !== 0) {
             const authState = useAuthStore.getState();
             const student = authState.users.find(u => u.id === studentId);
+            const newStreak = Math.max(0, ((student as any)?.streak || 0) + change);
             
-            if (student && (student as any).lastStreakDate === todayStr) {
-              // Already incremented today in DB
-              return;
-            }
-            
-            // 3. Mark as incremented locally
-            (window as any)._streakCache.add(cacheKey);
-            
-            // 4. Optimistic update to UI
             useAuthStore.setState((state) => ({
               users: state.users.map((u) => 
                 u.id === studentId 
-                  ? { ...u, streak: ((u as any).streak || 0) + 1, lastStreakDate: todayStr } 
+                  ? { ...u, streak: newStreak } 
                   : u
               )
             }));
             
-            // 5. Send to Firestore
-            await updateDoc(userRef, { 
-              streak: increment(1),
-              lastStreakDate: todayStr 
-            });
+            await updateDoc(userRef, { streak: newStreak });
           }
         } catch (error) {
           console.error("Failed to update streak in Firestore", error);
         }
       },
 
-      validateStreaks: () => {
+            validateStreaks: () => {
         import('./homeworkStore').then(({ useHomeworkStore }) => {
           const { assignments, submissions } = useHomeworkStore.getState();
           const authState = useAuthStore.getState();
@@ -180,38 +171,48 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           const now = new Date().getTime();
           
           students.forEach(async student => {
+            const studentAssignments = assignments.filter(a => {
+              const targetClass = (a as any).targetClassId;
+              if (targetClass && targetClass !== "-") {
+                const studentClassId = (student as any)?.classId || (student as any)?.grade;
+                return studentClassId === targetClass;
+              }
+              return (a as any).assignedTo?.includes(student.id) || (a as any).recipientStudentIds?.includes(student.id);
+            });
+            
+            // Sort assignments by due date to compute chronologically
+            studentAssignments.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+            
+            let calculatedStreak = 0;
+            
+            studentAssignments.forEach(a => {
+              const dueDate = new Date(a.dueDate).getTime();
+              const submission = submissions.find(s => s.assignmentId === a.id && s.studentId === student.id);
+              
+              const isSubmitted = submission && !["pending", "draft"].includes((submission.status as any)) && !submission.isLate;
+              
+              if (isSubmitted) {
+                if (submission.status === "rejected") {
+                  calculatedStreak = Math.max(0, calculatedStreak - 1);
+                } else if (!submission.isLate) {
+                  calculatedStreak++;
+                }
+              } else if (now > dueDate) {
+                // Missed deadline
+                calculatedStreak = 0;
+              }
+            });
+            
             const currentStreak = (student as any).streak || 0;
-            if (currentStreak > 0) {
-              // Find all assignments for this student
-              const studentAssignments = assignments.filter(a => {
-                const targetClass = (a as any).targetClassId;
-                if (targetClass && targetClass !== "-") {
-                  const studentClassId = (student as any)?.classId || (student as any)?.grade;
-                  return studentClassId === targetClass;
-                }
-                return (a as any).assignedTo?.includes(student.id) || (a as any).recipientStudentIds?.includes(student.id);
-              });
-              
-              // Check if any assignment is past due and NOT submitted
-              const hasMissedAssignment = studentAssignments.some(a => {
-                const dueDate = new Date(a.dueDate).getTime();
-                const gracePeriod = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
-                if (now > dueDate + gracePeriod) {
-                  // It's past grace period. Did they submit?
-                  const submission = submissions.find(s => s.assignmentId === a.id && s.studentId === student.id);
-                  const isSubmitted = submission && !["pending", "draft"].includes(submission.status);
-                  return !isSubmitted; // Missed if not submitted
-                }
-                return false;
-              });
-              
-              if (hasMissedAssignment) {
-                // Reset streak in Firestore!
-                try {
-                  await updateDoc(doc(db, "users", student.id), { streak: 0 });
-                } catch(e) {
-                  console.error("Failed to reset missed streak", e);
-                }
+            if (currentStreak !== calculatedStreak) {
+              // Sync the correct streak to Firestore
+              try {
+                await updateDoc(doc(db, "users", student.id), { streak: calculatedStreak });
+                useAuthStore.setState((state) => ({
+                  users: state.users.map((u) => u.id === student.id ? { ...u, streak: calculatedStreak } : u)
+                }));
+              } catch(e) {
+                console.error("Failed to sync streak", e);
               }
             }
           });
@@ -235,8 +236,15 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         
         const unsub2 = eventBus.on("HOMEWORK_SUBMITTED", (event) => {
           const payload = event.payload as any;
+          if (payload && payload.studentId && !payload.isLate) {
+            get().updateStreak(payload.studentId, 1);
+          }
+        });
+
+        const unsub3 = eventBus.on("HOMEWORK_REJECTED", (event) => {
+          const payload = event.payload as any;
           if (payload && payload.studentId) {
-            get().updateStreak(payload.studentId, false);
+            get().updateStreak(payload.studentId, -1);
           }
         });
         
@@ -244,6 +252,11 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           unsubAuth();
           unsub1();
           unsub2();
+          unsub3();
         };
       }
 }));
+
+
+
+

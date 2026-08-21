@@ -256,19 +256,25 @@ export default function TeacherDashboard() {
               <div className="space-y-6">
                 {(() => {
                   const recentActivities = [];
+                  const students = getStudentUsers();
 
                   // Latest Submission
-                  const latestSubmission = [...submissions].sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime())[0];
-                  if (latestSubmission) {
+                  const recentSubmissions = [...submissions]
+                    .filter(s => (s.status as any) !== "draft" && !!s.submittedAt)
+                    .sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime())
+                    .slice(0, 2);
+                    
+                  recentSubmissions.forEach(sub => {
+                    const student = students.find(s => s.id === sub.studentId);
                     recentActivities.push({
                       title: "Homework Submitted",
-                      desc: `${(latestSubmission as any).studentName || "A student"} submitted ${(latestSubmission as any).subjectName || "homework"}`,
-                      time: latestSubmission.submittedAt,
+                      desc: `${student?.name || "A student"} submitted the homework`,
+                      time: sub.submittedAt,
                       icon: FileText,
                       color: "text-[#2DD4BF]", bg: "bg-[#2DD4BF]/10", border: "border-[#2DD4BF]/20",
                       href: "/dashboard/teacher/homework"
                     });
-                  }
+                  });
 
                   // Latest Doubt
                   const latestDoubt = [...doubts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
