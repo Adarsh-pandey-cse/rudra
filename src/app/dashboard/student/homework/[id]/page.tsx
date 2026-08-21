@@ -111,6 +111,7 @@ export default function StudentHomeworkDetailsPage() {
 
   // -- MCQ Handlers --
   const handleSelectOption = (opt: string) => {
+    if (isPastDue) return;
     if (isCompleted) return;
     setAnswers(prev => ({ ...prev, [currentQuestion.id]: opt }));
   };
@@ -562,13 +563,21 @@ export default function StudentHomeworkDetailsPage() {
                 {!isCompleted ? (
                 <div className="flex flex-col gap-5 mt-4 items-center">
                   <div
-                    onDragOver={e => { e.preventDefault(); !isUploading && setIsDragging(true); }}
+                    onDragOver={e => { if (isPastDue) return; e.preventDefault(); !isUploading && setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
-                    onDrop={(e) => { e.preventDefault(); setIsDragging(false); const target = e.dataTransfer; if (!isUploading && target.files && target.files.length > 0) handleFileChange({ target } as any); }}
-                    onClick={() => !isUploading && fileInputRef.current?.click()}
-                    className={`w-full max-w-2xl mx-auto border-2 border-dashed rounded-[14px] p-8 flex flex-col items-center justify-center text-center transition-colors ${isUploading ? "cursor-not-allowed border-white/[0.1] bg-white/[0.02]" : isDragging ? "cursor-pointer border-[#4F9DFF] bg-[#4F9DFF]/10" : "cursor-pointer border-white/[0.12] hover:bg-white/[0.04]"}`}
+                    onDrop={(e) => { if (isPastDue) return; e.preventDefault(); setIsDragging(false); const target = e.dataTransfer; if (!isUploading && target.files && target.files.length > 0) handleFileChange({ target } as any); }}
+                    onClick={() => !isPastDue && !isUploading && fileInputRef.current?.click()}
+                    className={`w-full max-w-2xl mx-auto border-2 border-dashed rounded-[14px] p-8 flex flex-col items-center justify-center text-center transition-colors ${isPastDue ? "cursor-not-allowed border-red-500/20 bg-red-500/5 opacity-70" : isUploading ? "cursor-not-allowed border-white/[0.1] bg-white/[0.02]" : isDragging ? "cursor-pointer border-[#4F9DFF] bg-[#4F9DFF]/10" : "cursor-pointer border-white/[0.12] hover:bg-white/[0.04]"}`}
                   >
-                    {isUploading ? (
+                    {isPastDue ? (
+                      <>
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 shadow-lg rounded-full mb-4">
+                          <UploadCloud className="w-6 h-6 text-red-400" />
+                        </div>
+                        <p className="text-[15px] text-red-400 font-bold mb-1.5">Deadline Passed</p>
+                        <p className="text-xs text-red-400/70">Submissions are closed. Ask your teacher to extend the deadline.</p>
+                      </>
+                    ) : isUploading ? (
                       <>
                         <div className="p-3 bg-white/[0.04] rounded-full mb-3">
                           <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 border-2 border-[#4F9DFF]/30 border-t-[#4F9DFF] rounded-full" />
@@ -590,7 +599,7 @@ export default function StudentHomeworkDetailsPage() {
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-2xl mx-auto">
                     <GlassButton 
                       onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
-                      disabled={isUploading}
+                      disabled={isUploading || isPastDue}
                       className="w-full sm:w-1/2 py-3.5 border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/10 text-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed justify-center"
                     >
                       <Camera className="w-4 h-4 mr-2" /> Take Photo
@@ -598,7 +607,7 @@ export default function StudentHomeworkDetailsPage() {
                   
                     <GradientButton 
                       onClick={handleSubmitSubjective} 
-                      disabled={isSubmitting || isUploading} 
+                      disabled={isSubmitting || isUploading || isPastDue} 
                       className="w-full sm:w-1/2 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed justify-center"
                     >
                       {isSubmitting ? (
@@ -733,26 +742,26 @@ export default function StudentHomeworkDetailsPage() {
 
             {/* MCQ Navigation Controls */}
             {!isSubjective && (
-              <div className="flex justify-between items-center pt-2">
-                <GlassButton onClick={handlePrev} disabled={currentQuestionIndex === 0} className="px-6">
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-                </GlassButton>
-                
-                {!isCompleted && isLastQuestion ? (
-                  <GradientButton onClick={handleSubmitMCQ} disabled={isSubmitting} className="px-8 flex items-center">
-                    {isSubmitting ? (
-                      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
-                    Submit Answers
-                  </GradientButton>
-                ) : (
-                  <GradientButton onClick={handleNext} disabled={isLastQuestion} className="px-6">
-                    Next <ChevronRight className="w-4 h-4 ml-1" />
-                  </GradientButton>
-                )}
-              </div>
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/[0.08]">
+                  <GlassButton onClick={handlePrev} disabled={currentQuestionIndex === 0} className="px-6">
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </GlassButton>
+                  
+                  {!isCompleted && isLastQuestion ? (
+                    <GradientButton onClick={handleSubmitMCQ} disabled={isSubmitting || isPastDue} className={`px-8 flex items-center ${isPastDue ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      {isSubmitting ? (
+                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      {isPastDue ? "Deadline Passed" : "Submit Answers"}
+                    </GradientButton>
+                  ) : (
+                    <GradientButton onClick={handleNext} disabled={isLastQuestion} className="px-6">
+                      Next <ChevronRight className="w-4 h-4 ml-1" />
+                    </GradientButton>
+                  )}
+                </div>
             )}
 
             {/* Pagination Dots for MCQ */}
@@ -862,3 +871,5 @@ export default function StudentHomeworkDetailsPage() {
     </DashboardLayout>
   );
 }
+
+

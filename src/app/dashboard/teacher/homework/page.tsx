@@ -74,9 +74,18 @@ export default function HomeworkPage() {
   const teacherAssignments = getTeacherAssignments(currentUser.id);
   
   const filteredAssignments = teacherAssignments.filter(assignment => {
-    const matchesStatus = statusFilter === "all" || assignment.status === statusFilter;
+    let matchesStatus = false;
+    const isPastDue = new Date(assignment.dueDate) < new Date();
+    if (statusFilter === "all") matchesStatus = true;
+    else if (statusFilter === "active") matchesStatus = assignment.status === "published" && !isPastDue;
+    else if (statusFilter === "closed") matchesStatus = assignment.status === "published" && isPastDue;
+    else if (statusFilter === "draft") matchesStatus = assignment.status === "draft";
+    else if (statusFilter === "scheduled") matchesStatus = assignment.status === "scheduled";
     const matchesClass = classFilter === "all" || assignment.classId === classFilter;
     return matchesStatus && matchesClass;
+  }).sort((a, b) => {
+    if (a.classId !== b.classId) return a.classId.localeCompare(b.classId);
+    return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
   });
 
   const getStatusVariant = (status: string): "success" | "info" | "warning" | "error" | "default" => {
@@ -203,7 +212,7 @@ export default function HomeworkPage() {
         {/* Filters */}
         <motion.div variants={itemVariants} initial="hidden" animate="show" className="flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-wrap gap-3">
-            {["all", "published", "draft", "scheduled"].map(tab => (
+            {["all", "active", "closed", "draft", "scheduled"].map(tab => (
               <button
                 key={tab}
                 onClick={() => setStatusFilter(tab)}
@@ -488,3 +497,4 @@ export default function HomeworkPage() {
     </DashboardLayout>
   );
 }
+

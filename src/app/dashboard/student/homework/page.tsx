@@ -72,9 +72,13 @@ export default function StudentHomeworkPage() {
     const status = getComputedStatus(hw.id);
     if (activeTab === "All") return true;
     if (activeTab === "Pending") return status === "pending" || status === "draft";
-    if (activeTab === "Submitted") return status === "submitted" || status === "ai_evaluating";
+    if (activeTab === "Missed") return status === "missed";
+    if (activeTab === "Submitted") return status === "submitted" || status === "resubmitted" || status === "ai_evaluating";
     if (activeTab === "Graded") return status === "ai_evaluated" || status === "teacher_reviewed" || status === "accepted" || status === "rejected" || status === "resubmission_requested";
     return status.toLowerCase() === activeTab.toLowerCase();
+  }).sort((a, b) => {
+    if (a.subjectId !== b.subjectId) return a.subjectId.localeCompare(b.subjectId);
+    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
   });
 
   console.log("DEBUG StudentHomeworkPage:", {
@@ -95,7 +99,7 @@ export default function StudentHomeworkPage() {
     return { label: `${days}d left`, color: "text-[#22C55E]" };
   };
 
-  const tabs = ["All", "Pending", "Submitted", "Graded"];
+  const tabs = ["All", "Pending", "Missed", "Submitted", "Graded"];
   const pendingCount = allHomework.filter(h => {
     const st = getComputedStatus(h.id);
     return st === "pending" || st === "draft";
@@ -288,3 +292,4 @@ export default function StudentHomeworkPage() {
     </DashboardLayout>
   );
 }
+
