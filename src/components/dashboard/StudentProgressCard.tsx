@@ -65,7 +65,7 @@ export default function StudentProgressCard({ student, progress, isPastStudent }
           {progress.studyStreak > 0 && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-medium">
               <Flame className="w-3.5 h-3.5" />
-              <span>{progress.studyStreak} Day Streak</span>
+              <span>{progress.studyStreak} Streak</span>
             </div>
           )}
           
@@ -144,3 +144,4 @@ export default function StudentProgressCard({ student, progress, isPastStudent }
     </GlassCard>
   );
 }
+
