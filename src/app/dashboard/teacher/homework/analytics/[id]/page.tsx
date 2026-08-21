@@ -132,6 +132,11 @@ export default function HomeworkAnalyticsPage() {
 
   const handleSaveGrade = async (status: "accepted" | "rejected" | "resubmission_requested") => {
     if (!selectedSubmission) return;
+    
+    // Prevent double submissions
+    if ((selectedSubmission.sub as any).isSaving) return;
+    (selectedSubmission.sub as any).isSaving = true;
+
     const gradeVal = teacherGrade === "" ? null : Number(teacherGrade);
     
     try {
@@ -142,6 +147,8 @@ export default function HomeworkAnalyticsPage() {
       setSelectedSubmission(null);
     } catch (error: any) {
       alert(error.message || "Failed to submit review.");
+    } finally {
+      delete (selectedSubmission.sub as any).isSaving;
     }
   };
 

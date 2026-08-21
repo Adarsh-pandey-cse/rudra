@@ -244,6 +244,7 @@ export default function CreateHomeworkPage() {
   const [isPublishing, setIsPublishing] = useState(false);
 
   const handlePublish = async (hasGeneratedQs = true) => {
+    if (isPublishing) return;
     if (!selectedClass) {
       alert("Please select a class before publishing.");
       setGeminiError("Please select a class before publishing.");
@@ -426,7 +427,9 @@ export default function CreateHomeworkPage() {
                   <h2 className="text-lg font-bold text-white flex items-center gap-2"><Eye className="w-5 h-5 text-[#5B5CFF]" /> Review Generated Questions</h2>
                   <p className="text-[#B6C2D9] text-sm mt-1">Review, edit, or adjust marks before publishing.</p>
                 </div>
-                <GradientButton onClick={() => handlePublish(true)} className="px-6 py-2.5">Publish Assignment</GradientButton>
+                <GradientButton onClick={() => handlePublish(true)} disabled={isPublishing} className="px-6 py-2.5">
+                  {isPublishing ? "Publishing..." : "Publish Assignment"}
+                </GradientButton>
               </div>
               <div className="space-y-4">
                 {generatedQuestions.map((q, idx) => {
