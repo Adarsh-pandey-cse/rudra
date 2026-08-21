@@ -249,7 +249,9 @@ export default function ResetPinPage() {
                       label="Create New 6-Digit PIN"
                       icon={<KeyRound className="h-4 w-4" />}
                       placeholder="••••••"
-                      type="password"
+                      type="tel"
+                      autoComplete="off"
+                      style={{ WebkitTextSecurity: "disc" } as any}
                       inputMode="numeric"
                       maxLength={6}
                       value={newPin}
@@ -263,7 +265,9 @@ export default function ResetPinPage() {
                       label="Confirm New PIN"
                       icon={<KeyRound className="h-4 w-4" />}
                       placeholder="••••••"
-                      type="password"
+                      type="tel"
+                      autoComplete="off"
+                      style={{ WebkitTextSecurity: "disc" } as any}
                       inputMode="numeric"
                       maxLength={6}
                       value={confirmPin}
@@ -285,3 +289,4 @@ export default function ResetPinPage() {
     </main>
   );
 }
+
