@@ -1,13 +1,11 @@
 "use client";
 
-import { Kalam } from "next/font/google";
 import { autoFormatNoticeText, parseHighlights } from "@/lib/utils/noticeFormatter";
 import { Notice } from "@/types/notice-types";
 import { CheckCircle, Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import GlassButton from "@/components/ui/GlassButton";
 
-const kalam = Kalam({ weight: ["400", "700"], subsets: ["latin"] });
 
 interface CombinedNoticeProps {
   notice: Notice;
@@ -108,14 +106,14 @@ export default function CombinedNotice({
         </div>
 
         {/* Content (Text First) */}
-        <div className={cn(kalam.className, "text-center space-y-6 flex-1 flex flex-col items-center justify-center relative z-10 mb-8")}>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight max-w-[90%] mx-auto drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] opacity-95">
+        <div className={cn("text-left space-y-6 flex-1 flex flex-col items-start justify-start relative z-10 mb-8")}>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] opacity-95 w-full">
             {notice.title}
           </h2>
           
-          <div className="text-xl sm:text-2xl text-white/90 leading-relaxed max-w-2xl mx-auto space-y-2 font-medium opacity-85">
+          <div className="text-base sm:text-lg text-white/90 leading-relaxed w-full space-y-2 font-medium opacity-90">
             {highlightedBody.split('\n').map((line, i) => (
-              <p key={i} className={cn("whitespace-pre-wrap", line.startsWith('✓') && "text-left inline-block w-full sm:w-auto")}>
+              <p key={i} className="whitespace-pre-wrap text-left w-full break-words">
                 {line.split('!!').map((part, j) => 
                   j % 2 === 1 ? <span key={j} className="text-[#FCD34D] font-bold underline decoration-wavy decoration-1 underline-offset-4">{part}</span> : part
                 )}
@@ -181,3 +179,4 @@ export default function CombinedNotice({
     </div>
   );
 }
+
