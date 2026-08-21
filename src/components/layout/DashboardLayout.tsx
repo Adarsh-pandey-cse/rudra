@@ -236,19 +236,23 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       const { initializeNoticeListener, initializeReadListener } = useNoticeStore.getState();
       const { initializeAssignmentsListener, initializeSubmissionsListener } = useHomeworkStore.getState();
       const { initializeDoubtsListener } = useDoubtStore.getState();
-      
+      let isMounted = true;
+
       let unsubFees: (() => void) | undefined;
       import("@/store/feeStore").then(({ useFeeStore }) => {
+        if (!isMounted) return;
         unsubFees = useFeeStore.getState().initializeFeeListeners();
       });
 
       let unsubLeaderboard: (() => void) | undefined;
       import("@/store/leaderboardStore").then(({ useLeaderboardStore }) => {
+        if (!isMounted) return;
         unsubLeaderboard = useLeaderboardStore.getState().setupEventListeners();
       });
       
       let unsubNotifications: (() => void) | undefined;
       import("@/store/notificationStore").then(({ useNotificationStore }) => {
+        if (!isMounted) return;
         unsubNotifications = useNotificationStore.getState().setupEventListeners();
       });
       
@@ -264,6 +268,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       }
       
       return () => {
+        isMounted = false;
         unsubUsers();
         unsubNotices();
         unsubAssignments();
@@ -308,60 +313,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     (window as any)._syncFCMToken = syncToken;
   }, [currentUser?.id, currentUser?.fcmToken]);
 
-  // Watch for new notifications and trigger push
-  const prevNotifCount = useRef(0);
-  const isInitialMount = useRef(true);
-  
-  useEffect(() => {
-    if (isInitialMount.current) {
-      prevNotifCount.current = inAppNotifs.length;
-      isInitialMount.current = false;
-      return;
-    }
-    
-    if (inAppNotifs.length > prevNotifCount.current) {
-      const newNotifsCount = inAppNotifs.length - prevNotifCount.current;
-      const newNotifs = inAppNotifs.slice(0, newNotifsCount);
-      
-      const now = new Date().getTime();
-      const recentNotifs = newNotifs.filter(n => {
-         const createdAt = new Date(n.createdAt).getTime();
-         return (now - createdAt) < 60000; // Only trigger push for events in the last 60 seconds
-      });
-      
-      if (recentNotifs.length > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-        recentNotifs.forEach(n => {
-          if (!n.read) {
-            const showPwaNotification = async () => {
-              try {
-                if ('serviceWorker' in navigator) {
-                  const registration = await navigator.serviceWorker.ready;
-                  if (registration && registration.showNotification) {
-                    await registration.showNotification(n.title, {
-                      body: n.message,
-                      icon: '/icon512_maskable.png',
-                      badge: '/icon512_maskable.png',
-                      vibrate: [200, 100, 200]
-                    } as any);
-                    return;
-                  }
-                }
-                // Fallback for desktop browsers
-                new Notification(n.title, {
-                  body: n.message,
-                  icon: '/icon512_maskable.png'
-                });
-              } catch (err) {
-                console.warn("Browser push notification failed (expected on some mobile browsers):", err);
-              }
-            };
-            showPwaNotification();
-          }
-        });
-      }
-    }
-    prevNotifCount.current = inAppNotifs.length;
-  }, [inAppNotifs]);
+
 
   const navItems = role === "teacher" ? TEACHER_NAV : STUDENT_NAV;
   const bottomNavItems = role === "teacher" ? TEACHER_BOTTOM_NAV : STUDENT_BOTTOM_NAV;

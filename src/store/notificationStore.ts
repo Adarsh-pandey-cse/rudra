@@ -23,6 +23,8 @@ interface NotificationState {
   setupEventListeners: () => () => void;
 }
 
+let isListenerSetup = false;
+let globalUnsubs: (() => void)[] = [];
 const displayedToasts = new Set<string>();
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
@@ -136,6 +138,14 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       },
       setupEventListeners: () => {
+        if (isListenerSetup) {
+          return () => {
+            globalUnsubs.forEach(unsub => unsub());
+            globalUnsubs = [];
+            isListenerSetup = false;
+          };
+        }
+        isListenerSetup = true;
         const unsubs: (() => void)[] = [];
 
         const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
@@ -183,6 +193,30 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                     }
                   } catch (err) {
                     console.warn("Failed to trigger toast on mobile", err);
+                  }
+
+                  // Also trigger native push notification
+                  try {
+                    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+                      if ('serviceWorker' in navigator) {
+                        const registration = await navigator.serviceWorker.ready;
+                        if (registration && registration.showNotification) {
+                          await registration.showNotification(notif.title, {
+                            body: notif.message,
+                            icon: '/icon512_maskable.png',
+                            badge: '/icon512_maskable.png',
+                            vibrate: [200, 100, 200]
+                          } as any);
+                          return;
+                        }
+                      }
+                      new Notification(notif.title, {
+                        body: notif.message,
+                        icon: '/icon512_maskable.png'
+                      });
+                    }
+                  } catch (err) {
+                    console.warn("Browser push notification failed", err);
                   }
                 }
               }
@@ -286,10 +320,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           }
         }));
 
+        globalUnsubs = unsubs;
+
         return () => {
-          unsubs.forEach(unsub => unsub());
+          globalUnsubs.forEach(unsub => unsub());
+          globalUnsubs = [];
+          isListenerSetup = false;
         };
       }
     })
 );
-
