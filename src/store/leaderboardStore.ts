@@ -3,6 +3,7 @@ import { doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 import type { LeaderboardEntry } from "@/types/homework-types";
 import { useAuthStore } from "./authStore";
+import { useHomeworkStore } from "./homeworkStore";
 import { eventBus } from "@/lib/eventBus";
 
 export interface LeaderboardState {
@@ -33,6 +34,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         set(state => {
           const activeStudentIds = students.map(s => s.id);
           const currentEntries = state.entries.filter(e => activeStudentIds.includes(e.studentId));
+            const submissions = useHomeworkStore.getState().submissions;
           
           students.forEach(s => {
             const existingIndex = currentEntries.findIndex(e => e.studentId === s.id);
@@ -45,6 +47,7 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               homeworkCount: (s as any).homeworkCount || 0,
               accuracy: 0,
               streak: (s as any).streak || 0,
+                lastSubmissionAt: submissions.filter(sub => sub.studentId === s.id && sub.submittedAt).reduce((max, sub) => Math.max(max, new Date(sub.submittedAt || 0).getTime()), 0),
               rank: 0
             };
             
@@ -59,15 +62,12 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           currentEntries.sort((a, b) => {
             if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
             if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
+              const aTime = (a as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
+              const bTime = (b as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
+              if (aTime !== bTime) return aTime - bTime;
             return (a.name || "").localeCompare(b.name || "");
           });
-          let currentRank = 1;
-currentEntries.forEach((e, i, arr) => {
-  if (i > 0 && (e.points !== arr[i-1].points || e.streak !== arr[i-1].streak)) {
-    currentRank++;
-  }
-  e.rank = currentRank;
-});
+          currentEntries.forEach((e, i) => e.rank = i + 1);
           
           return { entries: currentEntries, isInitialized: true };
         });
@@ -95,15 +95,12 @@ currentEntries.forEach((e, i, arr) => {
         currentEntries.sort((a, b) => {
           if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
           if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
+              const aTime = (a as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
+              const bTime = (b as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
+              if (aTime !== bTime) return aTime - bTime;
           return (a.name || "").localeCompare(b.name || "");
         });
-        let currentRank = 1;
-currentEntries.forEach((e, i, arr) => {
-  if (i > 0 && (e.points !== arr[i-1].points || e.streak !== arr[i-1].streak)) {
-    currentRank++;
-  }
-  e.rank = currentRank;
-});
+        currentEntries.forEach((e, i) => e.rank = i + 1);
         
         return currentEntries;
       },
@@ -256,6 +253,8 @@ currentEntries.forEach((e, i, arr) => {
         };
       }
 }));
+
+
 
 
 
