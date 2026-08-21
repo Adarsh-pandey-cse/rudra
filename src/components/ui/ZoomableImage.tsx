@@ -24,13 +24,13 @@ export default function ZoomableImage({ src, alt = "Image", className = "", imag
   return (
     <>
       <div 
-        className={\elative group cursor-zoom-in overflow-hidden \\}
+        className={`relative group cursor-zoom-in overflow-hidden ${className}`}
         onClick={() => { setIsOpen(true); setScale(1); setRotation(0); }}
       >
         <img 
           src={src} 
           alt={alt} 
-          className={\w-full h-full transition-transform duration-300 group-hover:scale-105 \\} 
+          className={`w-full h-full transition-transform duration-300 group-hover:scale-105 ${imageClassName}`} 
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
           <div className="p-2 bg-black/50 backdrop-blur-sm rounded-full text-white">

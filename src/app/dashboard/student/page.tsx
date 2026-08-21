@@ -289,7 +289,14 @@ export default function StudentDashboard() {
               <Megaphone className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <div className="text-xl font-bold text-white">{unreadNoticesCount}</div>
+              <div className="text-xl font-bold text-white relative inline-block">
+                {unreadNoticesCount}
+                {unreadNoticesCount > 0 && (
+                  <span className="absolute -top-3 -right-6 bg-red-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)] border border-red-400">
+                    +{unreadNoticesCount}
+                  </span>
+                )}
+              </div>
               <div className="text-[13px] text-[#7B8798]">New Notices</div>
             </div>
           </GlassCard>
@@ -323,13 +330,57 @@ export default function StudentDashboard() {
         </motion.div>
 
         <div className="grid grid-cols-1 gap-8">
+
+          {/* Latest Notice (Full Width) */}
+          {recentNotice && (
+            <motion.div variants={itemVariants}>
+              <GlassCard className="p-6 border-white/10 relative overflow-hidden group cursor-pointer hover:border-white/20 transition-all shadow-lg"
+                onClick={() => router.push('/dashboard/student/notices')}
+              >
+                <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none ${
+                  recentNotice.priority === 'critical' ? 'bg-[#EF4444]/20' :
+                  recentNotice.priority === 'high' ? 'bg-[#F59E0B]/20' :
+                  'bg-[#3B82F6]/20'
+                }`} />
+                <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-start">
+                  <div className="shrink-0">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      recentNotice.priority === 'critical' ? 'bg-[#EF4444]/20' :
+                      recentNotice.priority === 'high' ? 'bg-[#F59E0B]/20' :
+                      'bg-[#3B82F6]/20'
+                    }`}>
+                      <Bell className={`w-6 h-6 ${
+                        recentNotice.priority === 'critical' ? 'text-[#EF4444]' :
+                        recentNotice.priority === 'high' ? 'text-[#F59E0B]' :
+                        'text-[#3B82F6]'
+                      }`} />
+                    </div>
+                  </div>
+                  <div className="flex-1 w-full">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold text-white">{recentNotice.title}</h3>
+                      {recentNotice.priority === 'critical' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/30 uppercase">Urgent</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-[#B6C2D9] mb-4 whitespace-pre-wrap">{recentNotice.body}</p>
+                    <div className="flex items-center text-[13px] text-[#7B8798] transition-colors group-hover:text-white">
+                      <span className="font-medium">View in Notice Board</span>
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
           {/* Main Content Column */}
           <div className="space-y-8">
             
             {/* Action Center */}
             <motion.div variants={itemVariants} className="space-y-4">
               <h2 className="text-lg font-semibold text-white">Action Center</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
               
               {/* Next Up Homework */}
               <GlassCard className="p-5 flex flex-col justify-between border-[#5B5CFF]/30 relative overflow-hidden group">
@@ -360,46 +411,6 @@ export default function StudentDashboard() {
                 </div>
               </GlassCard>
 
-              {/* Latest Notice */}
-              <GlassCard className="p-5 flex flex-col justify-between border-white/10 relative overflow-hidden group cursor-pointer hover:border-white/20 transition-colors"
-                onClick={() => router.push('/dashboard/student/notices')}
-              >
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none ${
-                  recentNotice?.priority === 'critical' ? 'bg-[#EF4444]/10' :
-                  recentNotice?.priority === 'high' ? 'bg-[#F59E0B]/10' :
-                  'bg-[#3B82F6]/10'
-                }`} />
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Bell className={`w-4 h-4 ${
-                      recentNotice?.priority === 'critical' ? 'text-[#EF4444]' :
-                      recentNotice?.priority === 'high' ? 'text-[#F59E0B]' :
-                      'text-[#3B82F6]'
-                    }`} />
-                    <span className={`text-sm font-semibold ${
-                      recentNotice?.priority === 'critical' ? 'text-[#EF4444]' :
-                      recentNotice?.priority === 'high' ? 'text-[#F59E0B]' :
-                      'text-[#3B82F6]'
-                    }`}>Latest Notice</span>
-                  </div>
-                  {recentNotice ? (
-                    <>
-                      <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{recentNotice.title}</h3>
-                      <p className="text-[13px] text-[#B6C2D9] line-clamp-2 mb-4">{recentNotice.body}</p>
-                      <div className="flex items-center text-[13px] text-[#7B8798] mt-auto">
-                        <span className="font-medium">Read more</span>
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-center">
-                      <CheckCircle className="w-10 h-10 text-[#7B8798]/30 mb-2" />
-                      <p className="text-sm font-medium text-[#7B8798]">No recent notices</p>
-                    </div>
-                  )}
-                </div>
-              </GlassCard>
-
               </div>
             </motion.div>
 
@@ -411,7 +422,7 @@ export default function StudentDashboard() {
               </div>
               
               {subjects.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {subjects.map((subject) => (
                     <GlassCard key={subject.subjectId} className="p-5 flex flex-col gap-4">
                       <div className="flex justify-between items-center">
@@ -516,4 +527,6 @@ export default function StudentDashboard() {
     </DashboardLayout>
   );
 }
+
+
 
