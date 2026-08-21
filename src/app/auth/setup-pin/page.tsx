@@ -130,7 +130,9 @@ export default function SetupPinPage() {
                   label="Create 6-Digit PIN"
                   icon={<Shield className="h-4 w-4" />}
                   placeholder="••••••"
-                  type="password"
+                  type="tel"
+                  autoComplete="off"
+                  style={{ WebkitTextSecurity: "disc" } as any}
                   inputMode="numeric"
                   maxLength={6}
                   value={pin}
@@ -143,7 +145,9 @@ export default function SetupPinPage() {
                   label="Confirm PIN"
                   icon={<Shield className="h-4 w-4" />}
                   placeholder="••••••"
-                  type="password"
+                  type="tel"
+                  autoComplete="off"
+                  style={{ WebkitTextSecurity: "disc" } as any}
                   inputMode="numeric"
                   maxLength={6}
                   value={confirmPin}
@@ -163,3 +167,4 @@ export default function SetupPinPage() {
     </main>
   );
 }
+

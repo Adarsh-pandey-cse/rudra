@@ -21,11 +21,12 @@ export default function VerifyPinPage() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerify = async (e?: React.FormEvent, pinToVerify?: string) => {
+    if (e) e.preventDefault();
     setError(null);
 
-    if (pin.length !== 6) {
+    const currentPin = pinToVerify || pin;
+    if (currentPin.length !== 6) {
       setError("PIN must be exactly 6 digits.");
       return;
     }
@@ -39,7 +40,7 @@ export default function VerifyPinPage() {
     // Simulate slight network delay for better UX
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    if (pin === currentUser.pin) {
+    if (currentPin === currentUser.pin) {
       setPinVerified(true);
       router.push(`/dashboard/${currentUser.role}`);
     } else {
@@ -119,11 +120,19 @@ export default function VerifyPinPage() {
                   label="Enter PIN"
                   icon={<KeyRound className="h-4 w-4" />}
                   placeholder="••••••"
-                  type="password"
+                  type="tel"
+                  autoComplete="off"
+                  style={{ WebkitTextSecurity: "disc" } as any}
                   inputMode="numeric"
                   maxLength={6}
                   value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    setPin(val);
+                    if (val.length === 6) {
+                      handleVerify(undefined, val);
+                    }
+                  }}
                   className="text-center text-xl tracking-[0.5em] font-mono font-bold"
                   autoFocus
                   required
@@ -146,3 +155,5 @@ export default function VerifyPinPage() {
     </main>
   );
 }
+
+
