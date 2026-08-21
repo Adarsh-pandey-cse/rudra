@@ -189,9 +189,9 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
               const isSubmitted = submission && !["pending", "draft"].includes((submission.status as any)) && !submission.isLate;
               
               if (isSubmitted) {
-                if (submission.status === "rejected") {
-                  calculatedStreak = Math.max(0, calculatedStreak - 1);
-                } else if (!submission.isLate) {
+                // If rejected, they don't get the +1 streak (cancels out fake submission). 
+                // We do NOT penalize past streak, we just don't award it here.
+                if (submission.status !== "rejected" && !submission.isLate) {
                   calculatedStreak++;
                 }
               } else if (now > dueDate) {
