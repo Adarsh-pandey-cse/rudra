@@ -97,6 +97,8 @@ export default function StudentHomeworkDetailsPage() {
     );
   }
 
+  const isPastDue = new Date() > new Date(homework.dueDate);
+  const isMissed = isPastDue && !['submitted', 'resubmitted', 'teacher_reviewed', 'ai_evaluated', 'accepted', 'rejected', 'resubmission_requested'].includes(submission?.status || '');
   const questions = homework.questions || [];
   const isCompleted = submission?.status === "submitted" || submission?.status === "resubmitted" || submission?.status === "teacher_reviewed" || submission?.status === "ai_evaluated" || submission?.status === "accepted";
   const needsResubmission = submission?.status === "rejected" || submission?.status === "resubmission_requested";
@@ -327,9 +329,15 @@ export default function StudentHomeworkDetailsPage() {
                 </div>
               )}
 
-              <GradientButton onClick={() => setStarted(true)} className="px-12 py-3 text-lg font-bold relative z-10">
-                {isSubjective ? 'Open Assignment' : 'Start Quiz'}
-              </GradientButton>
+              {isMissed ? (
+                <div className="inline-flex px-8 py-3 bg-[#EF4444]/20 border-2 border-[#EF4444]/50 rounded-xl text-[#EF4444] font-black text-2xl tracking-[0.2em] uppercase relative z-10 rotate-[-5deg] shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                  MISSED
+                </div>
+              ) : (
+                <GradientButton onClick={() => setStarted(true)} className="px-12 py-3 text-lg font-bold relative z-10">
+                  {isSubjective ? 'Open Assignment' : 'Start Quiz'}
+                </GradientButton>
+              )}
             </GlassCard>
           </motion.div>
         ) : (
@@ -819,6 +827,33 @@ export default function StudentHomeworkDetailsPage() {
                   <iframe src={`${viewingAttachment.url}#navpanes=0`} className="w-full h-full border-0 rounded-lg bg-white" title={viewingAttachment.name} />
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isUploading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-gradient-to-br from-[#1A2235] to-[#0D1525] border border-white/[0.08] p-8 rounded-[24px] shadow-[0_0_50px_rgba(91,92,255,0.2)] flex flex-col items-center text-center max-w-sm w-full"
+            >
+              <div className="w-20 h-20 relative mb-6">
+                <div className="absolute inset-0 border-4 border-[#5B5CFF]/30 border-t-[#5B5CFF] rounded-full animate-spin" />
+                <div className="absolute inset-2 bg-gradient-to-br from-[#5B5CFF]/20 to-transparent rounded-full flex items-center justify-center">
+                  <UploadCloud className="w-8 h-8 text-[#5B5CFF] animate-pulse" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Uploading Securely</h3>
+              <p className="text-sm text-[#7B8798]">Please wait while we process your homework image...</p>
             </motion.div>
           </motion.div>
         )}

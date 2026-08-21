@@ -81,7 +81,10 @@ export default function CreateHomeworkPage() {
   const [difficulty, setDifficulty] = useState("Medium");
   const [estimatedTime, setEstimatedTime] = useState("30");
   const [dueDate, setDueDate] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() + 3); return d.toISOString().slice(0, 16);
+    const d = new Date(); 
+    d.setHours(d.getHours() + 24); 
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
   });
   const [allowLate, setAllowLate] = useState(false);
   const [lateWindow, setLateWindow] = useState("24");
@@ -785,6 +788,36 @@ export default function CreateHomeworkPage() {
           </GlassCard>
         )}
       </motion.div>
+          {/* Royal Upload Status Modal for Teacher */}
+      <AnimatePresence>
+        {isPublishing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-gradient-to-br from-[#1A2235] to-[#0D1525] border border-white/[0.08] p-8 rounded-[24px] shadow-[0_0_50px_rgba(91,92,255,0.2)] flex flex-col items-center text-center max-w-sm w-full"
+            >
+              <div className="w-20 h-20 relative mb-6">
+                <div className="absolute inset-0 border-4 border-[#5B5CFF]/30 border-t-[#5B5CFF] rounded-full animate-spin" />
+                <div className="absolute inset-2 bg-gradient-to-br from-[#5B5CFF]/20 to-transparent rounded-full flex items-center justify-center">
+                  <Upload className="w-8 h-8 text-[#5B5CFF] animate-pulse" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Publishing Assignment</h3>
+              <p className="text-sm text-[#7B8798]">Please wait while we upload the assignment and materials...</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </DashboardLayout>
   );
 }
+
+
