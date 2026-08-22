@@ -1,6 +1,8 @@
 ﻿import React, { useState } from 'react';
 import { ZoomIn, ZoomOut, RotateCcw, RotateCw, Download, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
+import dynamic from "next/dynamic";
+const ReactPDFViewer = dynamic(() => import("./ReactPDFViewer"), { ssr: false });
 
 interface InlineFileViewerProps {
   url: string;
@@ -68,12 +70,8 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
           </div>
         </>
             ) : isPdf ? (
-        <iframe 
-          src={"https://mozilla.github.io/pdf.js/web/viewer.html?file=" + encodeURIComponent(url)} 
-          className="w-full h-full border-0 bg-white rounded-xl"
-          title={name}
-        />
-      ) : isDoc ? (
+            <ReactPDFViewer url={url} />
+          ) : isDoc ? (
         <iframe 
           src={'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true'} 
           className="w-full h-full border-0 bg-white"

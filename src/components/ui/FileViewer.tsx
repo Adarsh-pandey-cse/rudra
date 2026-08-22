@@ -2,6 +2,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ZoomOut, RotateCcw, RotateCw, Download, FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import dynamic from "next/dynamic";
+const ReactPDFViewer = dynamic(() => import("./ReactPDFViewer"), { ssr: false });
 
 interface FileViewerProps {
   url: string;
@@ -87,11 +89,7 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
               />
             </motion.div>
                     ) : isPdf ? (
-            <iframe 
-              src={"https://mozilla.github.io/pdf.js/web/viewer.html?file=" + encodeURIComponent(url)} 
-              className="w-full h-full border-0 bg-white rounded-xl"
-              title={name}
-            />
+            <ReactPDFViewer url={url} />
           ) : isDoc ? (
             <iframe 
               src={'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true'} 
