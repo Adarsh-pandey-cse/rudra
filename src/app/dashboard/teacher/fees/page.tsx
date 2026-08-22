@@ -146,6 +146,18 @@ export default function TeacherFeesPage() {
             verifierName: currentUser!.name
           };
           setActiveReceiptData({ payment: paymentData, invoice: currentInvoice, record, student });
+          
+          // Send notification to student
+          fetch("/api/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: student.id,
+              title: "Payment Received",
+              body: `Your payment of Rs. ${amountNum} for ${new Date(currentInvoice.month).toLocaleString(undefined, { month: "long" })} has been successfully received.`,
+              type: "fee_update"
+            })
+          }).catch(console.error);
         } catch (error) {
           console.error("Failed to generate receipt immediately", error);
         } finally {
@@ -892,4 +904,5 @@ export default function TeacherFeesPage() {
     </DashboardLayout>
   );
 }
+
 
