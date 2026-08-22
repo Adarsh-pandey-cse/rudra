@@ -60,7 +60,7 @@ export default function TeacherDoubtChatPage() {
   const params = useParams();
   const doubtId = params.id as string;
 
-  const { currentUser, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { currentUser, isAuthenticated, _hasHydrated, users } = useAuthStore();
   const { doubts, replies, teacherReply, resolveDoubt, setTyping, typingStatus, initializeRepliesListener } = useDoubtStore();
 
   const [mounted, setMounted] = useState(false);
@@ -360,8 +360,8 @@ export default function TeacherDoubtChatPage() {
                   >
                     {/* Student avatar */}
                     {!isMe && (
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] flex items-center justify-center shrink-0 mr-2 mt-1 shadow-md text-white font-bold text-xs">
-                        {doubt.studentName.charAt(0)}
+                      <div className="w-7 h-7 rounded-full shrink-0 mr-2 mt-1 shadow-md overflow-hidden">
+                        <img src={users.find((u: any) => u.id === doubt.studentId)?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${doubt.studentId}`} alt="avatar" className="w-full h-full object-cover" />
                       </div>
                     )}
 
@@ -406,6 +406,11 @@ export default function TeacherDoubtChatPage() {
                         </div>
                       </div>
                     </div>
+                    {isMe && (
+                      <div className="w-7 h-7 rounded-full shrink-0 ml-2 mt-1 shadow-md overflow-hidden">
+                        <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.id}`} alt="avatar" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
