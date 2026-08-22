@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -10,6 +10,7 @@ import {
   MessageCircleQuestion, Loader2, Bot
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import FileViewer from "@/components/ui/FileViewer";
 import GlassCard from "@/components/ui/GlassCard";
 import GlassButton from "@/components/ui/GlassButton";
 import EmptyState from "@/components/ui/EmptyState";
@@ -19,7 +20,7 @@ import type { DoubtReply, DoubtStatus } from "@/types/doubt-types";
 import type { Attachment } from "@/types/homework-types";
 import { format, isToday, isYesterday } from "date-fns";
 
-// ─── Helpers ────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function formatMessageTime(dateStr: string) {
   const d = new Date(dateStr);
   return format(d, "h:mm a");
@@ -54,7 +55,7 @@ const statusConfig: Record<string, { color: string; bg: string; label: string }>
   escalated: { color: "text-[#EF4444]", bg: "bg-[#EF4444]/10", label: "Escalated" },
 };
 
-// ─── Component ──────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function StudentDoubtChatPage() {
   const router = useRouter();
   const params = useParams();
@@ -137,7 +138,7 @@ export default function StudentDoubtChatPage() {
     );
   }
 
-  // ─── Handlers ───────────────────────────────────────────
+  // â”€â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSend = async () => {
     const content = text.trim();
     const currentAttachments = [...attachments];
@@ -217,12 +218,12 @@ export default function StudentDoubtChatPage() {
   const messageGroups = groupMessagesByDate(chatMessages);
   const isTeacherTyping = typingStatus[doubtId] === "teacher";
 
-  // ─── Render ─────────────────────────────────────────────
+  // â”€â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <DashboardLayout role="student">
       <div className="fixed inset-0 top-[60px] lg:left-[260px] z-10 bg-[#07111F] flex flex-col pb-[84px] lg:pb-0">
 
-        {/* ── Chat Header ── */}
+        {/* â”€â”€ Chat Header â”€â”€ */}
         <div className="shrink-0 bg-[#0B1628]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center gap-3 z-10">
           <button
             onClick={() => router.push("/dashboard/student/doubts")}
@@ -246,7 +247,7 @@ export default function StudentDoubtChatPage() {
                 {isTeacherTyping ? (
                   <span className="text-[#4F9DFF] font-medium">typing...</span>
                 ) : (
-                  <>Class {doubt.classId} • {doubt.topicName || "General"}</>
+                  <>Class {doubt.classId} â€¢ {doubt.topicName || "General"}</>
                 )}
               </p>
             </div>
@@ -257,7 +258,7 @@ export default function StudentDoubtChatPage() {
           </span>
         </div>
 
-        {/* ── Info Panel (collapsible) ── */}
+        {/* â”€â”€ Info Panel (collapsible) â”€â”€ */}
         <AnimatePresence>
           {showInfo && (
             <motion.div
@@ -298,7 +299,7 @@ export default function StudentDoubtChatPage() {
           )}
         </AnimatePresence>
 
-        {/* ── Messages Area ── */}
+        {/* â”€â”€ Messages Area â”€â”€ */}
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scroll-smooth bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAyKSIgY3g9IjMwIiBjeT0iMzAiIHI9IjEiLz48L2c+PC9zdmc+')] ">
 
           {/* System message: Original question */}
@@ -501,7 +502,7 @@ export default function StudentDoubtChatPage() {
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        {/* ── Input Bar ── */}
+        {/* â”€â”€ Input Bar â”€â”€ */}
         <div className="shrink-0 border-t border-white/[0.06] bg-[#0B1628]/95 backdrop-blur-xl px-2 py-2 lg:px-4 lg:py-3 z-20">
           {/* Attachment preview */}
           {attachments.length > 0 && (
@@ -572,46 +573,19 @@ export default function StudentDoubtChatPage() {
       <input ref={fileInputRef} type="file" onChange={handleFileUpload} multiple accept="image/*,.pdf,.doc,.docx" className="hidden" />
       <input ref={cameraInputRef} type="file" onChange={handleFileUpload} accept="image/*" capture="environment" className="hidden" />
 
-      {/* ── Attachment Viewer Modal ── */}
+      {/* â”€â”€ Attachment Viewer Modal â”€â”€ */}
       <AnimatePresence>
         {viewingAttachment && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-5xl h-[85vh] bg-[#0F172A] border border-white/[0.1] rounded-[24px] overflow-hidden flex flex-col shadow-2xl"
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#131D2E]">
-                <h3 className="text-white font-medium flex items-center gap-2 truncate pr-4">
-                  <Paperclip className="w-4 h-4 text-[#7B8798] shrink-0" />
-                  <span className="truncate">{viewingAttachment.name}</span>
-                </h3>
-                <div className="flex items-center gap-2 shrink-0">
-                  <a href={viewingAttachment.url} download={viewingAttachment.name} className="p-2 bg-white/[0.05] hover:bg-white/[0.1] rounded-full text-white transition-colors">
-                    <Download className="w-4 h-4" />
-                  </a>
-                  <button onClick={() => setViewingAttachment(null)} className="p-2 bg-white/[0.05] hover:bg-[#EF4444] rounded-full text-white transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-auto bg-[#07111F] flex items-center justify-center p-4">
-                {viewingAttachment.type === "image" || viewingAttachment.url.startsWith("data:image/") ? (
-                  <img src={viewingAttachment.url} alt={viewingAttachment.name} className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
-                ) : (
-                  <iframe src={`${viewingAttachment.url}#navpanes=0`} className="w-full h-full border-0 rounded-lg bg-white" title={viewingAttachment.name} />
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
+          <FileViewer 
+            url={viewingAttachment.url}
+            name={viewingAttachment.name}
+            type={viewingAttachment.type || (viewingAttachment.url.startsWith('data:image/') ? 'image' : 'other')}
+            onClose={() => setViewingAttachment(null)}
+          />
         )}
       </AnimatePresence>
     </DashboardLayout>
   );
 }
+
+

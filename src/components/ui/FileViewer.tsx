@@ -1,6 +1,4 @@
-﻿const fs = require('fs');
-
-const content = `import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ZoomOut, RotateCcw, RotateCw, Download, FileText } from 'lucide-react';
 
@@ -75,7 +73,7 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
                 src={url} 
                 alt={name} 
                 style={{ 
-                  transform: \`scale(${scale}) rotate(${rotation}deg)\`,
+                  transform: 'scale(' + scale + ') rotate(' + rotation + 'deg)',
                   transition: 'transform 0.2s ease-out'
                 }}
                 className="max-w-full max-h-full object-contain drop-shadow-2xl pointer-events-none" 
@@ -83,7 +81,7 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
             </motion.div>
           ) : isDoc ? (
             <iframe 
-              src={\`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true\`} 
+              src={'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true'} 
               className="w-full h-full border-0 bg-white rounded-xl"
               title={name}
             />
@@ -101,6 +99,4 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
       </motion.div>
     </AnimatePresence>
   );
-}`;
-
-fs.writeFileSync('src/components/ui/FileViewer.tsx', content, 'utf8');
+}
