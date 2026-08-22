@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -148,7 +148,7 @@ export default function TeacherNotesPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0F172A] border border-white/[0.1] p-6 md:p-8 rounded-3xl w-full max-w-xl shadow-2xl relative overflow-hidden"
+              className="bg-[#0F172A] border border-white/[0.1] p-6 md:p-8 rounded-3xl w-full max-w-xl shadow-2xl relative overflow-y-auto max-h-[90vh] m-4"
             >
               {/* Decorative gradients */}
               <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">

@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, FileText, Image as ImageIcon, File, Download, Eye, ChevronLeft, ArrowLeft } from "lucide-react";
+import { BookOpen, FileText, Image as ImageIcon, File, Download, Eye, ChevronLeft, ArrowLeft, Folder } from "lucide-react";
 import { useNoteStore } from "@/store/noteStore";
 import { useAuthStore } from "@/store/authStore";
 import { getSubjectsForClass } from "@/data/curriculum-index";
@@ -80,13 +80,14 @@ export default function StudentNotesPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedSubject(subject.id)}
-                    className="bg-white/[0.02] border border-white/[0.05] p-6 rounded-3xl text-left hover:bg-white/[0.04] hover:border-[#5B5CFF]/30 transition-all group"
+                    className="bg-gradient-to-br from-white/[0.02] to-white/[0.01] border border-white/[0.05] p-5 sm:p-6 rounded-3xl text-left hover:border-[#5B5CFF]/30 transition-all group flex flex-col items-center sm:items-start text-center sm:text-left relative overflow-hidden"
                   >
-                    <div className="w-12 h-12 bg-[#5B5CFF]/10 text-[#5B5CFF] rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <BookOpen className="w-6 h-6" />
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#5B5CFF]/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-[#5B5CFF]/10 transition-colors" />
+                    <div className="w-16 h-16 sm:w-12 sm:h-12 bg-[#5B5CFF]/10 text-[#5B5CFF] rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                      <Folder className="w-8 h-8 sm:w-6 sm:h-6 fill-[#5B5CFF]/20" />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1">{subject.name}</h3>
-                    <p className="text-sm text-[#7B8798]">{noteCount} Notes available</p>
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-1">{subject.name}</h3>
+                    <p className="text-xs sm:text-sm text-[#7B8798]">{noteCount} File{noteCount !== 1 ? 's' : ''}</p>
                   </motion.button>
                 );
               })
@@ -112,35 +113,35 @@ export default function StudentNotesPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredNotes.map(note => (
-              <div key={note.id} className="bg-[#0F172A] border border-white/[0.08] p-6 rounded-3xl flex flex-col h-full">
+              <div key={note.id} className="bg-[#0F172A] border border-white/[0.08] p-5 sm:p-6 rounded-3xl flex flex-col h-full hover:border-[#5B5CFF]/30 transition-colors">
                 <div className="flex justify-between items-start mb-4">
                   <div className="p-3 bg-white/[0.03] rounded-2xl">
                     {getFileIcon(note.fileType)}
                   </div>
-                  <div className="text-xs text-[#5B5CFF] font-medium bg-[#5B5CFF]/10 px-3 py-1.5 rounded-lg">
+                  <div className="text-[11px] sm:text-xs text-[#5B5CFF] font-medium bg-[#5B5CFF]/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#5B5CFF]/20">
                     {(note.sizeBytes / 1024 / 1024).toFixed(2)} MB
                   </div>
                 </div>
                 
-                <h3 className="text-lg font-bold text-white mb-2 flex-grow">{note.title}</h3>
-                <p className="text-sm text-[#7B8798] mb-6">{new Date(note.uploadedAt).toLocaleDateString()}</p>
+                <h3 className="text-base sm:text-lg font-bold text-white mb-1 flex-grow break-words">{note.title}</h3>
+                <p className="text-xs sm:text-sm text-[#7B8798] mb-5">{new Date(note.uploadedAt).toLocaleDateString()}</p>
                 
-                <div className="flex gap-3 mt-auto">
+                <div className="flex gap-2 sm:gap-3 mt-auto">
                   {(note.fileType === "pdf" || note.fileType === "image") && (
                     <button 
                       onClick={() => setViewingNote(note)}
-                      className="flex-1 bg-white/[0.03] hover:bg-white/[0.08] text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-white/[0.03] hover:bg-white/[0.08] text-white py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       <Eye className="w-4 h-4" /> View
                     </button>
                   )}
                   <button 
                     onClick={() => handleDownload(note.fileUrl, note.fileName || note.title)}
-                    className="flex-1 bg-[#5B5CFF]/10 hover:bg-[#5B5CFF]/20 text-[#5B5CFF] py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#5B5CFF]/10 hover:bg-[#5B5CFF]/20 text-[#5B5CFF] py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Download className="w-4 h-4" /> Download
+                    <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download</span>
                   </button>
                 </div>
               </div>

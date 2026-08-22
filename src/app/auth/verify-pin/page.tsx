@@ -144,9 +144,15 @@ export default function VerifyPinPage() {
                   </Link>
                 </div>
 
-                <GradientButton loading={isLoading} className="w-full py-4 text-base font-semibold min-h-[44px] mt-2">
-                  Verify & Enter
-                </GradientButton>
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-4 mt-2">
+                    <div className="w-6 h-6 border-2 border-[#5B5CFF]/30 border-t-[#5B5CFF] rounded-full animate-spin" />
+                  </div>
+                ) : pin.length !== 6 && (
+                  <GradientButton className="w-full py-4 text-base font-semibold min-h-[44px] mt-2 opacity-50 cursor-not-allowed">
+                    Enter 6 digits...
+                  </GradientButton>
+                )}
               </form>
             </GlassCard>
           </motion.div>

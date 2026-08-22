@@ -63,7 +63,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
         uploadedAt: new Date().toISOString(),
         teacherId,
         sizeBytes: file.size,
-        fileName: file.name
+        fileName: title + '.' + extension
       };
 
       await setDoc(doc(db, "notes", noteId), note);
@@ -91,4 +91,5 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     }
   }
 }));
+
 
