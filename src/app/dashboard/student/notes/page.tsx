@@ -7,6 +7,7 @@ import { useNoteStore } from "@/store/noteStore";
 import { useAuthStore } from "@/store/authStore";
 import { getSubjectsForClass } from "@/data/curriculum-index";
 import { Note } from "@/types";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default function StudentNotesPage() {
   const { notes, isLoading, initializeListeners } = useNoteStore();
@@ -58,8 +59,9 @@ export default function StudentNotesPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 relative">
-      {!selectedSubject && (
+    <DashboardLayout role="student">
+      <div className="max-w-6xl mx-auto space-y-8 pb-20 relative">
+        {!selectedSubject && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">My Study Notes</h1>
@@ -199,7 +201,8 @@ export default function StudentNotesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { CLASSES, getSubjectsForClass } from "@/data/curriculum-index";
 import { toast } from "sonner";
 import { Note } from "@/types";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default function TeacherNotesPage() {
   const { notes, isLoading, initializeListeners, uploadNote, deleteNote } = useNoteStore();
@@ -103,8 +104,9 @@ export default function TeacherNotesPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <DashboardLayout role="teacher">
+      <div className="max-w-6xl mx-auto space-y-8 pb-20 relative">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Study Notes</h1>
           <p className="text-[#7B8798] mt-2">Manage and upload class materials</p>
@@ -475,7 +477,8 @@ export default function TeacherNotesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
