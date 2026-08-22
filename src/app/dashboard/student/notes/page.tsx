@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -141,7 +141,7 @@ export default function StudentNotesPage() {
                     onClick={() => handleDownload(note.fileUrl, note.fileName || note.title)}
                     className="flex-1 bg-[#5B5CFF]/10 hover:bg-[#5B5CFF]/20 text-[#5B5CFF] py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download</span>
+                    <Download className="w-4 h-4" /> <span>Download</span>
                   </button>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function StudentNotesPage() {
                 onClick={() => handleDownload(viewingNote.fileUrl, viewingNote.fileName || viewingNote.title)}
                 className="bg-[#5B5CFF] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#4f50e6] transition-colors flex items-center gap-2"
               >
-                <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download</span>
+                <Download className="w-4 h-4" /> <span>Download</span>
               </button>
             </div>
             
@@ -200,3 +200,4 @@ export default function StudentNotesPage() {
     </div>
   );
 }
+
