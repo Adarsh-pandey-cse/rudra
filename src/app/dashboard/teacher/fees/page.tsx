@@ -74,6 +74,7 @@ export default function TeacherFeesPage() {
 
   const [activeReceiptData, setActiveReceiptData] = useState<{payment: Payment, invoice: Invoice, record: ReceiptRecord, student: Student} | null>(null);
   const [isLoadingReceipt, setIsLoadingReceipt] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const defaultDate = new Date();
   defaultDate.setMonth(defaultDate.getMonth() - 1);
@@ -125,15 +126,18 @@ export default function TeacherFeesPage() {
     const amountNum = parseFloat(paymentAmount);
     if (amountNum <= 0 || amountNum > (selectedInvoice.totalAmount - selectedInvoice.amountPaid)) return;
 
+    setIsProcessing(true);
     const currentInvoice = selectedInvoice;
-    const paymentId = await recordPayment(currentInvoice.id, amountNum, paymentMode, currentUser.id);
     
-    if (paymentId) {
-      const student = students.find(s => s.id === currentInvoice.studentId);
-      if (student) {
-        setIsLoadingReceipt(paymentId);
-        try {
-          const record = await receiptService.createReceiptRecord(paymentId, currentInvoice.id, currentUser!.id, currentUser!.name);
+    try {
+      const paymentId = await recordPayment(currentInvoice.id, amountNum, paymentMode, currentUser.id);
+      
+      if (paymentId) {
+        const student = students.find(s => s.id === currentInvoice.studentId);
+        if (student) {
+          setIsLoadingReceipt(paymentId);
+          try {
+            const record = await receiptService.createReceiptRecord(paymentId, currentInvoice.id, student.id, currentUser!.id);
           const paymentData = {
             id: paymentId,
             invoiceId: currentInvoice.id,
@@ -165,9 +169,13 @@ export default function TeacherFeesPage() {
         }
       }
     }
-    
-    setSelectedInvoice(null);
-    setPaymentAmount("");
+    } catch (error) {
+      console.error("Failed to record payment", error);
+    } finally {
+      setIsProcessing(false);
+      setSelectedInvoice(null);
+      setPaymentAmount("");
+    }
   };
 
   const openProfileEdit = (student: Student) => {
@@ -729,7 +737,7 @@ export default function TeacherFeesPage() {
 
                   <div className="pt-2 flex gap-3">
                     <GlassButton type="button" onClick={() => setSelectedInvoice(null)} className="flex-1 py-2.5">Cancel</GlassButton>
-                    <GradientButton type="submit" className="flex-1 py-2.5">Confirm Payment</GradientButton>
+                    <GradientButton type="submit" className="flex-1 py-2.5" loading={isProcessing}>Confirm Payment</GradientButton>
                   </div>
                 </form>
               </motion.div>

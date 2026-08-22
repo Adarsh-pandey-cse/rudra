@@ -181,7 +181,9 @@ export default function StudentDashboard() {
   }));
 
   const nextHomework = pendingHomework.length > 0 ? pendingHomework[0] : null;
-  const recentNotice = myNotices.length > 0 ? myNotices[0] : null;
+  const { isRead, markAsRead } = useNoticeStore();
+  const unreadNotices = myNotices.filter(n => !isRead(n.id, currentUser.id));
+  const recentNotice = unreadNotices.length > 0 ? unreadNotices[0] : null;
 
   return (
     <DashboardLayout role="student">
@@ -294,7 +296,10 @@ export default function StudentDashboard() {
                 <div className="text-[13px] text-[#7B8798]">View Materials</div>
               </div>
             </GlassCard>
-          <GlassCard hoverEffect onClick={() => router.push('/dashboard/student/notices')} className="p-4 flex items-center gap-4 cursor-pointer">
+          <GlassCard hoverEffect onClick={() => {
+                  if (recentNotice) markAsRead(recentNotice.id, currentUser.id);
+                  router.push('/dashboard/student/notices');
+                }} className="p-4 flex items-center gap-4 cursor-pointer">
             <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
               <Megaphone className="w-5 h-5 text-green-400" />
             </div>
@@ -345,7 +350,10 @@ export default function StudentDashboard() {
           {recentNotice && (
             <motion.div variants={itemVariants}>
               <GlassCard className="p-6 border-white/10 relative overflow-hidden group cursor-pointer hover:border-white/20 transition-all shadow-lg"
-                onClick={() => router.push('/dashboard/student/notices')}
+                onClick={() => {
+                  if (recentNotice) markAsRead(recentNotice.id, currentUser.id);
+                  router.push('/dashboard/student/notices');
+                }}
               >
                 <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none ${
                   recentNotice.priority === 'critical' ? 'bg-[#EF4444]/20' :

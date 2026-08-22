@@ -13,6 +13,7 @@ interface SmartNoticeCardProps {
   onAcknowledge?: (id: string, e: React.MouseEvent) => void;
   hasAcknowledged?: boolean;
   requiresAck?: boolean;
+  onClick?: () => void;
 }
 
 export default function SmartNoticeCard({
@@ -20,7 +21,8 @@ export default function SmartNoticeCard({
   isPinned = false,
   onAcknowledge,
   hasAcknowledged,
-  requiresAck
+  requiresAck,
+  onClick
 }: SmartNoticeCardProps) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerImage, setViewerImage] = useState("");
@@ -68,6 +70,7 @@ export default function SmartNoticeCard({
         badgeLabel={badgeLabel} 
         isPinned={isPinned}
         onImageClick={handleImageClick}
+        onExpand={onClick}
         onAcknowledge={requiresAck ? handleAcknowledge : undefined}
         hasAcknowledged={hasAcknowledged}
         authorAvatar={authorAvatar}
