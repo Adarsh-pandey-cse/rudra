@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -54,6 +54,7 @@ const TEACHER_NAV: NavItem[] = [
   { label: "Students", href: "/dashboard/teacher/students", icon: Users },
   { label: "Homework", href: "/dashboard/teacher/homework", icon: BookOpen },
   { label: "Notes", href: "/dashboard/teacher/notes", icon: BookOpen },
+    { label: "Offline Tests", href: "/dashboard/teacher/tests", icon: FileText },
   { label: "Leaderboard", href: "/dashboard/teacher/leaderboard", icon: Trophy },
   { label: "Progress", href: "/dashboard/teacher/progress", icon: TrendingUp },
   { label: "Doubts", href: "/dashboard/teacher/doubts", icon: MessageCircleQuestion },
@@ -66,6 +67,7 @@ const STUDENT_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/student", icon: LayoutDashboard },
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
   { label: "Notes", href: "/dashboard/student/notes", icon: BookOpen },
+    { label: "Test Marks", href: "/dashboard/student/tests", icon: FileText },
   { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: Trophy },
   { label: "My Progress", href: "/dashboard/student/progress", icon: TrendingUp },
   { label: "Doubts", href: "/dashboard/student/doubts", icon: MessageCircleQuestion },
@@ -642,7 +644,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                 {typeof window !== 'undefined' && !('Notification' in window) && (
                   <div className="mt-3 p-3 bg-[#FB923C]/10 border border-[#FB923C]/20 rounded-xl">
                     <p className="text-[11px] text-[#FB923C] leading-relaxed">
-                      To get notifications on iPhone/iPad, tap Share <span className="inline-block px-1 border border-[#FB923C]/30 rounded">⎙</span> and select "Add to Home Screen".
+                      To get notifications on iPhone/iPad, tap Share <span className="inline-block px-1 border border-[#FB923C]/30 rounded">âŽ™</span> and select "Add to Home Screen".
                     </p>
                   </div>
                 )}
@@ -720,4 +722,9 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     </div>
   );
 }
+
+
+
+
+
 
