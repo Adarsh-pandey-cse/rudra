@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -16,6 +16,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import GlassCard from "@/components/ui/GlassCard";
 import GradientButton from "@/components/ui/GradientButton";
 import GlassButton from "@/components/ui/GlassButton";
+import InlineFileViewer from "@/components/ui/InlineFileViewer";
 import ZoomableImage from "@/components/ui/ZoomableImage";
 import EmptyState from "@/components/ui/EmptyState";
 import CircularProgress from "@/components/dashboard/CircularProgress";
@@ -189,7 +190,7 @@ export default function HomeworkAnalyticsPage() {
           <div>
             <h1 className="text-2xl font-bold text-white mb-2">{homework.title}</h1>
             <p className="text-[#B6C2D9] text-sm flex items-center gap-2">
-              Class {homework.classId.replace("class-", "")} • Topic: {homework.topicTitle}
+              Class {homework.classId.replace("class-", "")} â€¢ Topic: {homework.topicTitle}
               {isSubjective && <span className="px-2 py-0.5 rounded bg-[#4F9DFF]/20 text-[#4F9DFF] text-xs font-semibold ml-2 border border-[#4F9DFF]/30">Subjective</span>}
             </p>
           </div>
@@ -543,21 +544,11 @@ export default function HomeworkAnalyticsPage() {
                       </div>
                       <div className="flex-1 overflow-hidden p-4 flex items-center justify-center relative">
                         {viewingAttachment ? (
-                          viewingAttachment.type === 'image' || viewingAttachment.url.startsWith('data:image/') ? (
-                            <ZoomableImage 
-                              src={viewingAttachment.url} 
-                              alt={viewingAttachment.name} 
-                              className="absolute inset-4 m-auto w-full h-full"
-                              imageClassName="object-contain rounded-lg shadow-lg border border-white/[0.1]"
-                            />
-                          ) : viewingAttachment.url === "/" || viewingAttachment.url === "" ? (
-                            <div className="text-center text-[#7B8798]">
-                              <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                              <p>This is a dummy submission attachment without a real file.</p>
-                            </div>
-                          ) : (
-                            <iframe src={`${viewingAttachment.url}#navpanes=0`} className="w-full h-full border-0 rounded-lg bg-white" title={viewingAttachment.name} />
-                          )
+                          <InlineFileViewer 
+                            url={viewingAttachment.url}
+                            name={viewingAttachment.name}
+                            type={viewingAttachment.type || (viewingAttachment.url.startsWith("data:image/") ? "image" : "other")}
+                          />
                         ) : (
                           <div className="text-center text-[#7B8798]">
                             <Paperclip className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -708,3 +699,5 @@ export default function HomeworkAnalyticsPage() {
     </DashboardLayout>
   );
 }
+
+

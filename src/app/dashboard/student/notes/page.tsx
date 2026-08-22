@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { getSubjectsForClass } from "@/data/curriculum-index";
 import { Note } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import FileViewer from "@/components/ui/FileViewer";
 
 export default function StudentNotesPage() {
   const { notes, isLoading, initializeListeners } = useNoteStore();
@@ -154,56 +155,21 @@ export default function StudentNotesPage() {
         </motion.div>
       )}
 
-      {/* File Viewer Modal */}
-      <AnimatePresence>
-        {viewingNote && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col"
-          >
-            <div className="flex justify-between items-center p-4 md:p-6 bg-black/50">
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setViewingNote(null)}
-                  className="p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h2 className="text-white font-semibold text-lg line-clamp-1">{viewingNote.title}</h2>
-              </div>
-              <button 
-                onClick={() => handleDownload(viewingNote.fileUrl, viewingNote.fileName || viewingNote.title)}
-                className="bg-[#5B5CFF] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#4f50e6] transition-colors flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" /> <span>Download</span>
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-              {viewingNote.fileType === "pdf" ? (
-                <iframe 
-                  src={viewingNote.fileUrl + "#toolbar=0"} 
-                  className="w-full h-full max-w-5xl bg-white rounded-xl shadow-2xl"
-                  title={viewingNote.title}
-                />
-              ) : viewingNote.fileType === "image" ? (
-                <img 
-                  src={viewingNote.fileUrl} 
-                  alt={viewingNote.title} 
-                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                />
-              ) : (
-                <div className="text-white">Preview not available. Please download the file.</div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* File Viewer Modal */}
+        <AnimatePresence>
+          {viewingNote && (
+            <FileViewer 
+              url={viewingNote.fileUrl}
+              name={viewingNote.fileName || viewingNote.title}
+              type={viewingNote.fileType}
+              onClose={() => setViewingNote(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );
 }
+
 
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -13,6 +13,7 @@ import confetti from "canvas-confetti";
 import { useAuthStore } from "@/store/authStore";
 import { useHomeworkStore } from "@/store/homeworkStore";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import FileViewer from "@/components/ui/FileViewer";
 import GlassCard from "@/components/ui/GlassCard";
 import GradientButton from "@/components/ui/GradientButton";
 import GlassButton from "@/components/ui/GlassButton";
@@ -265,7 +266,7 @@ export default function StudentHomeworkDetailsPage() {
               
               <h1 className="text-3xl font-bold text-white mb-2 relative z-10">{homework.title}</h1>
               <p className="text-[#B6C2D9] mb-6 relative z-10">
-                Topic: {homework.topicTitle} • {isSubjective ? 'Subjective Assignment' : `${mcqQuestions.length} Questions`}
+                Topic: {homework.topicTitle} â€¢ {isSubjective ? 'Subjective Assignment' : `${mcqQuestions.length} Questions`}
               </p>
               
               <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-8 relative z-10">
@@ -787,57 +788,12 @@ export default function StudentHomeworkDetailsPage() {
       {/* Full Screen Attachment Viewer Modal */}
       <AnimatePresence>
         {viewingAttachment && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-5xl h-[85vh] bg-[#0F172A] border border-white/[0.1] rounded-[24px] overflow-hidden flex flex-col shadow-2xl"
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#131D2E]">
-                <h3 className="text-white font-medium flex items-center gap-2 truncate pr-4">
-                  <Paperclip className="w-4 h-4 text-[#7B8798] flex-shrink-0" /> 
-                  <span className="truncate">{viewingAttachment.name}</span>
-                </h3>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <a 
-                    href={viewingAttachment.url} 
-                    download={viewingAttachment.name} 
-                    className="p-2 bg-white/[0.05] hover:bg-white/[0.1] rounded-full text-white transition-colors"
-                    title="Download"
-                  >
-                     <Download className="w-4 h-4" />
-                  </a>
-                  <button 
-                    onClick={() => setViewingAttachment(null)} 
-                    className="p-2 bg-white/[0.05] hover:bg-[#EF4444] rounded-full text-white transition-colors"
-                    title="Close"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-auto bg-[#07111F] flex items-center justify-center p-4">
-                {viewingAttachment.type === 'image' || viewingAttachment.url.startsWith('data:image/') ? (
-                  <div className="w-full h-full relative">
-                    <ZoomableImage 
-                      src={viewingAttachment.url} 
-                      alt={viewingAttachment.name} 
-                      className="absolute inset-0 m-auto w-full h-full"
-                      imageClassName="max-w-full max-h-full object-contain rounded-lg shadow-lg" 
-                    />
-                  </div>
-                ) : (
-                  <iframe src={`${viewingAttachment.url}#navpanes=0`} className="w-full h-full border-0 rounded-lg bg-white" title={viewingAttachment.name} />
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
+          <FileViewer 
+            url={viewingAttachment.url}
+            name={viewingAttachment.name}
+            type={viewingAttachment.type}
+            onClose={() => setViewingAttachment(null)}
+          />
         )}
       </AnimatePresence>
 
@@ -871,5 +827,8 @@ export default function StudentHomeworkDetailsPage() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
