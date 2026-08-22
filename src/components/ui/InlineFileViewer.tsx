@@ -69,7 +69,7 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
         </>
             ) : isPdf ? (
         <iframe 
-          src={url} 
+          src={"https://mozilla.github.io/pdf.js/web/viewer.html?file=" + encodeURIComponent(url)} 
           className="w-full h-full border-0 bg-white rounded-xl"
           title={name}
         />
