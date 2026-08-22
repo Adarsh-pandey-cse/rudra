@@ -26,8 +26,8 @@ export default function StudentNotesPage() {
 
   // Derived subjects based on actual notes available
   const availableSubjectIds = Array.from(new Set(notes.map(n => n.subjectId)));
-  const classIdClean = currentUser?.role === "student" ? ((currentUser as any).classId?.replace('class-', '') || (currentUser as any).grade?.replace(/\D/g, '')) : "11";
-  const allSubjects = getSubjectsForClass(classIdClean);
+  const classIdClean2 = currentUser?.role === "student" ? (((currentUser as any).classId || (currentUser as any).grade)?.replace(/\D/g, '') || "11") : "11";
+  const allSubjects = getSubjectsForClass(classIdClean2);
   
   const subjectsWithNotes = allSubjects.filter(s => availableSubjectIds.includes(s.id));
 
