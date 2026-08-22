@@ -46,7 +46,7 @@ export default function StudentDashboard() {
   const { getStudentAssignments, getSubmission } = useHomeworkStore();
   const assignmentsList = useHomeworkStore(state => state.assignments);
   const submissionsList = useHomeworkStore(state => state.submissions);
-  const { getStudentNotices, getUnreadCount } = useNoticeStore();
+  const { getStudentNotices, getUnreadCount, isRead, markAsRead } = useNoticeStore();
   const noticesList = useNoticeStore(state => state.notices);
   const { getStudentDoubts } = useDoubtStore();
   const doubtsList = useDoubtStore(state => state.doubts);
@@ -181,7 +181,6 @@ export default function StudentDashboard() {
   }));
 
   const nextHomework = pendingHomework.length > 0 ? pendingHomework[0] : null;
-  const { isRead, markAsRead } = useNoticeStore();
   const unreadNotices = myNotices.filter(n => !isRead(n.id, currentUser.id));
   const recentNotice = unreadNotices.length > 0 ? unreadNotices[0] : null;
 
