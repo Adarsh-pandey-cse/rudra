@@ -19,6 +19,7 @@ import GradientButton from "@/components/ui/GradientButton";
 import GlassButton from "@/components/ui/GlassButton";
 import EmptyState from "@/components/ui/EmptyState";
 import ZoomableImage from "@/components/ui/ZoomableImage";
+import UploadProgressRing from "@/components/ui/UploadProgressRing";
 import type { GeneratedQuestion, Submission, Attachment } from "@/types/homework-types";
 import { format } from "date-fns";
 import { uploadService } from "@/lib/services/upload.service";
@@ -578,15 +579,7 @@ export default function StudentHomeworkDetailsPage() {
                         <p className="text-[15px] text-red-400 font-bold mb-1.5">Deadline Passed</p>
                         <p className="text-xs text-red-400/70">Submissions are closed. Ask your teacher to extend the deadline.</p>
                       </>
-                    ) : isUploading ? (
-                      <>
-                        <div className="p-3 bg-white/[0.04] rounded-full mb-3">
-                          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 border-2 border-[#4F9DFF]/30 border-t-[#4F9DFF] rounded-full" />
-                        </div>
-                        <p className="text-sm text-[#4F9DFF] mb-1 font-medium">Uploading images...</p>
-                        <p className="text-[11px] text-[#7B8798] uppercase tracking-wider">Please wait</p>
-                      </>
-                    ) : (
+                    ) : isUploading ? (<UploadProgressRing />) : (
                       <>
                         <div className="p-4 bg-white/[0.03] border border-white/[0.05] shadow-lg rounded-full mb-4">
                           <UploadCloud className={`w-6 h-6 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
@@ -811,14 +804,7 @@ export default function StudentHomeworkDetailsPage() {
               exit={{ scale: 0.9, y: 20 }}
               className="bg-gradient-to-br from-[#1A2235] to-[#0D1525] border border-white/[0.08] p-8 rounded-[24px] shadow-[0_0_50px_rgba(91,92,255,0.2)] flex flex-col items-center text-center max-w-sm w-full"
             >
-              <div className="w-20 h-20 relative mb-6">
-                <div className="absolute inset-0 border-4 border-[#5B5CFF]/30 border-t-[#5B5CFF] rounded-full animate-spin" />
-                <div className="absolute inset-2 bg-gradient-to-br from-[#5B5CFF]/20 to-transparent rounded-full flex items-center justify-center">
-                  <UploadCloud className="w-8 h-8 text-[#5B5CFF] animate-pulse" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Uploading Securely</h3>
-              <p className="text-sm text-[#7B8798]">Please wait while we process your homework image...</p>
+              <div className="mb-6 scale-150"><UploadProgressRing /></div>
             </motion.div>
           </motion.div>
         )}

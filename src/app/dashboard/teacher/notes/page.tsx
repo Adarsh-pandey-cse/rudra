@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
+import UploadProgressRing from "@/components/ui/UploadProgressRing";
 import { BookOpen, Upload, Trash2, FileText, Image as ImageIcon, File, X, Plus, CheckCircle2, Eye, Folder, ArrowLeft, ChevronLeft, Download } from "lucide-react";
 import { useNoteStore } from "@/store/noteStore";
 import { useAuthStore } from "@/store/authStore";
@@ -286,8 +288,9 @@ export default function TeacherNotesPage() {
           )}
         </AnimatePresence>
             {/* Upload Modal */}
-      <AnimatePresence>
-        {showUploadModal && (
+      {typeof document !== "undefined" && createPortal(
+          <AnimatePresence>
+          {showUploadModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -388,14 +391,7 @@ export default function TeacherNotesPage() {
                     disabled={uploadState === "uploading" || !file || !title.trim()}
                     className="w-full bg-[#5B5CFF] hover:bg-[#5B5CFF]/90 disabled:bg-[#5B5CFF]/50 text-white py-3.5 rounded-xl font-bold transition-colors mt-2 shadow-lg shadow-[#5B5CFF]/20 relative overflow-hidden"
                   >
-                    {uploadState === "uploading" ? (
-                      <div className="flex flex-col items-center justify-center">
-                        <span className="mb-1 text-sm">Uploading... {uploadProgress.toFixed(0)}%</span>
-                        <div className="w-1/2 h-1 bg-white/20 rounded-full overflow-hidden">
-                          <div className="h-full bg-white transition-all duration-300" style={{ width: uploadProgress + '%' }} />
-                        </div>
-                      </div>
-                    ) : "Upload Document"}
+                    {uploadState === "uploading" ? <UploadProgressRing progress={uploadProgress} /> : "Upload Document"}
                   </button>
                   
                   {uploadState === "error" && (
@@ -405,8 +401,10 @@ export default function TeacherNotesPage() {
               )}
             </motion.div>
           </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
       </div>
     </DashboardLayout>
   );

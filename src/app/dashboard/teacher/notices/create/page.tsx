@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { motion, Variants } from "framer-motion";
 import { ArrowLeft, Paperclip, CheckCircle2, X } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -55,8 +56,8 @@ export default function CreateNoticePage() {
   if (!mounted || !currentUser) return null;
 
   const handleSubmit = async () => {
-    if (!title.trim()) return;
-    if (!body.trim() && attachments.length === 0) return;
+    if (!title.trim()) { toast.error("Please enter a notice title"); return; }
+    if (!body.trim() && attachments.length === 0) { toast.error("Please enter notice content or attach a file"); return; }
     
     setIsSubmitting(true);
     try {
@@ -100,7 +101,7 @@ export default function CreateNoticePage() {
       });
       router.push("/dashboard/teacher/notices");
     } catch (error) {
-      console.error("Failed to publish notice", error);
+      console.error("Failed to publish notice", error); toast.error("Failed to publish notice. Please try again.");
       setIsSubmitting(false);
     }
   };
