@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -261,128 +261,108 @@ export default function HomeworkPage() {
                   variants={itemVariants} 
                   layout 
                   onClick={() => router.push(`/dashboard/teacher/homework/analytics/${assignment.id}`)} 
-                  className={`cursor-pointer ${isMenuOpen ? 'relative z-50' : ''}`}
+                  className={`cursor-pointer group relative bg-[#0B1527] border border-white/[0.06] hover:border-[#5B5CFF]/40 rounded-2xl p-5 transition-all shadow-lg hover:shadow-xl flex flex-col h-full gap-4 ${isMenuOpen ? 'z-50' : 'z-10'}`}
                 >
-                  <GlassCard hoverEffect className="p-6 flex flex-col h-full group relative overflow-visible border-white/[0.08] hover:border-[#5B5CFF]/40 transition-colors">
-                    {/* Background decoration */}
-                    <div className="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-[#5B5CFF]/10 to-transparent rounded-full blur-2xl pointer-events-none group-hover:from-[#5B5CFF]/20 transition-colors" />
+                  {/* Top Row: Icon, Title, Menu */}
+                  <div className="flex items-start justify-between gap-3 relative z-10">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.05] flex items-center justify-center shrink-0">
+                        <SubjectIcon iconName={subject?.icon || 'book'} className="w-5 h-5 text-[#B6C2D9]" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <h3 className="text-base font-semibold text-white truncate group-hover:text-[#5B5CFF] transition-colors" title={assignment.title}>
+                          {assignment.title}
+                        </h3>
+                        <p className="text-xs text-[#7B8798] truncate mt-0.5" title={assignment.topicTitle}>{assignment.topicTitle}</p>
+                      </div>
+                    </div>
                     
-                    <div className={`flex justify-between items-start mb-6 relative ${isMenuOpen ? 'z-30' : 'z-10'}`}>
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-[14px] bg-white/[0.06] flex items-center justify-center text-2xl border border-white/[0.08] shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                          <SubjectIcon iconName={subject?.icon || 'book'} className="w-6 h-6 text-[#B6C2D9]" />
-                        </div>
-                        <div>
-                          <div className="mb-2 flex items-center gap-2">
-                            {(() => {
-                               const assignedCount = ((assignment as any).assignedTo || (assignment as any).recipientStudentIds || []).length;
-                               const subCount = getAssignmentSubmissions(assignment.id).length;
-                               const isAllSubmitted = assignedCount > 0 && subCount === assignedCount;
-                               return (
-                                 <StatusBadge variant={isAllSubmitted ? "success" : getStatusVariant(assignment.status)} dot className="capitalize">
-                                   {isAllSubmitted ? "Submitted by All" : assignment.status}
-                                 </StatusBadge>
-                               );
-                            })()}
-                            {assignment.classId && (
-                              <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/[0.05] text-[#7B8798] border border-white/[0.05]">
-                                {assignment.classId.replace("class-", "Class ")}
-                              </span>
-                            )}
-                          </div>
-                          <h3 className="text-base font-bold text-white line-clamp-1 group-hover:text-[#5B5CFF] transition-colors pr-2" title={assignment.title}>{assignment.title}</h3>
-                        </div>
-                      </div>
-                      
-                      <div className="relative z-50">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setOpenMenuId(isMenuOpen ? null : assignment.id);
-                          }}
-                          className="p-2 -mr-2 text-[#7B8798] hover:text-white rounded-[14px] hover:bg-white/[0.06] transition-colors shrink-0 z-20 relative"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                        
-                        <AnimatePresence>
-                          {isMenuOpen && (
-                            <motion.div 
-                              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                              transition={{ duration: 0.15 }}
-                              className="absolute right-0 top-full mt-2 w-36 bg-[#0B1527] border border-white/[0.08] rounded-xl shadow-2xl py-1 z-50 overflow-hidden"
-                            >
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(null);
-                                    router.push(`/dashboard/teacher/homework/edit/${assignment.id}`);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-[#B6C2D9] hover:bg-white/[0.06] hover:text-white flex items-center gap-2"
-                                >
-                                  <Edit3 className="w-4 h-4" /> Edit
-                                </button>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(null);
-                                    setAssignmentToExtend(assignment);
-                                    setExtendDateTime(new Date(assignment.dueDate).toISOString().slice(0, 16));
-                                    setExtendModalOpen(true);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-[#B6C2D9] hover:bg-[#5B5CFF]/10 hover:text-[#5B5CFF] flex items-center gap-2"
-                                >
-                                  <Clock className="w-4 h-4" /> {new Date(assignment.dueDate) < new Date() ? 'Reopen Submission' : 'Extend Deadline'}
-                                </button>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(null);
-                                    setAssignmentToDelete(assignment);
-                                    setDeleteModalOpen(true);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-[#EF4444] hover:bg-[#EF4444]/10 flex items-center gap-2"
-                                >
-                                  <Trash2 className="w-4 h-4" /> Delete
-                                </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
+                    <div className="relative z-50 shrink-0">
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setOpenMenuId(isMenuOpen ? null : assignment.id);
+                        }}
+                        className="p-1.5 rounded-lg text-[#7B8798] hover:text-white hover:bg-white/[0.06] transition-colors"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
 
-                    <div className="mb-6 relative z-10">
-                      <p className="text-sm text-[#B6C2D9] line-clamp-2 mb-4 leading-relaxed h-10">{assignment.topicTitle}</p>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center px-3 py-1 rounded-[12px] bg-[#4F9DFF]/10 border border-[#4F9DFF]/20 text-[11px] font-semibold text-[#4F9DFF]">
-                          {(assignment as any).maxGrade || (assignment as any).maxMarks || 0} Marks
-                        </span>
-                        {assignment.evaluationMethod !== "Teacher Only" && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-[12px] bg-[#8B5CF6]/10 border border-[#8B5CF6]/20 text-[11px] font-semibold text-[#8B5CF6]">
-                            <BrainCircuit className="w-3.5 h-3.5 mr-1.5" /> AI Grading
-                          </span>
+                      <AnimatePresence>
+                        {isMenuOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 top-full mt-1 w-36 bg-[#131D2E] border border-white/[0.08] rounded-xl shadow-2xl py-1 z-50 overflow-hidden"
+                          >
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); router.push(`/dashboard/teacher/homework/edit/${assignment.id}`); }}
+                                className="w-full text-left px-4 py-2 text-sm text-[#B6C2D9] hover:bg-white/[0.06] hover:text-white flex items-center gap-2"
+                              >
+                                <Edit3 className="w-4 h-4" /> Edit
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setAssignmentToExtend(assignment); setExtendDateTime(new Date(assignment.dueDate).toISOString().slice(0, 16)); setExtendModalOpen(true); }}
+                                className="w-full text-left px-4 py-2 text-sm text-[#B6C2D9] hover:bg-[#5B5CFF]/10 hover:text-[#5B5CFF] flex items-center gap-2"
+                              >
+                                <Clock className="w-4 h-4" /> {new Date(assignment.dueDate) < new Date() ? 'Reopen' : 'Extend'}
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setAssignmentToDelete(assignment); setDeleteModalOpen(true); }}
+                                className="w-full text-left px-4 py-2 text-sm text-[#EF4444] hover:bg-[#EF4444]/10 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </button>
+                          </motion.div>
                         )}
-                      </div>
+                      </AnimatePresence>
                     </div>
+                  </div>
 
-                    <div className="mt-auto pt-4 border-t border-white/[0.08] flex items-center justify-between relative z-10">
-                      <div className="flex items-center gap-2 text-[13px] text-[#7B8798]">
-                        <Calendar className="w-4 h-4 text-[#5B5CFF]" />
-                        <span className={cn("font-medium", new Date(assignment.dueDate) < new Date() ? 'text-[#EF4444]' : '', (assignment as any).isExtended ? 'text-[#F59E0B]' : '')}>
-                          {new Date(assignment.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at {new Date(assignment.dueDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                          {(assignment as any).isExtended && " (Extended)"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[13px] text-[#7B8798] bg-white/[0.04] px-3 py-1.5 rounded-xl border border-white/[0.05]">
-                        <Users className="w-4 h-4 text-[#4F9DFF]" />
-                        <span className="font-bold text-white">{getAssignmentSubmissions(assignment.id).length}</span>
-                        <span className="opacity-60">/ {((assignment as any).assignedTo || (assignment as any).recipientStudentIds || []).length}</span>
-                      </div>
+                  {/* Middle Row: Badges */}
+                  <div className="flex flex-wrap gap-2 mt-auto pt-2">
+                    {(() => {
+                       const assignedCount = ((assignment as any).assignedTo || (assignment as any).recipientStudentIds || []).length;
+                       const subCount = getAssignmentSubmissions(assignment.id).length;
+                       const isAllSubmitted = assignedCount > 0 && subCount === assignedCount;
+                       return (
+                         <span className={cn("px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider", isAllSubmitted ? "bg-[#22C55E]/10 text-[#22C55E]" : getStatusVariant(assignment.status) === 'success' ? "bg-[#22C55E]/10 text-[#22C55E]" : getStatusVariant(assignment.status) === 'info' ? "bg-[#4F9DFF]/10 text-[#4F9DFF]" : "bg-white/[0.06] text-[#B6C2D9]")}>
+                           {isAllSubmitted ? "Submitted by All" : assignment.status}
+                         </span>
+                       );
+                    })()}
+                    {assignment.classId && (
+                      <span className="px-2 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase bg-white/[0.04] text-[#7B8798] border border-white/[0.05]">
+                        {assignment.classId.replace("class-", "Class ")}
+                      </span>
+                    )}
+                    <span className="px-2 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase bg-[#4F9DFF]/10 text-[#4F9DFF]">
+                      {((assignment as any).maxGrade || (assignment as any).maxMarks || 0)} Marks
+                    </span>
+                    {assignment.evaluationMethod !== "Teacher Only" && (
+                      <span className="px-2 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase bg-[#8B5CF6]/10 text-[#8B5CF6] flex items-center gap-1">
+                        <BrainCircuit className="w-3 h-3" /> AI
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Bottom Row: Date and Submissions */}
+                  <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-[#7B8798]">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span className={cn("font-medium", new Date(assignment.dueDate) < new Date() ? 'text-[#EF4444]' : '', (assignment as any).isExtended ? 'text-[#F59E0B]' : '')}>
+                        {new Date(assignment.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
                     </div>
-                  </GlassCard>
+                    <div className="flex items-center gap-1.5 text-xs text-[#7B8798]">
+                      <Users className="w-3.5 h-3.5 text-[#B6C2D9]" />
+                      <span className="font-bold text-[#B6C2D9]">{getAssignmentSubmissions(assignment.id).length}</span>
+                      <span className="opacity-60">/ {((assignment as any).assignedTo || (assignment as any).recipientStudentIds || []).length}</span>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
@@ -497,4 +477,8 @@ export default function HomeworkPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
 
