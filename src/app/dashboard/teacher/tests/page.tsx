@@ -49,7 +49,7 @@ export default function TeacherTestsPage() {
   };
 
   const students = getStudentUsers();
-  const currentStudents = students.filter(s => (s as any).grade === selectedClass);
+  const currentStudents = students.filter(s => (s as any).grade === selectedClass || (s as any).classId === `class-${selectedClass}` || (s as any).classId === selectedClass);
   const recentMarks = selectedClass ? testMarks.filter(m => m.classId === selectedClass).sort((a,b) => b.createdAt - a.createdAt).slice(0, 10) : [];
 
   const handleSaveMarks = async () => {
@@ -260,6 +260,8 @@ export default function TeacherTestsPage() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

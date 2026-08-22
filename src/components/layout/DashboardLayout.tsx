@@ -30,6 +30,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useNoticeStore } from "@/store/noticeStore";
 import { useHomeworkStore } from "@/store/homeworkStore";
 import { useDoubtStore } from "@/store/doubtStore";
+import { useTestStore } from "@/store/testStore";
 import { cn, formatDate } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useLeaderboardStore } from "@/store/leaderboardStore";
@@ -241,8 +242,9 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     if (currentUser?.id) {
       const { initializeUsersListener } = useAuthStore.getState();
       const { initializeNoticeListener, initializeReadListener } = useNoticeStore.getState();
-      const { initializeAssignmentsListener, initializeSubmissionsListener } = useHomeworkStore.getState();
+            const { initializeAssignmentsListener, initializeSubmissionsListener } = useHomeworkStore.getState();
       const { initializeDoubtsListener } = useDoubtStore.getState();
+      const { initializeTestsListener } = useTestStore.getState();
       let isMounted = true;
 
       let unsubFees: (() => void) | undefined;
@@ -267,7 +269,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       const unsubNotices = initializeNoticeListener();
       const unsubAssignments = initializeAssignmentsListener();
       const unsubSubmissions = initializeSubmissionsListener(currentUser.id, currentUser.role);
-      const unsubDoubts = initializeDoubtsListener(currentUser.id, currentUser.role);
+            const unsubDoubts = initializeDoubtsListener(currentUser.id, currentUser.role);
+      const unsubTests = initializeTestsListener(currentUser.role, currentUser.id);
       
       let unsubReads: (() => void) | undefined;
       if (currentUser.role === "student") {
@@ -283,7 +286,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
         unsubDoubts();
         if (unsubFees) unsubFees();
         if (unsubLeaderboard) unsubLeaderboard();
-        if (unsubNotifications) unsubNotifications();
+                  if (unsubNotifications) unsubNotifications();
+          if (unsubTests) unsubTests();
         if (unsubReads) unsubReads();
       };
     }
@@ -722,6 +726,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     </div>
   );
 }
+
 
 
 
