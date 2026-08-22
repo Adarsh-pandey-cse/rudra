@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Upload, Trash2, FileText, Image as ImageIcon, File, X, Plus, CheckCircle2 } from "lucide-react";
+import { BookOpen, Upload, Trash2, FileText, Image as ImageIcon, File, X, Plus, CheckCircle2, Eye } from "lucide-react";
 import { useNoteStore } from "@/store/noteStore";
 import { useAuthStore } from "@/store/authStore";
 import { CLASSES, getSubjectsForClass } from "@/data/curriculum-index";
@@ -92,8 +92,7 @@ export default function TeacherNotesPage() {
         </button>
       </div>
 
-      {/* Notes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {isLoading ? (
           <div className="col-span-full py-12 text-center text-[#7B8798]">Loading notes...</div>
         ) : notes.length === 0 ? (
@@ -102,35 +101,44 @@ export default function TeacherNotesPage() {
           </div>
         ) : (
           notes.map(note => (
-            <motion.div 
-              key={note.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#0F172A] border border-white/[0.08] p-6 rounded-3xl hover:border-white/[0.15] transition-all group"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-white/[0.03] rounded-2xl">
-                  {getFileIcon(note.fileType)}
+              <motion.div 
+                key={note.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-[#0F172A] border border-white/[0.08] p-5 sm:p-6 rounded-3xl flex flex-col h-full hover:border-[#5B5CFF]/30 transition-colors group"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-3 bg-white/[0.03] rounded-2xl">
+                    {getFileIcon(note.fileType)}
+                  </div>
+                  <div className="text-[11px] sm:text-xs text-[#5B5CFF] font-medium bg-[#5B5CFF]/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#5B5CFF]/20">
+                    {(note.sizeBytes / 1024 / 1024).toFixed(2)} MB
+                  </div>
                 </div>
-                <button 
-                  onClick={() => {
-                    if(confirm("Delete this note?")) {
-                      deleteNote(note).then(() => toast.success("Deleted")).catch(() => toast.error("Failed to delete"));
-                    }
-                  }}
-                  className="p-2 text-[#7B8798] hover:text-red-400 bg-white/[0.02] hover:bg-red-400/10 rounded-xl transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-1">{note.title}</h3>
-              <p className="text-sm text-[#7B8798] mb-4">Class {note.classId.replace('class-', '')} • {getSubjectsForClass(note.classId.replace('class-', '')).find(s => s.id === note.subjectId)?.name || note.subjectId}</p>
-              
-              <div className="flex justify-between items-center text-xs text-[#5B5CFF] font-medium bg-[#5B5CFF]/10 px-3 py-2 rounded-lg">
-                <span>{(note.sizeBytes / 1024 / 1024).toFixed(2)} MB</span>
-                <span>{new Date(note.uploadedAt).toLocaleDateString()}</span>
-              </div>
-            </motion.div>
+                
+                <h3 className="text-base sm:text-lg font-bold text-white mb-1 flex-grow break-words">{note.title}</h3>
+                <p className="text-xs sm:text-sm text-[#7B8798] mb-2">Class {note.classId.replace('class-', '')} â€¢ {getSubjectsForClass(note.classId.replace('class-', '')).find(s => s.id === note.subjectId)?.name || note.subjectId}</p>
+                <p className="text-xs sm:text-sm text-[#7B8798] mb-5">{new Date(note.uploadedAt).toLocaleDateString()}</p>
+                
+                <div className="flex gap-2 mt-auto">
+                  <button 
+                    onClick={() => window.open(note.fileUrl, '_blank')}
+                    className="flex-1 bg-white/[0.03] hover:bg-white/[0.08] text-white py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" /> <span className="hidden sm:inline">View</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if(confirm("Are you sure you want to delete this note for everyone?")) {
+                        deleteNote(note).then(() => toast.success("Deleted")).catch(() => toast.error("Failed to delete"));
+                      }
+                    }}
+                    className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" /> <span className="hidden sm:inline">Delete</span>
+                  </button>
+                </div>
+              </motion.div>
           ))
         )}
       </div>
@@ -294,3 +302,4 @@ export default function TeacherNotesPage() {
     </div>
   );
 }
+
