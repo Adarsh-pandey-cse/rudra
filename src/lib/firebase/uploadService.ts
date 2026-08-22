@@ -1,4 +1,4 @@
-﻿import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebase";
 
 export interface UploadProgress {
@@ -12,53 +12,30 @@ export const uploadFile = async (
   path: string,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, path);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+  return new Promise(async (resolve, reject) => {
+    try {
+      const storageRef = ref(storage, path);
+      
+      // Simulate progress for UI since uploadBytes doesn't support live progress
+      let simulatedProgress = 0;
+      const simInterval = setInterval(() => {
+        if (simulatedProgress < 90) {
+          simulatedProgress += Math.floor(Math.random() * 10) + 5;
+          if (simulatedProgress > 90) simulatedProgress = 90;
+          if (onProgress) onProgress(simulatedProgress);
+        }
+      }, 400);
 
-    // Provide immediate feedback by simulating initial progress if the connection is slow
-    let simulatedProgress = 0;
-    const simInterval = setInterval(() => {
-      if (simulatedProgress < 85) {
-        simulatedProgress += 5;
-        if (onProgress) onProgress(simulatedProgress);
-      }
-    }, 500);
-
-    const timeout = setTimeout(() => {
+      const snapshot = await uploadBytes(storageRef, file);
+      
       clearInterval(simInterval);
-      uploadTask.cancel();
-      reject(new Error("Upload timed out after 30 seconds. Check your internet or Firebase Storage rules."));
-    }, 30000);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const actualProgress = snapshot.totalBytes > 0 ? (snapshot.bytesTransferred / snapshot.totalBytes) * 100 : 0;
-        if (actualProgress > simulatedProgress) {
-          simulatedProgress = actualProgress;
-        }
-        if (onProgress) {
-          onProgress(simulatedProgress);
-        }
-      },
-      (error) => {
-        clearInterval(simInterval);
-        clearTimeout(timeout);
-        reject(error);
-      },
-      async () => {
-        clearInterval(simInterval);
-        clearTimeout(timeout);
-        try {
-          if (onProgress) onProgress(100);
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(downloadURL);
-        } catch (error) {
-          reject(error);
-        }
-      }
-    );
+      if (onProgress) onProgress(100);
+      
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      resolve(downloadURL);
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
@@ -74,4 +51,3 @@ export const base64ToFile = (base64String: string, filename: string): File => {
   }
   return new File([u8arr], filename, { type: mime });
 };
-
