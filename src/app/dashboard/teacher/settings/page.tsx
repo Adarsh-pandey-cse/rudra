@@ -46,7 +46,7 @@ export default function TeacherSettingsPage() {
 
   const { doubts } = useDoubtStore();
   const teacherFeedbacks = doubts
-    .filter(d => d.resolvedBy === currentUser?.id && d.studentRating !== null)
+    .filter(d => d.resolvedBy === currentUser?.id && typeof d.studentRating === 'number')
     .sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   const averageRating = teacherFeedbacks.length > 0 
