@@ -24,7 +24,7 @@ import { useDoubtStore } from '@/store/doubtStore';
 import { useLeaderboardStore } from '@/store/leaderboardStore';
 import { getMasteryColor, getMasteryLevel, Student } from '@/types';
 
-const AVATAR_EMOJIS = ["👨‍🎓", "👩‍🎓", "🚀", "🌟", "🧠", "🎯", "📚", "💡", "😎", "🤓"];
+const AVATAR_EMOJIS = ["ðŸ‘¨â€ðŸŽ“", "ðŸ‘©â€ðŸŽ“", "ðŸš€", "ðŸŒŸ", "ðŸ§ ", "ðŸŽ¯", "ðŸ“š", "ðŸ’¡", "ðŸ˜Ž", "ðŸ¤“"];
 
 const containerVariants: any = {
   hidden: { opacity: 0 },
@@ -216,7 +216,7 @@ export default function StudentDashboard() {
             
             <div className="flex flex-col justify-center h-full pt-1 md:pt-3">
               <h1 className="text-2xl md:text-[28px] font-bold text-white mb-2">
-                {getGreeting()}, <span className="bg-gradient-to-r from-[#5B5CFF] to-[#2DD4BF] bg-clip-text text-transparent">{currentUser.name.split(' ')[0]}</span>! 👋
+                {getGreeting()}, <span className="bg-gradient-to-r from-[#5B5CFF] to-[#2DD4BF] bg-clip-text text-transparent">{currentUser.name.split(' ')[0]}</span>! ðŸ‘‹
               </h1>
               <p className="text-sm md:text-base text-[#B6C2D9]">
                 {pendingHomework.length === 0 
@@ -275,15 +275,25 @@ export default function StudentDashboard() {
               <div className="text-[13px] text-[#7B8798]">Pending Homework</div>
             </div>
           </GlassCard>
-          <GlassCard hoverEffect onClick={() => router.push('/dashboard/student/doubts')} className="p-4 flex items-center gap-4 cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
-              <MessageCircleQuestion className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-white">{unresolvedDoubts.length}</div>
-              <div className="text-[13px] text-[#7B8798]">Unresolved Doubts</div>
-            </div>
-          </GlassCard>
+            <GlassCard hoverEffect onClick={() => router.push('/dashboard/student/doubts')} className="p-4 flex items-center gap-4 cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
+                <MessageCircleQuestion className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-white">{unresolvedDoubts.length}</div>
+                <div className="text-[13px] text-[#7B8798]">Unresolved Doubts</div>
+              </div>
+            </GlassCard>
+
+            <GlassCard hoverEffect onClick={() => router.push('/dashboard/student/notes')} className="p-4 flex items-center gap-4 cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-white">Notes</div>
+                <div className="text-[13px] text-[#7B8798]">View Materials</div>
+              </div>
+            </GlassCard>
           <GlassCard hoverEffect onClick={() => router.push('/dashboard/student/notices')} className="p-4 flex items-center gap-4 cursor-pointer">
             <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
               <Megaphone className="w-5 h-5 text-green-400" />
@@ -527,6 +537,7 @@ export default function StudentDashboard() {
     </DashboardLayout>
   );
 }
+
 
 
 

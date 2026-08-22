@@ -160,3 +160,17 @@ export function getMasteryColor(level: MasteryLevel): string {
     case "weak": return "#EF4444";
   }
 }
+
+// Notes
+export interface Note {
+  id: string;
+  title: string;
+  classId: string;
+  subjectId: string;
+  fileUrl: string;
+  fileType: "pdf" | "image" | "docx" | "other";
+  uploadedAt: string;
+  teacherId: string;
+  sizeBytes: number;
+  fileName: string;
+}

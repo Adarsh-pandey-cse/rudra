@@ -52,6 +52,7 @@ const TEACHER_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/teacher", icon: LayoutDashboard },
   { label: "Students", href: "/dashboard/teacher/students", icon: Users },
   { label: "Homework", href: "/dashboard/teacher/homework", icon: BookOpen },
+  { label: "Notes", href: "/dashboard/teacher/notes", icon: BookOpen },
   { label: "Leaderboard", href: "/dashboard/teacher/leaderboard", icon: Trophy },
   { label: "Progress", href: "/dashboard/teacher/progress", icon: TrendingUp },
   { label: "Doubts", href: "/dashboard/teacher/doubts", icon: MessageCircleQuestion },
@@ -63,6 +64,7 @@ const TEACHER_NAV: NavItem[] = [
 const STUDENT_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/student", icon: LayoutDashboard },
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
+  { label: "Notes", href: "/dashboard/student/notes", icon: BookOpen },
   { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: Trophy },
   { label: "My Progress", href: "/dashboard/student/progress", icon: TrendingUp },
   { label: "Doubts", href: "/dashboard/student/doubts", icon: MessageCircleQuestion },
@@ -75,6 +77,7 @@ const TEACHER_BOTTOM_NAV = [
   { label: "Home", href: "/dashboard/teacher", icon: LayoutDashboard },
   { label: "Students", href: "/dashboard/teacher/students", icon: Users },
   { label: "Homework", href: "/dashboard/teacher/homework", icon: BookOpen },
+  { label: "Notes", href: "/dashboard/teacher/notes", icon: BookOpen },
   { label: "Leaderboard", href: "/dashboard/teacher/leaderboard", icon: Trophy },
   { label: "Profile", href: "/dashboard/teacher/settings", icon: Settings },
 ];
@@ -82,6 +85,7 @@ const TEACHER_BOTTOM_NAV = [
 const STUDENT_BOTTOM_NAV = [
   { label: "Home", href: "/dashboard/student", icon: LayoutDashboard },
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
+  { label: "Notes", href: "/dashboard/student/notes", icon: BookOpen },
   { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: Trophy },
   { label: "Doubts", href: "/dashboard/student/doubts", icon: MessageCircleQuestion },
   { label: "Profile", href: "/dashboard/student/settings", icon: Settings },
@@ -715,3 +719,4 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     </div>
   );
 }
+
