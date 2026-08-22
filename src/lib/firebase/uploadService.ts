@@ -45,13 +45,23 @@ export const uploadFile = async (
     };
 
     xhr.onload = () => {
-      if (xhr.status === 200) {
-        if (onProgress) onProgress(100);
-        const response = JSON.parse(xhr.responseText);
-        resolve(response.secure_url);
-      } else {
-        const response = JSON.parse(xhr.responseText);
-        reject(new Error(response.error?.message || `Upload failed with status ${xhr.status}` ));
+      try {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          if (onProgress) onProgress(100);
+          const response = JSON.parse(xhr.responseText);
+          resolve(response.secure_url);
+        } else {
+          let errorMessage = `Upload failed with status ${xhr.status}`;
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.error?.message) errorMessage = response.error.message;
+          } catch (e) {
+            // Ignore parse error on failure response
+          }
+          reject(new Error(errorMessage));
+        }
+      } catch (err: any) {
+        reject(new Error("Failed to process upload response: " + err.message));
       }
     };
 
