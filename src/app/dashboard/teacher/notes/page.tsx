@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,6 +50,12 @@ export default function TeacherNotesPage() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !title.trim() || !selectedSubjectId || !currentUser) return;
+    
+    // Cloudinary Free tier limits non-image raw files (like PDF/DOCX) to 10MB
+    if (file.size > 10 * 1024 * 1024 && !file.type.startsWith("image/")) {
+      toast.error("Cloudinary Free Plan only allows PDFs up to 10MB. Please compress your file.");
+      return;
+    }
 
     setUploadState("uploading");
     setUploadProgress(0);
@@ -125,7 +131,7 @@ export default function TeacherNotesPage() {
                     onClick={() => window.open(note.fileUrl, '_blank')}
                     className="flex-1 bg-white/[0.03] hover:bg-white/[0.08] text-white py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Eye className="w-4 h-4" /> <span className="hidden sm:inline">View</span>
+                    <Eye className="w-4 h-4" /> <span>View</span>
                   </button>
                   <button 
                     onClick={() => {
@@ -135,7 +141,7 @@ export default function TeacherNotesPage() {
                     }}
                     className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Trash2 className="w-4 h-4" /> <span className="hidden sm:inline">Delete</span>
+                    <Trash2 className="w-4 h-4" /> <span>Delete</span>
                   </button>
                 </div>
               </motion.div>
@@ -302,4 +308,7 @@ export default function TeacherNotesPage() {
     </div>
   );
 }
+
+
+
 
