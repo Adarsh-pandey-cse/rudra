@@ -28,22 +28,22 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 md:p-8 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-md"
       >
-        <div className="absolute top-4 right-4 z-[110] flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-[110] flex items-center gap-3">
           <a 
             href={url} 
             download={name}
             target="_blank"
             rel="noreferrer"
-            className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all shadow-lg hover:scale-105"
             title="Download"
           >
             <Download className="w-5 h-5" />
           </a>
           <button 
             onClick={onClose} 
-            className="p-3 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-colors"
+            className="p-3 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-all shadow-lg hover:scale-105"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -51,13 +51,13 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
         </div>
 
         {isImage && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 bg-[#0F172A] border border-white/10 p-2 rounded-2xl shadow-2xl">
-            <button onClick={handleZoomOut} className="p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><ZoomOut className="w-5 h-5" /></button>
-            <button onClick={handleReset} className="px-3 font-medium text-white/80 hover:text-white transition-colors text-sm">{Math.round(scale * 100)}%</button>
-            <button onClick={handleZoomIn} className="p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><ZoomIn className="w-5 h-5" /></button>
-            <div className="w-px h-6 bg-white/10 mx-1"></div>
-            <button onClick={handleRotateLeft} className="p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><RotateCcw className="w-5 h-5" /></button>
-            <button onClick={handleRotateRight} className="p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><RotateCw className="w-5 h-5" /></button>
+          <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-1.5 md:gap-2 bg-[#0B1527]/90 backdrop-blur-xl border border-white/10 p-2 md:p-3 rounded-2xl shadow-2xl">
+            <button onClick={handleZoomOut} className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><ZoomOut className="w-4 h-4 md:w-5 md:h-5" /></button>
+            <button onClick={handleReset} className="px-2 md:px-3 font-medium text-white/80 hover:text-white transition-colors text-xs md:text-sm min-w-[3rem] text-center">{Math.round(scale * 100)}%</button>
+            <button onClick={handleZoomIn} className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><ZoomIn className="w-4 h-4 md:w-5 md:h-5" /></button>
+            <div className="w-px h-5 md:h-6 bg-white/10 mx-1 md:mx-2"></div>
+            <button onClick={handleRotateLeft} className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><RotateCcw className="w-4 h-4 md:w-5 md:h-5" /></button>
+            <button onClick={handleRotateRight} className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><RotateCw className="w-4 h-4 md:w-5 md:h-5" /></button>
           </div>
         )}
 
@@ -65,18 +65,16 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
           {isImage ? (
             <motion.div
               drag
-              dragConstraints={{ left: -500, right: 500, top: -500, bottom: 500 }}
-              dragElastic={0.1}
-              className="cursor-grab active:cursor-grabbing w-full h-full flex items-center justify-center"
+              dragConstraints={{ left: -1000, right: 1000, top: -1000, bottom: 1000 }}
+              dragElastic={0.2}
+              animate={{ scale, rotate: rotation }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="cursor-grab active:cursor-grabbing touch-none select-none"
             >
               <img 
                 src={url} 
                 alt={name} 
-                style={{ 
-                  transform: 'scale(' + scale + ') rotate(' + rotation + 'deg)',
-                  transition: 'transform 0.2s ease-out'
-                }}
-                className="max-w-full max-h-full object-contain drop-shadow-2xl pointer-events-none" 
+                className="max-w-[95vw] max-h-[85vh] object-contain drop-shadow-2xl pointer-events-none" 
               />
             </motion.div>
           ) : isDoc ? (
