@@ -321,42 +321,48 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
       }
     });
 
-    // 2. Generate Invoices for current month if missing
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-    const currentMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
-    
-    feeProfiles.filter(p => p.isActive).forEach(profile => {
-      const billingDateThisMonth = new Date(currentYear, currentMonth - 1, profile.preferredDueDate);
-      const hasAnyInvoice = invoices.some(i => i.studentId === profile.studentId);
+      // 2. Generate Invoices for target month if missing
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
       
-      if (now >= billingDateThisMonth || !hasAnyInvoice) {
-        const hasCurrentInvoice = invoices.some(i => i.studentId === profile.studentId && i.month === currentMonthStr);
+      const isAfter15th = now.getDate() > 15;
+      const targetYear = isAfter15th ? currentYear : prevMonthYear;
+      const targetMonth = isAfter15th ? currentMonth : prevMonth;
+      const targetMonthStr = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
+      
+      feeProfiles.filter(p => p.isActive).forEach(profile => {
+        const billingDateThisMonth = new Date(targetYear, targetMonth - 1, profile.preferredDueDate);
+        const hasAnyInvoice = invoices.some(i => i.studentId === profile.studentId);
         
-        if (!hasCurrentInvoice) {
-          const baseAmount = profile.monthlyFee;
-          const discountAmount = profile.discounts.reduce((acc, curr) => curr.isPercentage ? acc + (baseAmount * curr.amount / 100) : acc + curr.amount, 0);
-          const finalAmount = baseAmount - discountAmount;
+        if (now >= billingDateThisMonth || !hasAnyInvoice) {
+          const hasTargetInvoice = invoices.some(i => i.studentId === profile.studentId && i.month === targetMonthStr);
           
-          const previousInvoices = invoices.filter(
-            i => i.studentId === profile.studentId && 
-            i.month !== currentMonthStr && 
-            (i.status === "pending" || i.status === "overdue" || i.status === "partially_paid")
-          );
-          
-          let previousBalance = 0;
-          previousInvoices.forEach(inv => {
-            previousBalance += (inv.totalAmount - inv.amountPaid);
-            batch.update(doc(db, "invoices", inv.id), { status: "cancelled" });
-          });
-          
-          const newInvId = `inv_${profile.studentId}_${currentYear}_${currentMonth}_${Date.now()}`;
-          const newInvoice: Invoice = {
-            id: newInvId,
-            studentId: profile.studentId,
-            month: currentMonthStr,
-            issueDate: billingDateThisMonth.toISOString(),
-            dueDate: billingDateThisMonth.toISOString(),
+          if (!hasTargetInvoice) {
+            const baseAmount = profile.monthlyFee;
+            const discountAmount = profile.discounts.reduce((acc, curr) => curr.isPercentage ? acc + (baseAmount * curr.amount / 100) : acc + curr.amount, 0);
+            const finalAmount = baseAmount - discountAmount;
+            
+            const previousInvoices = invoices.filter(
+              i => i.studentId === profile.studentId && 
+              i.month !== targetMonthStr && 
+              (i.status === "pending" || i.status === "overdue" || i.status === "partially_paid")
+            );
+            
+            let previousBalance = 0;
+            previousInvoices.forEach(inv => {
+              previousBalance += (inv.totalAmount - inv.amountPaid);
+              batch.update(doc(db, "invoices", inv.id), { status: "cancelled" });
+            });
+            
+            const newInvId = `inv_${profile.studentId}_${targetYear}_${targetMonth}_${Date.now()}`;
+            const newInvoice: Invoice = {
+              id: newInvId,
+              studentId: profile.studentId,
+              month: targetMonthStr,
+              issueDate: billingDateThisMonth.toISOString(),
+              dueDate: billingDateThisMonth.toISOString(),
             baseAmount,
             discountAmount,
             lateFeeAmount: 0,
@@ -771,4 +777,5 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
   }
 
 }));
+
 
