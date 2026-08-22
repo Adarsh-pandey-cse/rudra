@@ -1,5 +1,6 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebase";
+import { firebaseConfig } from "./firebase";
 
 export interface UploadProgress {
   progress: number;
@@ -14,17 +15,22 @@ export const uploadFile = async (
 ): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     try {
+      if (firebaseConfig.storageBucket === "mock.appspot.com" || !firebaseConfig.storageBucket) {
+        throw new Error("Firebase Storage Bucket is missing! Please add NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET to your .env file.");
+      }
+
       const storageRef = ref(storage, path);
       
       // Simulate progress for UI since uploadBytes doesn't support live progress
       let simulatedProgress = 0;
       const simInterval = setInterval(() => {
-        if (simulatedProgress < 90) {
-          simulatedProgress += Math.floor(Math.random() * 10) + 5;
-          if (simulatedProgress > 90) simulatedProgress = 90;
+        if (simulatedProgress < 95) {
+          // Slow down progress as it approaches 95% to wait for real completion
+          const increment = (95 - simulatedProgress) / 10;
+          simulatedProgress += Math.max(0.5, increment);
           if (onProgress) onProgress(simulatedProgress);
         }
-      }, 400);
+      }, 500);
 
       const snapshot = await uploadBytes(storageRef, file);
       
@@ -33,7 +39,7 @@ export const uploadFile = async (
       
       const downloadURL = await getDownloadURL(snapshot.ref);
       resolve(downloadURL);
-    } catch (error) {
+    } catch (error: any) {
       reject(error);
     }
   });
