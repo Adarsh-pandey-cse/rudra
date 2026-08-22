@@ -25,7 +25,7 @@ export const uploadFile = async (
     }
 
     // Use 'auto' to support images, videos, and raw files (PDFs, DOCX)
-    const url = "https://api.cloudinary.com/v1_1/$cloudName/auto/upload";
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
     
     const formData = new FormData();
     formData.append("file", file);
@@ -51,7 +51,7 @@ export const uploadFile = async (
         resolve(response.secure_url);
       } else {
         const response = JSON.parse(xhr.responseText);
-        reject(new Error(response.error?.message || "Upload failed with status $(xhr.status)" ));
+        reject(new Error(response.error?.message || `Upload failed with status ${xhr.status}` ));
       }
     };
 
