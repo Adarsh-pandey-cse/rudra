@@ -75,8 +75,9 @@ export default function TeacherFeesPage() {
   const [activeReceiptData, setActiveReceiptData] = useState<{payment: Payment, invoice: Invoice, record: ReceiptRecord, student: Student} | null>(null);
   const [isLoadingReceipt, setIsLoadingReceipt] = useState<string | null>(null);
 
-  const currentDate = new Date();
-  const defaultMonthStr = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
+  const defaultDate = new Date();
+  defaultDate.setMonth(defaultDate.getMonth() - 1);
+  const defaultMonthStr = `${defaultDate.getFullYear()}-${(defaultDate.getMonth() + 1).toString().padStart(2, '0')}`;
   const [selectedMonth, setSelectedMonth] = useState(defaultMonthStr);
 
   useEffect(() => {
@@ -117,16 +118,42 @@ export default function TeacherFeesPage() {
     return { value: val, label };
   });
 
-  const handleRecordPayment = (e: React.FormEvent) => {
+  const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedInvoice || !paymentAmount) return;
     
     const amountNum = parseFloat(paymentAmount);
     if (amountNum <= 0 || amountNum > (selectedInvoice.totalAmount - selectedInvoice.amountPaid)) return;
 
-    recordPayment(selectedInvoice.id, amountNum, paymentMode, currentUser.id);
+    const currentInvoice = selectedInvoice;
+    const paymentId = await recordPayment(currentInvoice.id, amountNum, paymentMode, currentUser.id);
     
-    // Receipt generation logic has been moved to on-demand via the modal
+    if (paymentId) {
+      const student = students.find(s => s.id === currentInvoice.studentId);
+      if (student) {
+        setIsLoadingReceipt(paymentId);
+        try {
+          const record = await receiptService.createReceiptRecord(paymentId, currentInvoice.id, currentUser!.id, currentUser!.name);
+          const paymentData = {
+            id: paymentId,
+            invoiceId: currentInvoice.id,
+            studentId: student.id,
+            amount: amountNum,
+            paymentDate: new Date().toISOString(),
+            mode: paymentMode,
+            status: "verified" as const,
+            recordedBy: currentUser!.id,
+            verifierName: currentUser!.name
+          };
+          setActiveReceiptData({ payment: paymentData, invoice: currentInvoice, record, student });
+        } catch (error) {
+          console.error("Failed to generate receipt immediately", error);
+        } finally {
+          setIsLoadingReceipt(null);
+        }
+      }
+    }
+    
     setSelectedInvoice(null);
     setPaymentAmount("");
   };
@@ -865,3 +892,4 @@ export default function TeacherFeesPage() {
     </DashboardLayout>
   );
 }
+

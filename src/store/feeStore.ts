@@ -99,7 +99,7 @@ export interface FeeState {
   requestReceipt: (paymentId: string) => Promise<void>;
   verifyPayment: (paymentId: string, paymentDate: string, recordedBy: string, paymentMode: PaymentMode, remark?: string, amountReceived?: number, verifierName?: string) => Promise<void>;
   rejectPayment: (paymentId: string, remark?: string) => Promise<void>;
-  recordPayment: (invoiceId: string, amount: number, mode: PaymentMode, recordedBy: string, referenceNumber?: string) => Promise<void>;
+  recordPayment: (invoiceId: string, amount: number, mode: PaymentMode, recordedBy: string, referenceNumber?: string) => Promise<string | undefined>;
   undoPayment: (invoiceId: string) => Promise<void>;
   waiveInvoice: (invoiceId: string) => Promise<void>;
   updateFeeProfile: (profile: FeeProfile) => Promise<void>;
@@ -636,7 +636,7 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
 
   recordPayment: async (invoiceId, amount, mode, recordedBy, referenceNumber) => {
     const invoice = get().invoices.find(i => i.id === invoiceId);
-    if (!invoice) return;
+    if (!invoice) return undefined;
     
     const batch = writeBatch(db);
     
@@ -771,3 +771,4 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
   }
 
 }));
+
