@@ -20,7 +20,8 @@ import {
   Bell,
   Megaphone,
   MessageCircleQuestion,
-  Trophy
+  Trophy,
+  FileText
 } from "lucide-react";
 import Link from "next/link";
 import RudraLogo from "@/components/brand/RudraLogo";
@@ -77,7 +78,7 @@ const TEACHER_BOTTOM_NAV = [
   { label: "Home", href: "/dashboard/teacher", icon: LayoutDashboard },
   { label: "Students", href: "/dashboard/teacher/students", icon: Users },
   { label: "Homework", href: "/dashboard/teacher/homework", icon: BookOpen },
-  { label: "Notes", href: "/dashboard/teacher/notes", icon: BookOpen },
+  { label: "Notes", href: "/dashboard/teacher/notes", icon: FileText },
   { label: "Leaderboard", href: "/dashboard/teacher/leaderboard", icon: Trophy },
   { label: "Profile", href: "/dashboard/teacher/settings", icon: Settings },
 ];
@@ -85,7 +86,7 @@ const TEACHER_BOTTOM_NAV = [
 const STUDENT_BOTTOM_NAV = [
   { label: "Home", href: "/dashboard/student", icon: LayoutDashboard },
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
-  { label: "Notes", href: "/dashboard/student/notes", icon: BookOpen },
+  { label: "Notes", href: "/dashboard/student/notes", icon: FileText },
   { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: Trophy },
   { label: "Doubts", href: "/dashboard/student/doubts", icon: MessageCircleQuestion },
   { label: "Profile", href: "/dashboard/student/settings", icon: Settings },
