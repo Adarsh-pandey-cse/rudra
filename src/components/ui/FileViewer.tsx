@@ -1,6 +1,7 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ZoomOut, RotateCcw, RotateCw, Download, FileText } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface FileViewerProps {
   url: string;
@@ -12,6 +13,11 @@ interface FileViewerProps {
 export default function FileViewer({ url, name, type, onClose }: FileViewerProps) {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.5, 5));
   const handleZoomOut = () => setScale(prev => Math.max(prev - 0.5, 0.5));
@@ -22,15 +28,17 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
   const isImage = type === 'image' || url.startsWith('data:image/');
   const isDoc = type === 'pdf' || type === 'docx' || url.endsWith('.pdf') || url.endsWith('.docx');
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       <motion.div 
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-md"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-md"
       >
-        <div className="absolute top-4 right-4 z-[110] flex items-center gap-3">
+        <div className="absolute top-4 right-4 z-[99999] flex items-center gap-3">
           <a 
             href={url} 
             download={name}
@@ -51,7 +59,7 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
         </div>
 
         {isImage && (
-          <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-1.5 md:gap-2 bg-[#0B1527]/90 backdrop-blur-xl border border-white/10 p-2 md:p-3 rounded-2xl shadow-2xl">
+          <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-1.5 md:gap-2 bg-[#0B1527]/90 backdrop-blur-xl border border-white/10 p-2 md:p-3 rounded-2xl shadow-2xl">
             <button onClick={handleZoomOut} className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><ZoomOut className="w-4 h-4 md:w-5 md:h-5" /></button>
             <button onClick={handleReset} className="px-2 md:px-3 font-medium text-white/80 hover:text-white transition-colors text-xs md:text-sm min-w-[3rem] text-center">{Math.round(scale * 100)}%</button>
             <button onClick={handleZoomIn} className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-white transition-colors"><ZoomIn className="w-4 h-4 md:w-5 md:h-5" /></button>
@@ -95,6 +103,7 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
           )}
         </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
