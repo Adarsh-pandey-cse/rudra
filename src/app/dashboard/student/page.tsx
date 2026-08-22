@@ -216,7 +216,7 @@ export default function StudentDashboard() {
             
             <div className="flex flex-col justify-center h-full pt-1 md:pt-3">
               <h1 className="text-2xl md:text-[28px] font-bold text-white mb-2">
-                {getGreeting()}, <span className="bg-gradient-to-r from-[#5B5CFF] to-[#2DD4BF] bg-clip-text text-transparent">{currentUser.name.split(' ')[0]}</span>! ðŸ‘‹
+                {getGreeting()}, <span className="bg-gradient-to-r from-[#5B5CFF] to-[#2DD4BF] bg-clip-text text-transparent">{currentUser.name.split(' ')[0]}</span>! 👋
               </h1>
               <p className="text-sm md:text-base text-[#B6C2D9]">
                 {pendingHomework.length === 0 
