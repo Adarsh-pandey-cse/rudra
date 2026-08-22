@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 export default function TeacherTestsPage() {
   const { currentUser } = useAuthStore();
-  const { getStudentUsers } = useAuthStore();
+  const { getStudentUsers, users } = useAuthStore();
   const { testMarks, addTestMark, deleteTestMark } = useTestStore();
 
   const [viewState, setViewState] = useState<"classes" | "subjects" | "students">("classes");
@@ -49,7 +49,23 @@ export default function TeacherTestsPage() {
   };
 
   const students = getStudentUsers();
-  const currentStudents = students.filter(s => (s as any).grade === selectedClass || (s as any).classId === `class-${selectedClass}` || (s as any).classId === selectedClass);
+    const currentStudents = students.filter(s => {
+    const gradeStr = ((s as any).grade || "").toString().toLowerCase();
+    const classIdStr = ((s as any).classId || "").toString().toLowerCase();
+    const target = (selectedClass || "").toString().toLowerCase();
+    
+    return gradeStr === target || 
+           gradeStr === target + "th" ||
+           gradeStr === target + "st" ||
+           gradeStr === target + "nd" ||
+           gradeStr === target + "rd" ||
+           gradeStr === "class " + target ||
+           gradeStr === "class-" + target ||
+           classIdStr === "class-" + target || 
+           classIdStr === target ||
+           gradeStr.includes(target) || 
+           classIdStr.includes(target);
+  });
   const recentMarks = selectedClass ? testMarks.filter(m => m.classId === selectedClass).sort((a,b) => b.createdAt - a.createdAt).slice(0, 10) : [];
 
   const handleSaveMarks = async () => {
@@ -172,15 +188,15 @@ export default function TeacherTestsPage() {
           {viewState === "students" && selectedClass && selectedSubject && (
             <motion.div key="students" variants={containerVariants} initial="hidden" animate="show" exit="hidden" className="space-y-6">
               <div className="bg-[#0B1527] border border-white/10 rounded-3xl overflow-hidden">
-                <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                <div className="p-5 md:p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-5 text-center sm:text-left">
                   <div>
-                    <h2 className="text-xl font-bold text-white">Enter Marks for {selectedSubject.name}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-white">Enter Marks for {selectedSubject.name}</h2>
                     <p className="text-[#7B8798] text-sm mt-1">Class {selectedClass} • Maximum marks: 20</p>
                   </div>
                   <button
                     onClick={handleSaveMarks}
                     disabled={isSubmitting}
-                    className="bg-[#5B5CFF] hover:bg-[#5B5CFF]/90 text-white px-6 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50"
+                    className="bg-[#5B5CFF] hover:bg-[#5B5CFF]/90 text-white px-8 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 w-full sm:w-auto shadow-lg shadow-[#5B5CFF]/20 active:scale-95"
                   >
                     {isSubmitting ? "Saving..." : "Save Marks"}
                   </button>
@@ -188,12 +204,12 @@ export default function TeacherTestsPage() {
 
                 <div className="divide-y divide-white/5">
                   {currentStudents.length === 0 ? (
-                    <div className="p-12 text-center text-[#7B8798]">No students found in Class {selectedClass}</div>
+                    <div className="p-12 text-center text-[#7B8798] flex flex-col items-center justify-center gap-2"><div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-2"><Users className="w-8 h-8 text-white/20" /></div><p>No students found in Class {selectedClass}</p></div>
                   ) : (
                     currentStudents.map(student => (
-                      <div key={student.id} className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+                      <div key={student.id} className="p-4 md:p-6 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
                         <div className="flex items-center gap-4">
-                          <img src={student.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}"} alt={student.name} className="w-12 h-12 rounded-full border border-white/10" />
+                          <img src={student.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt={student.name} className="w-12 h-12 rounded-full border border-white/10" />
                           <div>
                             <h3 className="font-semibold text-white">{student.name}</h3>
                             <p className="text-sm text-[#7B8798]">ID: {student.id}</p>
