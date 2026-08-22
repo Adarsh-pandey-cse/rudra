@@ -124,28 +124,6 @@ export function useNotifications() {
     if (!currentUser || currentUser.role !== "student") return;
 
     const checkAlerts = () => {
-      const homework = getStudentHomework(currentUser.id) || [];
-      const now = new Date();
-
-      // 1. Homework Due Soon (<= 24h)
-      if (prefs.homeworkDueSoon) {
-        homework.forEach(hw => {
-          if (hw.status === "pending") {
-            const dueDate = new Date(hw.dueDate);
-            const hoursLeft = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-            
-            if (hoursLeft > 0 && hoursLeft <= 24) {
-              triggerNotification(
-                `due_hw_${hw.id}`, 
-                "Homework Due Soon", 
-                `${currentUser.name}, ${hw.title} is due in ${Math.ceil(hoursLeft)} hours!`, 
-                "homework"
-              );
-            }
-          }
-        });
-      }
-
       // 3. Manual Fee Reminders (Intercepted from Teacher)
       if (prefs.feeReminders) {
         const manualReminderStr = localStorage.getItem(`manual_fee_reminder_${currentUser.id}`);

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,8 +16,10 @@ export default function StudentNotesPage() {
 
   useEffect(() => {
     if (!currentUser) return;
-    const classId = currentUser.role === "student" ? (currentUser as any).classId || ('class-' + (currentUser as any).grade?.replace(/\D/g, '')) : undefined;
-    const unsub = initializeListeners("student", classId);
+    const rawClass = (currentUser as any).classId || (currentUser as any).grade;
+    const classIdClean = rawClass ? rawClass.replace(/\D/g, '') : "11";
+    const queryClassId = 'class-' + classIdClean;
+    const unsub = initializeListeners("student", queryClassId);
     return () => unsub();
   }, [currentUser, initializeListeners]);
 
