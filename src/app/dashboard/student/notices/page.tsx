@@ -142,6 +142,7 @@ export default function StudentNoticesPage() {
                     <SmartNoticeCard 
                       notice={notice} 
                       isPinned 
+                      onClick={() => markAsRead(notice.id, student.id)}
                       onAcknowledge={handleAcknowledge}
                       hasAcknowledged={(notice as any).acknowledgedBy?.includes(student.id)}
                       requiresAck={(notice as any).requiresAcknowledgment}
@@ -165,6 +166,7 @@ export default function StudentNoticesPage() {
                   <motion.div key={notice.id} variants={itemVariants}>
                     <SmartNoticeCard 
                       notice={notice} 
+                      onClick={() => markAsRead(notice.id, student.id)}
                       onAcknowledge={handleAcknowledge}
                       hasAcknowledged={(notice as any).acknowledgedBy?.includes(student.id)}
                       requiresAck={(notice as any).requiresAcknowledgment}
