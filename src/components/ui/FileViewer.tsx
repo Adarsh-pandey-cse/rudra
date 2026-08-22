@@ -88,7 +88,7 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
             </motion.div>
                     ) : isPdf ? (
             <iframe 
-              src={url} 
+              src={"https://mozilla.github.io/pdf.js/web/viewer.html?file=" + encodeURIComponent(url)} 
               className="w-full h-full border-0 bg-white rounded-xl"
               title={name}
             />
