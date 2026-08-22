@@ -343,7 +343,7 @@ export default function StudentDoubtChatPage() {
                             if (teacher.avatar.length < 10) return <span className="text-sm">{teacher.avatar}</span>;
                             return <img src={teacher.avatar} alt="Avatar" className="w-full h-full object-cover" />;
                           }
-                          return <span className="text-[11px] font-bold text-white">{msg.authorName?.[0]?.toUpperCase() || "T"}</span>;
+                          return <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.authorId}`} alt="Avatar" className="w-full h-full object-cover" />;
                         })()}
                       </div>
                     )}

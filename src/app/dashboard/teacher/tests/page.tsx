@@ -114,7 +114,7 @@ export default function TeacherTestsPage() {
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0B1527] p-6 md:p-8 rounded-3xl border border-white/[0.05]">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
             <div className="w-14 h-14 bg-gradient-to-br from-[#5B5CFF]/20 to-[#8B5CF6]/20 rounded-2xl flex items-center justify-center border border-white/5">
               <FileText className="w-7 h-7 text-[#5B5CFF]" />
             </div>
@@ -170,7 +170,7 @@ export default function TeacherTestsPage() {
                   onClick={() => handleSubjectSelect(sub)}
                   className="group flex items-center justify-between bg-[#0B1527] border border-white/10 p-6 rounded-2xl hover:bg-[#131D2E] transition-all hover:border-[#5B5CFF]/50"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                     <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-2xl">
                       { (sub as any).icon || <FileText className="w-6 h-6 text-white/50" /> }
                     </div>
@@ -208,21 +208,18 @@ export default function TeacherTestsPage() {
                   ) : (
                     currentStudents.map(student => (
                       <div key={student.id} className="p-4 md:p-6 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
-                        <div className="flex items-center gap-4">
-                          <img src={student.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt={student.name} className="w-12 h-12 rounded-full border border-white/10" />
-                          <div>
-                            <h3 className="font-semibold text-white">{student.name}</h3>
-                            <p className="text-sm text-[#7B8798]">ID: {student.id}</p>
-                          </div>
+                        <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                          <img src={student.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt={student.name} className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/10 shrink-0 object-cover" />
+                          <div className="min-w-0 flex-1"><h3 className="font-semibold text-white truncate text-sm md:text-base">{student.name}</h3></div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 md:gap-3 shrink-0">
                           <div className="relative">
                             <input 
                               type="number" 
                               min="0" max="20" step="0.5"
                               value={marksInputs[student.id] || ""}
                               onChange={(e) => setMarksInputs(prev => ({...prev, [student.id]: e.target.value}))}
-                              className="w-24 bg-[#131D2E] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-[#5B5CFF] focus:ring-1 focus:ring-[#5B5CFF] outline-none text-right font-medium"
+                              className="w-20 md:w-24 bg-[#131D2E] border border-white/10 rounded-xl px-3 md:px-4 py-2 md:py-2.5 text-white focus:border-[#5B5CFF] focus:ring-1 focus:ring-[#5B5CFF] outline-none text-right font-medium text-sm md:text-base"
                               placeholder="--"
                             />
                           </div>
@@ -251,7 +248,7 @@ export default function TeacherTestsPage() {
                             <p className="font-medium text-white">{student?.name || "Unknown Student"} <span className="text-[#7B8798] text-sm ml-2">{subject?.name}</span></p>
                             <p className="text-xs text-[#7B8798] mt-1">{new Date(mark.createdAt).toLocaleString()}</p>
                           </div>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 bg-[#22C55E]/10 px-3 py-1 rounded-lg border border-[#22C55E]/20">
                               <Trophy className="w-4 h-4 text-[#22C55E]" />
                               <span className="font-bold text-[#22C55E]">+{mark.marks} XP</span>
