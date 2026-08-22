@@ -29,6 +29,7 @@ export const uploadFile = async (
       },
       async () => {
         try {
+          if (onProgress) onProgress(100);
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           resolve(downloadURL);
         } catch (error) {
