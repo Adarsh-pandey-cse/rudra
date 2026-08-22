@@ -6,7 +6,10 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 interface PDFViewerProps {
   url: string;
@@ -17,6 +20,7 @@ export default function ReactPDFViewer({ url }: PDFViewerProps) {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [rotation, setRotation] = useState<number>(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -59,8 +63,9 @@ export default function ReactPDFViewer({ url }: PDFViewerProps) {
       {/* Viewer */}
       <div className="flex-1 w-full overflow-auto flex justify-center bg-[#1A2333] p-4 md:p-8">
         <Document
-          file={url}
+          file={url.replace("http://", "https://")}
           onLoadSuccess={onDocumentLoadSuccess}
+          onLoadError={(err) => setLoadError(err.message)}
           loading={
             <div className="flex flex-col items-center justify-center h-64 text-[#7B8798]">
               <div className="w-8 h-8 border-4 border-[#5B5CFF] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -68,8 +73,10 @@ export default function ReactPDFViewer({ url }: PDFViewerProps) {
             </div>
           }
           error={
-            <div className="flex flex-col items-center justify-center h-64 text-red-400">
-              <p>Failed to load PDF document.</p>
+            <div className="flex flex-col items-center justify-center h-64 text-red-400 px-6 text-center">
+              <p className="font-bold mb-2">Failed to load PDF document.</p>
+              {loadError && <p className="text-xs text-red-300 break-all bg-red-900/20 p-2 rounded">{loadError}</p>}
+              <p className="text-[10px] text-white/40 mt-4 break-all">URL: {url.substring(0, 50)}...</p>
             </div>
           }
         >
