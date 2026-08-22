@@ -285,10 +285,134 @@ export default function TeacherNotesPage() {
             />
           )}
         </AnimatePresence>
+            {/* Upload Modal */}
+      <AnimatePresence>
+        {showUploadModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#0B1527] border border-white/10 p-6 md:p-8 rounded-3xl w-full max-w-md relative shadow-2xl my-auto"
+            >
+              <button 
+                onClick={handleCloseModal}
+                className="absolute top-6 right-6 text-[#7B8798] hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <h2 className="text-2xl font-bold text-white mb-2">Upload Note</h2>
+              <p className="text-[#7B8798] text-sm mb-6">Share a new document with your students.</p>
+
+              {uploadState === "success" ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-[#22C55E]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8 text-[#22C55E]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Upload Complete!</h3>
+                  <p className="text-[#7B8798] mb-6">Your note has been successfully shared.</p>
+                  <button 
+                    onClick={handleCloseModal}
+                    className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-medium transition-colors border border-white/10"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleUpload} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-[#B6C2D9] mb-2">Target Class</label>
+                    <select 
+                      value={selectedClass} 
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full bg-[#131D2E] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#5B5CFF] focus:ring-1 focus:ring-[#5B5CFF] outline-none transition-all appearance-none"
+                    >
+                      {CLASSES.map(cls => (
+                        <option key={cls} value={cls}>Class {cls}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#B6C2D9] mb-2">Subject</label>
+                    <select 
+                      value={selectedSubjectId} 
+                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      className="w-full bg-[#131D2E] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#5B5CFF] focus:ring-1 focus:ring-[#5B5CFF] outline-none transition-all appearance-none"
+                    >
+                      {getSubjectsForClass(selectedClass).map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#B6C2D9] mb-2">Note Title</label>
+                    <input 
+                      type="text" 
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g. Chapter 1: Chemical Reactions"
+                      className="w-full bg-[#131D2E] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#5B5CFF] focus:ring-1 focus:ring-[#5B5CFF] outline-none transition-all placeholder:text-[#4A5568]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#B6C2D9] mb-2">Document File</label>
+                    <label className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${file ? 'border-[#5B5CFF]/50 bg-[#5B5CFF]/5' : 'border-white/10 hover:border-white/20 bg-white/[0.02]'}`}>
+                      <input 
+                        type="file" 
+                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept=".pdf,image/*"
+                      />
+                      <Upload className={`w-8 h-8 mb-3 ${file ? 'text-[#5B5CFF]' : 'text-[#7B8798]'}`} />
+                      {file ? (
+                        <div className="text-center">
+                          <p className="text-white font-medium line-clamp-1">{file.name}</p>
+                          <p className="text-xs text-[#7B8798] mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <p className="text-white font-medium">Click to browse or drag and drop</p>
+                          <p className="text-xs text-[#7B8798] mt-1">PDF or Images up to 200MB</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={uploadState === "uploading" || !file || !title.trim()}
+                    className="w-full bg-[#5B5CFF] hover:bg-[#5B5CFF]/90 disabled:bg-[#5B5CFF]/50 text-white py-3.5 rounded-xl font-bold transition-colors mt-2 shadow-lg shadow-[#5B5CFF]/20 relative overflow-hidden"
+                  >
+                    {uploadState === "uploading" ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="mb-1 text-sm">Uploading... {uploadProgress.toFixed(0)}%</span>
+                        <div className="w-1/2 h-1 bg-white/20 rounded-full overflow-hidden">
+                          <div className="h-full bg-white transition-all duration-300" style={{ width: uploadProgress + '%' }} />
+                        </div>
+                      </div>
+                    ) : "Upload Document"}
+                  </button>
+                  
+                  {uploadState === "error" && (
+                    <p className="text-red-400 text-sm text-center mt-2">Failed to upload. Please try again.</p>
+                  )}
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       </div>
     </DashboardLayout>
   );
 }
+
+
 
 
 
