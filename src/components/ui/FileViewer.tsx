@@ -26,7 +26,8 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
   const handleReset = () => { setScale(1); setRotation(0); };
 
   const isImage = type === 'image' || url.startsWith('data:image/');
-  const isDoc = type === 'pdf' || type === 'docx' || url.endsWith('.pdf') || url.endsWith('.docx');
+  const isPdf = type === 'pdf' || url.endsWith('.pdf');
+  const isDoc = type === 'docx' || url.endsWith('.docx');
 
   if (!mounted) return null;
 
@@ -85,6 +86,12 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
                 className="max-w-[95vw] max-h-[85vh] object-contain drop-shadow-2xl pointer-events-none" 
               />
             </motion.div>
+                    ) : isPdf ? (
+            <iframe 
+              src={url} 
+              className="w-full h-full border-0 bg-white rounded-xl"
+              title={name}
+            />
           ) : isDoc ? (
             <iframe 
               src={'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true'} 
@@ -107,3 +114,4 @@ export default function FileViewer({ url, name, type, onClose }: FileViewerProps
     document.body
   );
 }
+

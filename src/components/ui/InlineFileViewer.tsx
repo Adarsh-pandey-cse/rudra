@@ -19,7 +19,8 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
   const handleReset = () => { setScale(1); setRotation(0); };
 
   const isImage = type === 'image' || url.startsWith('data:image/');
-  const isDoc = type === 'pdf' || type === 'docx' || url.endsWith('.pdf') || url.endsWith('.docx');
+  const isPdf = type === 'pdf' || url.endsWith('.pdf');
+  const isDoc = type === 'docx' || url.endsWith('.docx');
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0B1527] rounded-xl overflow-hidden border border-white/10 group touch-none">
@@ -66,6 +67,12 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
             <button onClick={handleRotateRight} className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"><RotateCw className="w-4 h-4" /></button>
           </div>
         </>
+            ) : isPdf ? (
+        <iframe 
+          src={url} 
+          className="w-full h-full border-0 bg-white rounded-xl"
+          title={name}
+        />
       ) : isDoc ? (
         <iframe 
           src={'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true'} 
@@ -84,3 +91,4 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
     </div>
   );
 }
+
