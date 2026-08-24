@@ -1,5 +1,5 @@
 ﻿import { create } from "zustand";
-import { collection, doc, setDoc, deleteDoc, onSnapshot, query, where, getDocs } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 import { useLeaderboardStore } from "./leaderboardStore";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ export interface TestStoreState {
   isInitialized: boolean;
   initializeTestsListener: (role: "teacher" | "student", userId: string) => () => void;
   addTestMark: (data: Omit<TestMark, "id" | "createdAt">) => Promise<void>;
+  updateTestMark: (id: string, marks: number) => Promise<void>;
   deleteTestMark: (id: string) => Promise<void>;
   getMarksForStudent: (studentId: string) => TestMark[];
   getMarksForClass: (classId: string) => TestMark[];
@@ -70,7 +71,7 @@ export const useTestStore = create<TestStoreState>()((set, get) => ({
 
       // Add points to leaderboard
       if (data.marks > 0) {
-        useLeaderboardStore.getState().addPoints(
+        useLeaderboardStore.getState().adjustPoints(
           data.studentId, 
           data.marks, 
           `Scored ${data.marks}/20 in Offline Test`
@@ -84,8 +85,42 @@ export const useTestStore = create<TestStoreState>()((set, get) => ({
     }
   },
 
+  updateTestMark: async (id, marks) => {
+    try {
+      const existing = get().testMarks.find(m => m.id === id);
+      if (!existing) throw new Error("Mark not found");
+      
+      const diff = marks - existing.marks;
+      
+      await updateDoc(doc(db, "test_marks", id), { marks });
+
+      if (diff !== 0) {
+        useLeaderboardStore.getState().adjustPoints(
+          existing.studentId,
+          diff,
+          `Test marks updated by ${diff > 0 ? '+' : ''}${diff}`
+        );
+      }
+      
+      toast.success("Test marks updated successfully!");
+    } catch (error: any) {
+      toast.error("Failed to update test marks");
+      throw error;
+    }
+  },
+
   deleteTestMark: async (id) => {
     try {
+      const existing = get().testMarks.find(m => m.id === id);
+      
+      if (existing && existing.marks > 0) {
+        useLeaderboardStore.getState().adjustPoints(
+          existing.studentId,
+          -existing.marks,
+          `Test marks removed (-${existing.marks})`
+        );
+      }
+
       await deleteDoc(doc(db, "test_marks", id));
       toast.success("Deleted test mark");
     } catch (err) {
