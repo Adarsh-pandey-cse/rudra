@@ -15,6 +15,7 @@ export interface LeaderboardState {
   initializeLeaderboard: () => void;
   getLeaderboard: (classId?: string, subjectId?: string, period?: "weekly" | "monthly" | "all_time") => LeaderboardEntry[];
   addPoints: (studentId: string, points: number, reason: string) => void;
+    adjustPoints: (studentId: string, points: number, reason: string) => void;
   updateStreak: (studentId: string, change: number | "reset") => void;
   validateStreaks: () => void;
   setupEventListeners: () => () => void;
@@ -127,6 +128,30 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           });
         } catch (error) {
           console.error("Failed to add points to Firestore", error);
+        }
+      },
+
+      adjustPoints: async (studentId, points, reason) => {
+        try {
+          const userRef = doc(db, "users", studentId);
+          await updateDoc(userRef, {
+            points: increment(points)
+          });
+          
+          const currentEntry = get().entries.find(e => e.studentId === studentId);
+          const previousRank = currentEntry ? currentEntry.rank : 0;
+          
+          eventBus.emit({
+            type: "LEADERBOARD_UPDATED",
+            payload: {
+              studentId,
+              points,
+              newRank: previousRank, // Will be calculated after authStore sync
+              previousRank
+            }
+          });
+        } catch (error) {
+          console.error("Error adjusting points:", error);
         }
       },
 

@@ -7,13 +7,13 @@ import { useAuthStore } from "@/store/authStore";
 import { CLASSES, getSubjectsForClass } from "@/data/curriculum-index";
 
 import { useTestStore } from "@/store/testStore";
-import { Folder, Users, FileText, CheckCircle2, ChevronRight, X, Trash2, ArrowLeft, Trophy } from "lucide-react";
+import { Folder, Users, FileText, CheckCircle2, ChevronRight, X, Trash2, Edit2, ArrowLeft, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 export default function TeacherTestsPage() {
   const { currentUser } = useAuthStore();
   const { getStudentUsers, users } = useAuthStore();
-  const { testMarks, addTestMark, deleteTestMark } = useTestStore();
+  const { testMarks, addTestMark, updateTestMark, deleteTestMark } = useTestStore();
 
   const [viewState, setViewState] = useState<"classes" | "subjects" | "students">("classes");
   
@@ -21,6 +21,7 @@ export default function TeacherTestsPage() {
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
 
   const [marksInputs, setMarksInputs] = useState<Record<string, string>>({});
+  const [editingMarks, setEditingMarks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const containerVariants = {
@@ -253,6 +254,16 @@ export default function TeacherTestsPage() {
                               <Trophy className="w-4 h-4 text-[#22C55E]" />
                               <span className="font-bold text-[#22C55E]">+{mark.marks} XP</span>
                             </div>
+                            <button 
+                              onClick={() => {
+                                setMarksInputs(prev => ({...prev, [mark.studentId]: mark.marks.toString()}));
+                                setEditingMarks(prev => ({...prev, [mark.studentId]: mark.id}));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className={`p-2 rounded-lg transition-colors ${editingMarks[mark.studentId] === mark.id ? 'bg-[#5B5CFF]/20 text-[#5B5CFF]' : 'text-[#7B8798] hover:text-[#5B5CFF] hover:bg-[#5B5CFF]/10'}`}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
                             <button 
                               onClick={() => deleteTestMark(mark.id)}
                               className="p-2 text-[#7B8798] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
