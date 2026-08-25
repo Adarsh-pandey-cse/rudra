@@ -150,7 +150,7 @@ export default function DoubtsPage() {
 
                       {/* Right/Bottom Section: Badges & Action */}
                       <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0 sm:h-full pt-3 sm:pt-0 border-t border-white/[0.04] sm:border-0 mt-1 sm:mt-0">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 items-center justify-start sm:justify-end">
                           <StatusBadge variant={getPriorityVariant(doubt.priority)} className="uppercase text-[10px] sm:text-[11px] px-2 sm:px-2.5">
                             {doubt.priority}
                           </StatusBadge>
