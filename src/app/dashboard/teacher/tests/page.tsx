@@ -90,18 +90,23 @@ export default function TeacherTestsPage() {
       }
       
       try {
-        await addTestMark({
-          studentId,
-          teacherId: currentUser.id,
-          classId: selectedClass,
-          subjectId: selectedSubject.id,
-          date: dateStr,
-          marks,
-          maxMarks: 20
-        });
-        successCount++;
-      } catch (err) {}
-    }
+          const editId = editingMarks[studentId];
+          if (editId) {
+            await updateTestMark(editId, marks);
+          } else {
+            await addTestMark({
+              studentId,
+              teacherId: currentUser.id,
+              classId: selectedClass,
+              subjectId: selectedSubject.id,
+              date: dateStr,
+              marks,
+              maxMarks: 20
+            });
+          }
+          successCount++;
+        } catch (err) {}
+      }
 
     setIsSubmitting(false);
     if (successCount > 0) {

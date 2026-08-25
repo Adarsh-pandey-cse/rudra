@@ -30,9 +30,9 @@ export default function StudentNotesPage() {
   const classIdClean2 = currentUser?.role === "student" ? (((currentUser as any).classId || (currentUser as any).grade)?.replace(/\D/g, '') || "11") : "11";
   const allSubjects = getSubjectsForClass(classIdClean2);
   
-  const subjectsWithNotes = allSubjects.filter(s => availableSubjectIds.includes(s.id));
+  const subjectsWithNotes = allSubjects.filter(s => availableSubjectIds.includes(s.id)).sort((a, b) => a.name.localeCompare(b.name));
 
-  const filteredNotes = notes.filter(n => n.subjectId === selectedSubject);
+  const filteredNotes = notes.filter(n => n.subjectId === selectedSubject).sort((a, b) => a.title.localeCompare(b.title));
 
   const getFileIcon = (type: string) => {
     if (type === "pdf") return <FileText className="w-8 h-8 text-red-400" />;
