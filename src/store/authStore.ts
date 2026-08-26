@@ -236,16 +236,31 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const cleanEmail = email.trim();
       const cleanPassword = password.trim();
       
-      const firebaseEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@rudra.edu`.toLowerCase();
+      let firebaseEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@rudra.edu`.toLowerCase();
       
-      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
+      let userCredential;
+      let finalUsername = cleanEmail;
+      
+      try {
+        userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
+      } catch (err: any) {
+        if (err.code === "auth/email-already-in-use") {
+          // Auto-generate a unique suffix if email is in use
+          const suffix = Math.floor(1000 + Math.random() * 9000);
+          finalUsername = `${cleanEmail}${suffix}`;
+          firebaseEmail = `${finalUsername}@rudra.edu`.toLowerCase();
+          userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
+        } else {
+          throw err;
+        }
+      }
       const studentId = userCredential.user.uid;
       
       // Sign out of the secondary app so it doesn't persist
       await signOut(secondaryAuth);
       
       const newStudent = {
-        username: email,
+        username: finalUsername,
         name,
         role: "student" as UserRole,
         password: cleanPassword, // Stored to allow teachers to view and share with students
