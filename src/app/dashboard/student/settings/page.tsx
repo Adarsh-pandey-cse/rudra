@@ -60,11 +60,11 @@ export default function StudentSettingsPage() {
     const updates: any = {};
     const name = formData.get("name") as string;
     const parentPhone = formData.get("parentPhone") as string;
-    const parentName = formData.get("parentName") as string;
+    const fatherName = formData.get("fatherName") as string;
     
     if (name && name !== currentUser.name) updates.name = name;
     if (parentPhone !== null) updates.parentPhone = parentPhone;
-    if (parentName !== null) updates.parentName = parentName;
+    if (fatherName !== null) updates.fatherName = fatherName;
 
     try {
       if (Object.keys(updates).length > 0) {
@@ -224,7 +224,7 @@ export default function StudentSettingsPage() {
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-                    <span className="text-sm font-medium text-white">Parent Phone</span>
+                    <span className="text-sm font-medium text-white">Mobile Number</span>
                     <input 
                       type="tel" 
                       name="parentPhone"
