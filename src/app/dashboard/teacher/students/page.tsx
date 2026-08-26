@@ -120,7 +120,7 @@ export default function StudentListPage() {
     setEditError("");
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+    const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStudentId) return;
     
@@ -131,8 +131,35 @@ export default function StudentListPage() {
       return;
     }
 
+    // Update classId, grade, and fatherName
+    const { updateStudentProfile } = useAuthStore.getState();
+    await updateStudentProfile(editingStudentId, { 
+      classId: editClassId, 
+      grade: editClassId, 
+      fatherName: editFatherName
+      } as any);
+
+    // Update monthly fee
+    if (editMonthlyFee) {
+      const { feeProfiles, updateFeeProfile } = useFeeStore.getState();
+      const existingProfile = feeProfiles.find(p => p.studentId === editingStudentId);
+      if (existingProfile) {
+        await updateFeeProfile({ ...existingProfile, monthlyFee: parseFloat(editMonthlyFee) });
+      } else {
+        await updateFeeProfile({
+          studentId: editingStudentId,
+          monthlyFee: parseFloat(editMonthlyFee),
+          paymentFrequency: "monthly",
+          feeStartDate: new Date().toISOString(),
+          isActive: true,
+          discounts: [],
+          lateFeeRule: { type: "per_day", amount: 50, gracePeriodDays: 5 }
+        } as any);
+      }
+    }
+
     // Then update the password if it was changed
-    if (editPassword && editPassword !== "????????") {
+    if (editPassword && !editPassword.includes("") && editPassword !== "????????") {
       const { updateStudentPassword } = useAuthStore.getState();
       const pwRes = await updateStudentPassword(editingStudentId, editPassword);
       if (!pwRes.success) {
@@ -676,6 +703,7 @@ export default function StudentListPage() {
                                   </button>
                                   <div className="cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
                                     <div className="text-sm font-bold text-white mb-0.5">{s.name}</div>
+                                      {(s as any).fatherName && <div className="text-[11px] text-[#7B8798] mb-0.5">S/O {(s as any).fatherName}</div>}
                                     <span className="text-[12px] text-[#B6C2D9] font-mono">@{s.username}</span>
                                   </div>
                                 </div>
