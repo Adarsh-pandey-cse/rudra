@@ -16,6 +16,7 @@ import GlassButton from "@/components/ui/GlassButton";
 import EmptyState from "@/components/ui/EmptyState";
 import { useAuthStore } from "@/store/authStore";
 import { useDoubtStore } from "@/store/doubtStore";
+import { useLeaderboardStore } from "@/store/leaderboardStore";
 import type { DoubtReply, DoubtStatus } from "@/types/doubt-types";
 import type { Attachment } from "@/types/homework-types";
 import { format, isToday, isYesterday } from "date-fns";
@@ -63,6 +64,7 @@ export default function StudentDoubtChatPage() {
   const doubtId = params.id as string;
 
   const { currentUser, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { adjustPoints } = useLeaderboardStore();
   const { doubts, replies, studentReply, markResolved, rateResponse, setTyping, typingStatus, initializeRepliesListener } = useDoubtStore();
 
   const [mounted, setMounted] = useState(false);
@@ -212,6 +214,9 @@ export default function StudentDoubtChatPage() {
     if (ratingValue === 0) return;
     markResolved(doubtId);
     rateResponse(doubtId, ratingValue, feedbackText.trim());
+    if (currentUser) {
+      adjustPoints(currentUser.id, ratingValue, `Rated a doubt (${ratingValue / 2} stars)`);
+    }
   };
 
   const status = statusConfig[doubt.status] || statusConfig.open;

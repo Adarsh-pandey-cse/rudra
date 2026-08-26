@@ -324,18 +324,19 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
       }
     });
 
-      // 2. Generate Invoices for target month if missing
+      // 2. Generate Invoices for the PREVIOUS month (billed on the 1st of the CURRENT month)
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
       const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
       const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
       
       const targetYear = prevMonthYear;
-        const targetMonth = prevMonth;
-        const targetMonthStr = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
+      const targetMonth = prevMonth;
+      const targetMonthStr = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
       
       feeProfiles.filter(p => p.isActive).forEach(profile => {
-        const billingDateThisMonth = new Date(targetYear, targetMonth - 1, profile.preferredDueDate);
+        // ALWAYS trigger generation on the 1st of the current month
+        const billingDateThisMonth = new Date(currentYear, currentMonth - 1, 1);
         const hasAnyInvoice = invoices.some(i => i.studentId === profile.studentId);
         
         if (now >= billingDateThisMonth || !hasAnyInvoice) {

@@ -115,7 +115,12 @@ export default function TeacherDashboard() {
   const studentIds = students.map(s => s.id);
   const stats = getTeacherStats(studentIds);
 
-  const teacherFeedbacks = doubts.filter(d => d.resolvedBy === currentUser.id && typeof d.studentRating === 'number');
+  const currentMonthStr = new Date().toISOString().substring(0, 7); // e.g. '2026-08'
+    const teacherFeedbacks = doubts.filter(d => 
+      d.resolvedBy === currentUser.id && 
+      typeof d.studentRating === 'number' &&
+      d.updatedAt && d.updatedAt.startsWith(currentMonthStr)
+    );
   const solvedCount = doubts.filter(d => d.resolvedBy === currentUser.id).length;
   
   const averageRating = teacherFeedbacks.length > 0 
