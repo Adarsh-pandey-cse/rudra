@@ -465,8 +465,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       />
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block shrink-0 w-[260px] z-20">
-        <SidebarContent />
+      <aside className="hidden lg:block relative shrink-0 w-[260px] z-20">
+        {SidebarContent()}
       </aside>
 
       {/* Mobile Sidebar (Drawer) */}
@@ -487,7 +487,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
               exit="hidden"
               className="fixed top-0 left-0 bottom-0 z-50 lg:hidden bg-[#07111F]"
             >
-              <SidebarContent />
+              {SidebarContent()}
             </motion.aside>
           </>
         )}
@@ -496,7 +496,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         {/* Top Header */}
-        <header className="h-[60px] shrink-0 bg-[#07111F]/85 backdrop-blur-[32px] border-b border-white/[0.06] flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
+        <header className="h-[60px] shrink-0 relative bg-[#07111F]/85 backdrop-blur-[32px] border-b border-white/[0.06] flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
           <div className="flex items-center gap-4">
             <button
               className="lg:hidden text-[#7B8798] hover:text-white p-2 -ml-2 rounded-lg hover:bg-white/[0.04] focus:outline-none"
