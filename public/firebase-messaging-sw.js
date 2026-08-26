@@ -1,3 +1,12 @@
+
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(self.clients.claim());
+});
+
 // Scripts for firebase and firebase messaging
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
@@ -18,16 +27,24 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification?.title || 'New Notification';
+  
+  // If the payload already has a notification object, Firebase's default SW behavior 
+  // will automatically show it. We only need to manually show if it's a data-only payload.
+  if (payload.notification) {
+    console.log('Payload has notification, letting Firebase handle it.');
+    return;
+  }
+
+  const notificationTitle = payload.data?.title || 'New Notification';
   const notificationOptions = {
-    body: payload.notification?.body || '',
+    body: payload.data?.body || payload.data?.message || '',
     icon: '/icons/icon-192x192.png',
     data: {
       link: payload.data?.link || '/'
     }
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Firebase automatically displays the notification in the background because
