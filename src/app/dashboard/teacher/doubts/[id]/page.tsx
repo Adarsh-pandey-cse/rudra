@@ -238,7 +238,7 @@ export default function TeacherDoubtChatPage() {
                 {isStudentTyping ? (
                   <span className="text-[#22C55E] font-medium">typing...</span>
                 ) : (
-                  <>Class {doubt.classId} â€¢ {doubt.subjectName} â€¢ {doubt.topicName || "General"}</>
+                  <>Class {doubt.classId} &bull; {doubt.subjectName} &bull; {doubt.topicName || "General"}</>
                 )}
               </p>
             </div>

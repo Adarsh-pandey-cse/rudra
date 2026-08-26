@@ -97,15 +97,14 @@ export default function AddStudentPage() {
 
     const res = await registerStudent(name, username, password, grade, parentPhone, fatherName);
     if (res.success) {
-      const allUsers = getAllUsers();
-      const newStudent = allUsers.find(u => u.username === username);
+      const studentId = res.studentId;
       
-      if (newStudent) {
+      if (studentId) {
         const admissionDay = new Date(admissionDate).getDate();
         const preferredDueDate = admissionDay > 28 ? 28 : admissionDay;
         
         updateFeeProfile({
-          studentId: newStudent.id,
+          studentId: studentId,
           monthlyFee: parseFloat(monthlyFee) || 5000,
           paymentFrequency: "monthly",
           preferredDueDate,
