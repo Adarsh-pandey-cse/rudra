@@ -175,6 +175,9 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
     const currentMonth = new Date().getMonth() + 1; // 1-12
     const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
     const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    
+    // Always bill for the previous month as per user request
+    const targetMonthStr = `${prevMonthYear}-${prevMonth.toString().padStart(2, '0')}`;
 
     students.forEach((student, index) => {
       // 1. Create Profile
@@ -327,10 +330,9 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
       const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
       const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
       
-      const isAfter15th = now.getDate() > 15;
-      const targetYear = isAfter15th ? currentYear : prevMonthYear;
-      const targetMonth = isAfter15th ? currentMonth : prevMonth;
-      const targetMonthStr = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
+      const targetYear = prevMonthYear;
+        const targetMonth = prevMonth;
+        const targetMonthStr = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
       
       feeProfiles.filter(p => p.isActive).forEach(profile => {
         const billingDateThisMonth = new Date(targetYear, targetMonth - 1, profile.preferredDueDate);
@@ -741,10 +743,12 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
 
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
-    const currentMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    const targetMonthStr = `${prevMonthYear}-${prevMonth.toString().padStart(2, '0')}`;
     
     const { invoices } = get();
-    const hasCurrentInvoice = invoices.some(i => i.studentId === profile.studentId && i.month === currentMonthStr);
+    const hasCurrentInvoice = invoices.some(i => i.studentId === profile.studentId && i.month === targetMonthStr);
     
     if (!hasCurrentInvoice) {
       const baseAmount = profile.monthlyFee;
@@ -758,7 +762,7 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
       const newInvoice: Invoice = {
         id: newInvId,
         studentId: profile.studentId,
-        month: currentMonthStr,
+        month: targetMonthStr,
         issueDate: new Date().toISOString(),
         dueDate: new Date().toISOString(),
         baseAmount,

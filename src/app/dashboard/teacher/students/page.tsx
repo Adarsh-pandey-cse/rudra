@@ -49,6 +49,9 @@ export default function StudentListPage() {
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
+  const [editClassId, setEditClassId] = useState("");
+  const [editFatherName, setEditFatherName] = useState("");
+  const [editMonthlyFee, setEditMonthlyFee] = useState("");
   const [editError, setEditError] = useState("");
 
   useEffect(() => {
@@ -104,10 +107,16 @@ export default function StudentListPage() {
   if (!mounted || !currentUser) return null;
 
   const startEditing = (student: typeof students[0]) => {
+    const { feeProfiles } = useFeeStore.getState();
+    const profile = feeProfiles.find(p => p.studentId === student.id);
+
     setEditingStudentId(student.id);
     setEditName(student.name);
     setEditUsername(student.username || "");
     setEditPassword("••••••••"); 
+    setEditClassId((student as any).classId || (student as any).grade || "6th");
+    setEditFatherName((student as any).fatherName || "");
+    setEditMonthlyFee(profile?.monthlyFee?.toString() || "5000");
     setEditError("");
   };
 
