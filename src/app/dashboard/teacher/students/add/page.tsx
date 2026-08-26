@@ -32,11 +32,13 @@ export default function AddStudentPage() {
   const router = useRouter();
   const { currentUser, isAuthenticated, _hasHydrated, registerStudent, getStudentUsers, getAllUsers } = useAuthStore();
   const { updateFeeProfile } = useFeeStore();
+  const { updateStudentProfile } = useAuthStore();
   
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [grade, setGrade] = useState("6th");
+  const [gender, setGender] = useState<"male" | "female">("male");
   const [parentPhone, setParentPhone] = useState("");
   const [fatherName, setFatherName] = useState("");
   const [admissionDate, setAdmissionDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -100,6 +102,7 @@ export default function AddStudentPage() {
       const studentId = res.studentId;
       
       if (studentId) {
+        await updateStudentProfile(studentId, { gender } as any);
         const admissionDay = new Date(admissionDate).getDate();
         const preferredDueDate = admissionDay > 28 ? 28 : admissionDay;
         

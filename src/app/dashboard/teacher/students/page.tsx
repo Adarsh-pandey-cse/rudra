@@ -51,6 +51,7 @@ export default function StudentListPage() {
   const [editPassword, setEditPassword] = useState("");
   const [editClassId, setEditClassId] = useState("");
   const [editFatherName, setEditFatherName] = useState("");
+    const [editGender, setEditGender] = useState<"male" | "female" | "">("");
   const [editMonthlyFee, setEditMonthlyFee] = useState("");
   const [editError, setEditError] = useState("");
 
@@ -116,6 +117,7 @@ export default function StudentListPage() {
     setEditPassword("••••••••"); 
     setEditClassId((student as any).classId || (student as any).grade || "6th");
     setEditFatherName((student as any).fatherName || "");
+      setEditGender((student as any).gender || "male");
     setEditMonthlyFee(profile?.monthlyFee?.toString() || "5000");
     setEditError("");
   };
@@ -136,7 +138,7 @@ export default function StudentListPage() {
     await updateStudentProfile(editingStudentId, { 
       classId: editClassId, 
       grade: editClassId, 
-      fatherName: editFatherName
+      fatherName: editFatherName, gender: editGender
       } as any);
 
     // Update monthly fee
@@ -703,7 +705,7 @@ export default function StudentListPage() {
                                   </button>
                                   <div className="cursor-pointer" onClick={() => router.push("/dashboard/teacher/progress")}>
                                     <div className="text-sm font-bold text-white mb-0.5">{s.name}</div>
-                                      {(s as any).fatherName && <div className="text-[11px] text-[#7B8798] mb-0.5">S/O {(s as any).fatherName}</div>}
+                                      {(s as any).fatherName && <div className="text-[11px] text-[#7B8798] mb-0.5">{(s as any).gender === "female" ? "D/O" : "S/O"} {((s as any).fatherName || "").trim().toLowerCase().startsWith("mr") ? (s as any).fatherName : `Mr. ${(s as any).fatherName}`}</div>}
                                     <span className="text-[12px] text-[#B6C2D9] font-mono">@{s.username}</span>
                                   </div>
                                 </div>
