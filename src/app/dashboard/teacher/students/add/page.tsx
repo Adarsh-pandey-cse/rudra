@@ -298,8 +298,20 @@ export default function AddStudentPage() {
                       </select>
                     </div>
 
-                    <div>
-                      <label className={labelClasses}>Father's Name (Optional)</label>
+                                          <div>
+                        <label className={labelClasses}>Gender</label>
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value as any)}
+                          className={`${inputClasses} appearance-none`}
+                        >
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className={labelClasses}>Father's Name (Optional)</label>
                       <input
                         type="text"
                         value={fatherName}

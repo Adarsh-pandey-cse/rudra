@@ -448,7 +448,7 @@ export default function StudentListPage() {
                       </div>
                       <div>
                         <label className="block text-sm text-[#B6C2D9] mb-1">Username (Email)</label>
-                        <input type="email" required value={editUsername} onChange={e => setEditUsername(e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors" />
+                        <input type="text" required value={editUsername} onChange={e => setEditUsername(e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors" />
                       </div>
                       <div>
                         <label className="block text-sm text-[#B6C2D9] mb-1">Password</label>
@@ -456,7 +456,11 @@ export default function StudentListPage() {
                       </div>
                       <div>
                         <label className="block text-sm text-[#B6C2D9] mb-1">Class / Grade</label>
-                        <input type="text" required value={editClassId} onChange={e => setEditClassId(e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors" />
+                        <select value={editClassId.replace('class-', '')} onChange={e => setEditClassId(e.target.value)} className="w-full bg-[#131D2E] border border-white/[0.08] rounded-xl px-4 py-2 text-white outline-none focus:border-[#5B5CFF]/50 transition-colors appearance-none">
+                            {["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"].map((g) => (
+                              <option key={g} value={g}>Class {g}</option>
+                            ))}
+                          </select>
                       </div>
                       <div>
                         <label className="block text-sm text-[#B6C2D9] mb-1">Gender</label>
