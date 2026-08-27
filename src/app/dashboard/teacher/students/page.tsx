@@ -54,6 +54,7 @@ export default function StudentListPage() {
     const [editGender, setEditGender] = useState<"male" | "female" | "">("");
   const [editMonthlyFee, setEditMonthlyFee] = useState("");
   const [editError, setEditError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (!_hasHydrated) return;
