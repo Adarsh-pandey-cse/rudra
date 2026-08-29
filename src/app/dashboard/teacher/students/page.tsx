@@ -92,8 +92,13 @@ export default function StudentListPage() {
       if (!groups[cls]) groups[cls] = [];
       groups[cls].push(s);
     });
-    // Sort keys alphabetically
-    return Object.keys(groups).sort().reduce((obj, key) => {
+    // Sort keys numerically for classes
+      return Object.keys(groups).sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, "")) || 999;
+        const numB = parseInt(b.replace(/[^0-9]/g, "")) || 999;
+        if (numA !== numB) return numA - numB;
+        return a.localeCompare(b);
+      }).reduce((obj, key) => {
       obj[key] = groups[key];
       return obj;
     }, {} as Record<string, typeof filteredStudents>);
@@ -249,7 +254,12 @@ export default function StudentListPage() {
         exportGrouped[cls].push(s);
       });
 
-      Object.keys(exportGrouped).sort().forEach(className => {
+      Object.keys(exportGrouped).sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, "")) || 999;
+        const numB = parseInt(b.replace(/[^0-9]/g, "")) || 999;
+        if (numA !== numB) return numA - numB;
+        return a.localeCompare(b);
+      }).forEach(className => {
         exportGrouped[className].forEach(student => {
           const studentData = [
             className,
