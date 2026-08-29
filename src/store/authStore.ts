@@ -244,13 +244,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       try {
         userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
       } catch (err: any) {
-        if (err.code === "auth/email-already-in-use") {
-          // Auto-generate a unique suffix if email is in use
-          const suffix = Math.floor(1000 + Math.random() * 9000);
-          finalUsername = `${cleanEmail}${suffix}`;
-          firebaseEmail = `${finalUsername}@rudra.edu`.toLowerCase();
-          userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
-        } else {
+                  if (err.code === "auth/email-already-in-use") {
+            // Auto-generate a 3-digit suffix ensuring max 7 characters total (e.g. Ary001 -> Ary + 123 = Ary123)
+            const baseStr = cleanEmail.replace(/[0-9]+$/, '').substring(0, 4); // Keep up to 4 letters, strip trailing numbers
+            const suffix = Math.floor(100 + Math.random() * 900); // 3 digits
+            finalUsername = `${baseStr}${suffix}`;
+            firebaseEmail = `${finalUsername}@rudra.edu`.toLowerCase();
+            userCredential = await createUserWithEmailAndPassword(secondaryAuth, firebaseEmail, cleanPassword);
+          } else {
           throw err;
         }
       }
