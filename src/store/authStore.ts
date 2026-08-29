@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword
 } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, where } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
@@ -109,17 +109,43 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   login: async (emailOrUsername: string, password: string) => {
     set({ isLoading: true });
     try {
-      let firebaseEmail = emailOrUsername.trim();
+      let inputValue = emailOrUsername.trim();
       let cleanPassword = password.trim();
-      let normalizedUsername = firebaseEmail.toLowerCase();
+      let normalizedUsername = inputValue.toLowerCase();
       
       let isAdarsh = normalizedUsername === "adarsh@77" || normalizedUsername === "adarsh@rudra.edu";
       let isAkansha = normalizedUsername === "akansha@27" || normalizedUsername === "akansha@rudra.edu";
 
-      if (isAdarsh) firebaseEmail = "adarsh@rudra.edu";
-      else if (isAkansha) firebaseEmail = "akansha@rudra.edu";
-      else if (!firebaseEmail.includes('@')) {
-        firebaseEmail = `${firebaseEmail}@rudra.edu`.toLowerCase();
+      let firebaseEmail = inputValue;
+      
+      if (isAdarsh) {
+        firebaseEmail = "adarsh@rudra.edu";
+      } else if (isAkansha) {
+        firebaseEmail = "akansha@rudra.edu";
+      } else {
+        // Find user by username in Firestore to get their actual Auth email
+        try {
+          const usersRef = collection(db, "users");
+          const q = query(usersRef, where("username", "==", inputValue));
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            const userData = querySnapshot.docs[0].data();
+            // If they have a specific authEmail stored, use it. Otherwise fallback to old pattern.
+            if (userData.authEmail) {
+              firebaseEmail = userData.authEmail;
+            } else {
+              // Legacy fallback: if it doesn't have @, append @rudra.edu
+              firebaseEmail = inputValue.includes('@') ? inputValue : `${inputValue}@rudra.edu`.toLowerCase();
+            }
+          } else {
+             // Not found in DB, fallback to direct attempt
+             firebaseEmail = inputValue.includes('@') ? inputValue : `${inputValue}@rudra.edu`.toLowerCase();
+          }
+        } catch (e) {
+           console.warn("Failed to lookup username, falling back to direct login", e);
+           firebaseEmail = inputValue.includes('@') ? inputValue : `${inputValue}@rudra.edu`.toLowerCase();
+        }
       }
 
       let userCredential;
@@ -262,6 +288,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       
       const newStudent = {
         username: finalUsername,
+        authEmail: firebaseEmail,
         name,
         role: "student" as UserRole,
         password: cleanPassword, // Stored to allow teachers to view and share with students
@@ -408,23 +435,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   updateStudent: async (studentId: string, name: string, email: string) => {
     try {
-      // First update basic details in Firestore
       await updateDoc(doc(db, "users", studentId), {
         name,
         username: email
       });
-      
-      // Attempt to sync auth email via backend if it changed
-      try {
-        await fetch('/api/update-student-auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: studentId, newUsername: email })
-        });
-      } catch (err) {
-        console.warn("Failed to sync auth email", err);
-      }
-      
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message || "Failed to update student" };
