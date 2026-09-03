@@ -48,6 +48,7 @@ interface HomeworkState {
   
   createAssignment: (assignment: Omit<Assignment, "id" | "createdAt" | "updatedAt">) => Promise<string>;
   updateAssignment: (id: string, updates: Partial<Assignment>) => Promise<void>;
+  toggleAssignmentStatus: (id: string, isClosed: boolean) => Promise<void>;
   deleteAssignment: (id: string) => Promise<void>;
   purgeStudentSubmissions: (studentId: string) => void;
   publishAssignment: (id: string) => Promise<void>;
@@ -183,23 +184,25 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
         return id;
       },
 
-      updateAssignment: async (id, updates) => {
-        const now = new Date().toISOString();
-        const optimisticUpdates: any = {
-          ...updates,
-          updatedAt: now
-        };
-        
-        // Optimistic UI update
-        set(state => ({
-          assignments: state.assignments.map(a => a.id === id ? { ...a, ...updates, updatedAt: now } : a)
-        }));
-        
+            updateAssignment: async (id, updates) => {
         try {
-          await homeworkRepository.update(id, { ...updates, updatedAt: now } as any);
+          const hwRef = doc(db, "homeworks", id);
+          await updateDoc(hwRef, { ...updates, updatedAt: new Date().toISOString() });
         } catch (error) {
-          console.error("Failed to update assignment on server:", error);
-          // In a production app, you might want to revert the state here
+          console.error("Failed to update assignment", error);
+        }
+      },
+      
+      toggleAssignmentStatus: async (id, isClosed) => {
+        try {
+          const hwRef = doc(db, "homeworks", id);
+          await updateDoc(hwRef, { isClosed, updatedAt: new Date().toISOString() });
+          
+          set((state) => ({
+             assignments: state.assignments.map(a => a.id === id ? { ...a, isClosed, updatedAt: new Date().toISOString() } : a)
+          }));
+        } catch (error) {
+          console.error("Failed to toggle assignment status", error);
         }
       },
 

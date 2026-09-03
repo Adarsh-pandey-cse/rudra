@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Clock, CheckCircle, BrainCircuit,
-  ChevronRight, ChevronLeft, Send, AlertTriangle, BookOpen, X,
+  ChevronRight, ChevronLeft, Send, Lock, AlertTriangle, BookOpen, X,
   Paperclip, Camera, UploadCloud, Download, MessageCircleQuestion
 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -100,6 +100,7 @@ export default function StudentHomeworkDetailsPage() {
   }
 
   const isPastDue = new Date() > new Date(homework.dueDate);
+  const isClosed = homework.isClosed;
   const isMissed = isPastDue && !['submitted', 'resubmitted', 'teacher_reviewed', 'ai_evaluated', 'accepted', 'rejected', 'resubmission_requested'].includes(submission?.status || '');
   const questions = homework.questions || [];
   const isCompleted = submission?.status === "submitted" || submission?.status === "resubmitted" || submission?.status === "teacher_reviewed" || submission?.status === "ai_evaluated" || submission?.status === "accepted";
