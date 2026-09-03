@@ -27,7 +27,7 @@ export const LeaderboardPodium = ({ leaderboard }: { leaderboard: any[] }) => {
 
         return (
           <motion.div 
-            key={"podium-${group.rank}"}
+            key={`podium-${group.rank}`}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: group.delay, type: "spring" }}
@@ -39,7 +39,7 @@ export const LeaderboardPodium = ({ leaderboard }: { leaderboard: any[] }) => {
             <div className="relative mb-4 z-10">
               <div className="flex -space-x-4 justify-center">
                 {group.students.slice(0, 3).map((student, sIdx) => (
-                  <div key={student.studentId} className={"w-14 h-14 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center bg-gradient-to-br from-[#0D1929] to-[#07111F] text-xl font-bold text-white shadow-2xl ${group.border} relative"} style={{ zIndex: 3 - sIdx }}>
+                  <div key={student.studentId} className={`w-14 h-14 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center bg-gradient-to-br from-[#0D1929] to-[#07111F] text-xl font-bold text-white shadow-2xl ${group.border} relative`} style={{ zIndex: 3 - sIdx }}>
                     {student.avatar && student.avatar.length > 10 ? (
                       <img src={student.avatar} alt={student.name || "Student"} className="w-full h-full rounded-full object-cover" />
                     ) : student.avatar ? (
@@ -50,17 +50,17 @@ export const LeaderboardPodium = ({ leaderboard }: { leaderboard: any[] }) => {
                   </div>
                 ))}
                 {group.students.length > 3 && (
-                  <div className={"w-14 h-14 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center bg-[#0D1929] text-xs font-bold text-white shadow-2xl ${group.border} relative"} style={{ zIndex: 0 }}>
+                  <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center bg-[#0D1929] text-xs font-bold text-white shadow-2xl ${group.border} relative`} style={{ zIndex: 0 }}>
                     +{group.students.length - 3}
                   </div>
                 )}
               </div>
-              <div className={"absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-[#07111F] shadow-lg z-20 ${group.badge}"}>
+              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-[#07111F] shadow-lg z-20 ${group.badge}`}>
                 #{group.rank}
               </div>
             </div>
             
-            <div className={"w-28 md:w-40 ${group.height} rounded-t-2xl bg-gradient-to-b ${group.color} border-t-2 border-x border-white/0 backdrop-blur-sm flex flex-col items-center pt-4 shadow-[0_0_30px_rgba(0,0,0,0.3)] px-1"}>
+            <div className={`w-28 md:w-40 ${group.height} rounded-t-2xl bg-gradient-to-b ${group.color} border-t-2 border-x border-white/0 backdrop-blur-sm flex flex-col items-center pt-4 shadow-[0_0_30px_rgba(0,0,0,0.3)] px-1`}>
               {group.students.slice(0, 2).map(s => (
                  <p key={s.studentId} className="text-white font-bold text-center text-[11px] md:text-sm truncate w-full leading-tight mb-0.5">{s.name}</p>
               ))}
