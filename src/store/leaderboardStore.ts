@@ -60,15 +60,26 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           });
           
           // Sort and assign ranks
-          currentEntries.sort((a, b) => {
+                    currentEntries.sort((a, b) => {
             if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
             if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
-              const aTime = (a as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
-              const bTime = (b as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
-              if (aTime !== bTime) return aTime - bTime;
-            return (a.name || "").localeCompare(b.name || "");
+            return 0; // If points and streak match, they are a complete tie!
           });
-          currentEntries.forEach((e, i) => e.rank = i + 1);
+          
+          let currentRank = 1;
+          for (let i = 0; i < currentEntries.length; i++) {
+            if (i > 0) {
+              const prev = currentEntries[i - 1];
+              const curr = currentEntries[i];
+              if (prev.points === curr.points && prev.streak === curr.streak) {
+                curr.rank = prev.rank;
+              } else {
+                curr.rank = i + 1;
+              }
+            } else {
+              currentEntries[i].rank = 1;
+            }
+          }
           
           return { entries: currentEntries, isInitialized: true };
         });
@@ -93,15 +104,26 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
           currentEntries = currentEntries.filter(e => studentsInClass.includes(e.studentId));
         }
         
-        currentEntries.sort((a, b) => {
-          if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
-          if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
-              const aTime = (a as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
-              const bTime = (b as any).lastSubmissionAt || Number.MAX_SAFE_INTEGER;
-              if (aTime !== bTime) return aTime - bTime;
-          return (a.name || "").localeCompare(b.name || "");
-        });
-        currentEntries.forEach((e, i) => e.rank = i + 1);
+                  currentEntries.sort((a, b) => {
+            if (b.points !== a.points) return (b.points || 0) - (a.points || 0);
+            if (b.streak !== a.streak) return (b.streak || 0) - (a.streak || 0);
+            return 0; // If points and streak match, they are a complete tie!
+          });
+          
+          let currentRank = 1;
+          for (let i = 0; i < currentEntries.length; i++) {
+            if (i > 0) {
+              const prev = currentEntries[i - 1];
+              const curr = currentEntries[i];
+              if (prev.points === curr.points && prev.streak === curr.streak) {
+                curr.rank = prev.rank;
+              } else {
+                curr.rank = i + 1;
+              }
+            } else {
+              currentEntries[i].rank = 1;
+            }
+          }
         
         return currentEntries;
       },
