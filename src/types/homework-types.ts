@@ -72,6 +72,7 @@ export interface Assignment {
   originalDueDate?: string;
   publishMode: PublishMode;
   scheduledDate?: string;
+  isClosed?: boolean;
   
   // Rules
   allowLateSubmission: boolean;
