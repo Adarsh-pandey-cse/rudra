@@ -2,7 +2,7 @@
 import { db } from "@/lib/firebase/firebase";
 import { 
   collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, 
-  serverTimestamp, getDoc, writeBatch, deleteDoc 
+  serverTimestamp, getDoc, getDocs, writeBatch, deleteDoc 
 } from "firebase/firestore";
 import type { ChatThread, ChatMessage } from "@/types/chat-types";
 import { uploadFile } from "@/lib/firebase/uploadService";
@@ -223,9 +223,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   clearChat: async (threadId) => {
     try {
-      // In a real app we'd delete subcollections using a Cloud Function.
-      // Here we just delete the thread document and let the UI clear out.
+      // Step 1: Delete all messages in the subcollection first!
+      const messagesRef = collection(db, `chats/${threadId}/messages`);
+      const msgSnapshot = await getDocs(messagesRef);
+      
+      const batch = writeBatch(db);
+      msgSnapshot.docs.forEach((msgDoc) => {
+        batch.delete(msgDoc.ref);
+      });
+      await batch.commit();
+
+      // Step 2: Delete the thread document itself
       await deleteDoc(doc(db, "chats", threadId));
+      
+      // Step 3: Clear UI state
       if (get().activeThreadId === threadId) {
         set({ activeThreadId: null, messages: [] });
       }
