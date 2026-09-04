@@ -4,12 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useChatStore } from "@/store/chatStore";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Send, Image as ImageIcon, Check, CheckCheck, Loader2, X, Search, User } from "lucide-react";
+import { Send, Image as ImageIcon, Check, CheckCheck, Loader2, X, Search, User, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function TeacherChatPage() {
-  const { currentUser } = useAuthStore();
+  const { currentUser, users } = useAuthStore();
   const { 
     threads, 
     activeThreadId,
@@ -20,7 +20,10 @@ export default function TeacherChatPage() {
     markAsRead,
     setTypingStatus,
     setOnlineStatus,
-    setActiveThreadId
+    setActiveThreadId,
+    createThreadIfMissing,
+    deleteMessage,
+    clearChat
   } = useChatStore();
 
   const [text, setText] = useState("");
@@ -30,6 +33,8 @@ export default function TeacherChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unsubMessagesRef = useRef<(() => void) | null>(null);
+  
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -92,18 +97,60 @@ export default function TeacherChatPage() {
       setText("");
       setAttachment(null);
       setTypingStatus(activeThreadId, "teacher", currentUser.name, false);
+    } catch(err) {
+      console.error(err);
+      alert("Failed to send message. Make sure Firestore rules allow writes to chats.");
     } finally {
       setIsSending(false);
     }
   };
 
-  const filteredThreads = threads.filter(t => t.studentName.toLowerCase().includes(search.toLowerCase()));
+  const handleStudentClick = async (studentId: string, studentName: string, studentAvatar?: string) => {
+    await createThreadIfMissing(studentId, studentName, studentAvatar);
+    setActiveThreadId(studentId);
+    setSearch("");
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (activeThreadId && window.confirm("Delete this message?")) {
+      await deleteMessage(activeThreadId, msgId);
+    }
+  };
+
+  const handleClearChat = async () => {
+    if (activeThreadId && window.confirm("Are you sure you want to delete this chat entirely? This cannot be undone.")) {
+      await clearChat(activeThreadId);
+    }
+  };
 
   if (!currentUser) return null;
 
+  // Global search list combining existing threads and other students
+  const studentUsers = users.filter(u => u.role === "student" && u.name.toLowerCase().includes(search.toLowerCase()));
+  const allSearchable = studentUsers.map(stu => {
+    const existingThread = threads.find(t => t.id === stu.id);
+    return {
+      id: stu.id,
+      name: stu.name,
+      avatar: stu.avatar,
+      thread: existingThread,
+    };
+  });
+  
+  // Sort: threads with messages first, then unmessaged students
+  allSearchable.sort((a, b) => {
+    if (a.thread && !b.thread) return -1;
+    if (!a.thread && b.thread) return 1;
+    if (a.thread && b.thread) return new Date(b.thread.lastMessageTime).getTime() - new Date(a.thread.lastMessageTime).getTime();
+    return a.name.localeCompare(b.name);
+  });
+  
+  // If no search, just show existing threads
+  const displayList = search ? allSearchable : threads.map(t => ({ id: t.id, name: t.studentName, avatar: t.studentAvatar, thread: t }));
+
   return (
     <DashboardLayout role="teacher">
-      <div className="max-w-6xl mx-auto h-[calc(100vh-120px)] flex bg-[#0B1527] border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl">
+      <div className="max-w-6xl mx-auto h-[calc(100vh-120px)] flex bg-[#0B1527] border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl relative z-0">
         
         {/* Sidebar */}
         <div className="w-80 shrink-0 border-r border-white/[0.06] flex flex-col bg-[#070D19]">
@@ -113,7 +160,7 @@ export default function TeacherChatPage() {
               <Search className="w-4 h-4 text-[#7B8798] absolute left-3 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
-                placeholder="Search students..." 
+                placeholder="Search any student..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full bg-white/[0.04] border border-white/[0.06] text-sm text-white rounded-xl pl-9 pr-4 py-2 outline-none focus:border-[#5B5CFF]/50 transition-colors"
@@ -122,53 +169,59 @@ export default function TeacherChatPage() {
           </div>
           
           <div className="flex-1 overflow-y-auto">
-            {filteredThreads.length === 0 ? (
-              <div className="p-6 text-center text-sm text-[#7B8798]">No chats found</div>
+            {displayList.length === 0 ? (
+              <div className="p-6 text-center text-sm text-[#7B8798]">No students found</div>
             ) : (
-              filteredThreads.map(thread => (
+              displayList.map(item => (
                 <button
-                  key={thread.id}
-                  onClick={() => setActiveThreadId(thread.id)}
+                  key={item.id}
+                  onClick={() => handleStudentClick(item.id, item.name, item.avatar)}
                   className={cn(
                     "w-full p-4 flex items-center gap-3 text-left transition-colors border-b border-white/[0.02]",
-                    activeThreadId === thread.id ? "bg-[#5B5CFF]/10" : "hover:bg-white/[0.02]"
+                    activeThreadId === item.id ? "bg-[#5B5CFF]/10" : "hover:bg-white/[0.02]"
                   )}
                 >
                   <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 relative">
-                    {thread.studentAvatar ? (
-                      <img src={thread.studentAvatar} alt={thread.studentName} className="w-full h-full rounded-full object-cover" />
+                    {item.avatar ? (
+                      <img src={item.avatar} alt={item.name} className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <User className="w-5 h-5 text-[#B6C2D9]" />
                     )}
-                    {thread.onlineStatus?.student && (
+                    {item.thread?.onlineStatus?.student && (
                       <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 border-[#070D19] rounded-full" />
                     )}
                   </div>
                   
                   <div className="flex-1 overflow-hidden">
                     <div className="flex justify-between items-baseline mb-0.5">
-                      <h3 className="text-sm font-semibold text-white truncate pr-2">{thread.studentName}</h3>
-                      <span className="text-[10px] text-[#7B8798] shrink-0">
-                        {new Date(thread.lastMessageTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className={cn(
-                        "text-xs truncate", 
-                        (thread.unreadCountTeacher || 0) > 0 ? "text-white font-medium" : "text-[#7B8798]"
-                      )}>
-                        {thread.typingIndicator?.student ? (
-                          <span className="text-[#5B5CFF]">typing...</span>
-                        ) : (
-                          thread.lastMessage
-                        )}
-                      </p>
-                      {(thread.unreadCountTeacher || 0) > 0 && (
-                        <span className="bg-[#5B5CFF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0 ml-2">
-                          {thread.unreadCountTeacher}
+                      <h3 className="text-sm font-semibold text-white truncate pr-2">{item.name}</h3>
+                      {item.thread && (
+                        <span className="text-[10px] text-[#7B8798] shrink-0">
+                          {new Date(item.thread.lastMessageTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </span>
                       )}
                     </div>
+                    {item.thread ? (
+                      <div className="flex justify-between items-center">
+                        <p className={cn(
+                          "text-xs truncate", 
+                          (item.thread.unreadCountTeacher || 0) > 0 ? "text-white font-medium" : "text-[#7B8798]"
+                        )}>
+                          {item.thread.typingIndicator?.student ? (
+                            <span className="text-[#5B5CFF]">typing...</span>
+                          ) : (
+                            item.thread.lastMessage
+                          )}
+                        </p>
+                        {(item.thread.unreadCountTeacher || 0) > 0 && (
+                          <span className="bg-[#5B5CFF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0 ml-2">
+                            {item.thread.unreadCountTeacher}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[#7B8798] truncate italic">Start a new chat</p>
+                    )}
                   </div>
                 </button>
               ))
@@ -178,20 +231,20 @@ export default function TeacherChatPage() {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col relative bg-[#0B1527]">
-          {activeThreadId && activeThread ? (
+          {activeThreadId ? (
             <>
               {/* Header */}
-              <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center px-6 shrink-0 relative z-10">
+              <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center justify-between px-6 shrink-0 relative z-10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center">
                     <User className="w-5 h-5 text-[#B6C2D9]" />
                   </div>
                   <div>
-                    <h2 className="text-white font-semibold leading-tight">{activeThread.studentName}</h2>
+                    <h2 className="text-white font-semibold leading-tight">{activeThread?.studentName || "Student"}</h2>
                     <div className="text-xs text-[#7B8798] flex items-center gap-1.5 h-4">
-                      {activeThread.typingIndicator?.student ? (
+                      {activeThread?.typingIndicator?.student ? (
                         <span className="text-[#5B5CFF] font-medium animate-pulse">typing...</span>
-                      ) : activeThread.onlineStatus?.student ? (
+                      ) : activeThread?.onlineStatus?.student ? (
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
                           <span className="text-[#B6C2D9]">Online</span>
@@ -202,6 +255,15 @@ export default function TeacherChatPage() {
                     </div>
                   </div>
                 </div>
+                
+                {/* Delete Chat Button */}
+                <button 
+                  onClick={handleClearChat}
+                  title="Clear Chat History"
+                  className="w-10 h-10 rounded-full bg-white/[0.02] hover:bg-[#EF4444]/10 text-[#7B8798] hover:text-[#EF4444] flex items-center justify-center transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Messages Area */}
@@ -213,7 +275,6 @@ export default function TeacherChatPage() {
                 ) : (
                   messages.map((msg, idx) => {
                     const isMe = msg.senderRole === "teacher";
-                    const showName = !isMe && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
                     const showTeacherName = isMe && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
 
                     return (
@@ -221,41 +282,59 @@ export default function TeacherChatPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         key={msg.id} 
-                        className={cn("flex flex-col max-w-[75%]", isMe ? "self-end items-end" : "self-start items-start")}
+                        className={cn("flex flex-col max-w-[75%] group", isMe ? "self-end items-end" : "self-start items-start")}
                       >
                         {showTeacherName && <span className="text-[10px] text-[#7B8798] mb-1 mr-1">{msg.senderName} (Teacher)</span>}
                         
-                        <div className={cn(
-                          "relative px-4 py-2 rounded-2xl break-words whitespace-pre-wrap shadow-sm",
-                          isMe 
-                            ? "bg-[#5B5CFF] text-white rounded-br-sm" 
-                            : "bg-[#131D2E] border border-white/[0.06] text-[#B6C2D9] rounded-bl-sm"
-                        )}>
-                          {msg.attachmentUrl && (
-                            <div className="mb-2 -mx-2 -mt-1 overflow-hidden rounded-xl">
-                              {msg.attachmentType === "image" ? (
-                                <img src={msg.attachmentUrl} alt="Attachment" className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(msg.attachmentUrl, '_blank')} />
-                              ) : (
-                                <a href={msg.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-black/20 hover:bg-black/40 transition-colors">
-                                  <span className="text-sm underline">Download Attachment</span>
-                                </a>
-                              )}
-                            </div>
-                          )}
-                          <span className="text-[14px] leading-relaxed">{msg.text}</span>
+                        <div className="flex items-center gap-2 relative w-full justify-end">
+                          {/* Delete Message Button */}
+                          <button 
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className={cn(
+                              "opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#EF4444] transition-all",
+                              isMe ? "order-1" : "order-2"
+                            )}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                           
                           <div className={cn(
-                            "flex items-center justify-end gap-1 mt-1 -mb-0.5", 
-                            isMe ? "text-white/70" : "text-[#7B8798]"
+                            "relative px-4 py-2 rounded-2xl break-words whitespace-pre-wrap shadow-sm",
+                            isMe ? "order-2 bg-[#5B5CFF] text-white rounded-br-sm" : "order-1 bg-[#131D2E] border border-white/[0.06] text-[#B6C2D9] rounded-bl-sm"
                           )}>
-                            <span className="text-[9px]">
-                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            {isMe && (
-                              msg.status === "read" 
-                                ? <CheckCheck className="w-3 h-3 text-[#38BDF8]" />
-                                : <Check className="w-3 h-3" />
+                            {msg.attachmentUrl && (
+                              <div className="mb-2 -mx-2 -mt-1 overflow-hidden rounded-xl">
+                                {msg.attachmentType === "image" ? (
+                                  <div className="relative group/img">
+                                    <img 
+                                      src={msg.attachmentUrl} 
+                                      alt="Attachment" 
+                                      className="max-w-full h-auto cursor-zoom-in hover:opacity-90 transition-opacity" 
+                                      onClick={() => setFullScreenImage(msg.attachmentUrl!)} 
+                                    />
+                                  </div>
+                                ) : (
+                                  <a href={msg.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-black/20 hover:bg-black/40 transition-colors">
+                                    <span className="text-sm underline">Download Attachment</span>
+                                  </a>
+                                )}
+                              </div>
                             )}
+                            {msg.text && <span className="text-[14px] leading-relaxed block">{msg.text}</span>}
+                            
+                            <div className={cn(
+                              "flex items-center justify-end gap-1 mt-1 -mb-0.5", 
+                              isMe ? "text-white/70" : "text-[#7B8798]"
+                            )}>
+                              <span className="text-[9px]">
+                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {isMe && (
+                                msg.status === "read" 
+                                  ? <CheckCheck className="w-3 h-3 text-[#38BDF8]" />
+                                  : <Check className="w-3 h-3" />
+                              )}
+                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -327,11 +406,35 @@ export default function TeacherChatPage() {
                 <Send className="w-8 h-8 opacity-50" />
               </div>
               <h3 className="text-xl font-medium text-white mb-2">Teacher Chat Support</h3>
-              <p className="max-w-xs text-center text-sm leading-relaxed">Select a student from the sidebar to view their messages or reply to their questions.</p>
+              <p className="max-w-xs text-center text-sm leading-relaxed">Search and select a student from the sidebar to view their messages or reply to their questions.</p>
             </div>
           )}
         </div>
       </div>
+      
+      {/* Full Screen Image Modal */}
+      <AnimatePresence>
+        {fullScreenImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setFullScreenImage(null)}
+          >
+            <button 
+              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              onClick={() => setFullScreenImage(null)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="absolute top-4 left-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open(fullScreenImage, '_blank'); }}>
+               Download Original
+            </div>
+            <img src={fullScreenImage} alt="Full Screen" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </DashboardLayout>
   );
 }

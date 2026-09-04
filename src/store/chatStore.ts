@@ -2,7 +2,7 @@
 import { db } from "@/lib/firebase/firebase";
 import { 
   collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, 
-  serverTimestamp, getDoc, writeBatch 
+  serverTimestamp, getDoc, writeBatch, deleteDoc 
 } from "firebase/firestore";
 import type { ChatThread, ChatMessage } from "@/types/chat-types";
 import { uploadFile } from "@/lib/firebase/uploadService";
@@ -25,6 +25,9 @@ interface ChatState {
   markAsRead: (threadId: string, role: "student" | "teacher") => Promise<void>;
   setTypingStatus: (threadId: string, role: "student" | "teacher", name: string, isTyping: boolean) => Promise<void>;
   setOnlineStatus: (threadId: string, role: "student" | "teacher", name: string, isOnline: boolean) => Promise<void>;
+  createThreadIfMissing: (studentId: string, studentName: string, studentAvatar?: string) => Promise<void>;
+  deleteMessage: (threadId: string, msgId: string) => Promise<void>;
+  clearChat: (threadId: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -135,7 +138,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       updateData["typingIndicator.student"] = false;
     }
 
-    batch.update(threadRef, updateData);
+    batch.set(threadRef, updateData, { merge: true });
     await batch.commit();
   },
 
