@@ -37,8 +37,8 @@ export default function HomeworkPage() {
   const { subjects } = useDataStore();
   
   const [mounted, setMounted] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [classFilter, setClassFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
+  const [classFilter, setClassFilter] = useState("active");
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -212,7 +212,7 @@ export default function HomeworkPage() {
         {/* Filters */}
         <motion.div variants={itemVariants} initial="hidden" animate="show" className="flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-wrap gap-3">
-            {["all", "active", "closed", "draft", "scheduled"].map(tab => (
+            {["active", "all", "closed", "draft", "scheduled"].map(tab => (
               <button
                 key={tab}
                 onClick={() => setStatusFilter(tab)}

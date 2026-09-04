@@ -28,7 +28,7 @@ export default function StudentHomeworkPage() {
   const submissionsList = useHomeworkStore(state => state.submissions);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Pending");
   const [newNotifCount, setNewNotifCount] = useState(0);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function StudentHomeworkPage() {
     return { label: `${days}d left`, color: "text-[#22C55E]" };
   };
 
-  const tabs = ["All", "Pending", "Missed", "Submitted", "Graded"];
+  const tabs = ["Pending", "All", "Missed", "Submitted", "Graded"];
   const pendingCount = allHomework.filter(h => {
     const st = getComputedStatus(h.id);
     return st === "pending" || st === "draft";
