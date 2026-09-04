@@ -26,7 +26,7 @@ import { useTestStore } from '@/store/testStore';
 import { getSubjectsForClass } from '@/data/curriculum-index';
 import { getMasteryColor, getMasteryLevel, Student } from '@/types';
 
-const AVATAR_EMOJIS = ["ðŸ‘¨â€ðŸŽ“", "ðŸ‘©â€ðŸŽ“", "ðŸš€", "ðŸŒŸ", "ðŸ§ ", "ðŸŽ¯", "ðŸ“š", "ðŸ’¡", "ðŸ˜Ž", "ðŸ¤“"];
+const AVATAR_EMOJIS = ["👨‍🎓", "👩‍🎓", "🎓", "🎒", "📚", "✍️", "🎯", "🚀", "💻", "🧠"];
 
 const containerVariants: any = {
   hidden: { opacity: 0 },
