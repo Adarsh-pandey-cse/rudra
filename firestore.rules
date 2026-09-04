@@ -85,6 +85,15 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
     
+    
+    // Chats
+    match /chats/{threadId} {
+      allow read, write: if isAuthenticated();
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
     // Fallback: Default deny
     match /{document=**} {
       allow read, write: if false;
