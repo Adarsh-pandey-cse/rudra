@@ -121,7 +121,7 @@ export default function StudentChatPage() {
 
   return (
     <DashboardLayout role="student">
-      <div className="max-w-4xl mx-auto h-[calc(100vh-120px)] flex flex-col bg-[#0B1527] border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl relative z-0">
+      <div className="absolute inset-2 mb-[104px] md:inset-6 md:mb-6 lg:inset-8 lg:mb-8 max-w-4xl mx-auto flex flex-col bg-[#0B1527] border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl z-0">
         
         {/* Chat Header */}
         <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center justify-between px-6 shrink-0 relative z-10">
@@ -159,7 +159,7 @@ export default function StudentChatPage() {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 relative z-0">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 z-0">
           {messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-[#7B8798] opacity-50">
               <div className="w-16 h-16 mb-4 rounded-2xl bg-white/[0.04] flex items-center justify-center">
