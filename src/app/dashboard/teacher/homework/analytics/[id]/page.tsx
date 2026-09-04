@@ -528,7 +528,7 @@ export default function HomeworkAnalyticsPage() {
               </div>
 
               <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
-                <div className="w-full lg:w-[60%] border-b lg:border-b-0 lg:border-r border-white/[0.08] bg-[#07111F] flex flex-col relative min-h-[50vh] lg:min-h-0 lg:h-full shrink-0 overflow-hidden isolate z-0">
+                <div className="w-full lg:w-[60%] border-b lg:border-b-0 lg:border-r border-white/[0.08] bg-[#07111F] flex flex-col relative min-h-[50vh] lg:min-h-0 lg:h-full shrink-0 overflow-hidden" style={{ clipPath: "inset(0)" }}>
                   {selectedSubmission.sub.attachments && selectedSubmission.sub.attachments.length > 0 ? (
                     <>
                       <div className="p-3 border-b border-white/[0.08] flex gap-2 overflow-x-auto bg-[#131D2E] shrink-0">

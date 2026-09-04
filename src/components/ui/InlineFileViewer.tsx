@@ -25,7 +25,7 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
   const isDoc = type === 'docx' || url.endsWith('.docx');
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0B1527] rounded-xl overflow-hidden border border-white/10 group touch-none isolate z-0">
+    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0B1527] rounded-xl overflow-hidden border border-white/10 group touch-none" style={{ clipPath: "inset(0)", contain: "paint layout" }}>
       {/* Top Bar for Download */}
       <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
         <a 
@@ -60,7 +60,7 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
           </div>
           
           {/* Controls */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 sm:gap-2 bg-black/70 backdrop-blur-md border border-white/10 p-1.5 rounded-xl shadow-2xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 sm:gap-2 bg-[#070D19] border border-white/20 p-1.5 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.8)] opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={handleZoomOut} className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"><ZoomOut className="w-4 h-4" /></button>
             <button onClick={handleReset} className="px-2 font-medium text-white/90 hover:text-white transition-colors text-xs min-w-[2.5rem] text-center">{Math.round(scale * 100)}%</button>
             <button onClick={handleZoomIn} className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"><ZoomIn className="w-4 h-4" /></button>

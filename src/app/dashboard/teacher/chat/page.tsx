@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function TeacherChatPage() {
-  const { currentUser, users } = useAuthStore();
+  const { currentUser, users, getAllUsers } = useAuthStore();
   const { 
     threads, 
     activeThreadId,
@@ -30,6 +30,12 @@ export default function TeacherChatPage() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    getAllUsers();
+  }, [getAllUsers]);
+
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const unsubMessagesRef = useRef<(() => void) | null>(null);
@@ -176,59 +182,70 @@ export default function TeacherChatPage() {
             {displayList.length === 0 ? (
               <div className="p-6 text-center text-sm text-[#7B8798]">No students found</div>
             ) : (
-              displayList.map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => handleStudentClick(item.id, item.name, item.avatar)}
-                  className={cn(
-                    "w-full p-4 flex items-center gap-3 text-left transition-colors border-b border-white/[0.02]",
-                    activeThreadId === item.id ? "bg-[#5B5CFF]/10" : "hover:bg-white/[0.02]"
-                  )}
-                >
-                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 relative">
-                    {item.avatar ? (
-                      <img src={item.avatar} alt={item.name} className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      <User className="w-5 h-5 text-[#B6C2D9]" />
-                    )}
-                    {item.thread?.onlineStatus?.student && (
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 border-[#070D19] rounded-full" />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 overflow-hidden">
-                    <div className="flex justify-between items-baseline mb-0.5">
-                      <h3 className="text-sm font-semibold text-white truncate pr-2">{item.name}</h3>
-                      {item.thread && (
-                        <span className="text-[10px] text-[#7B8798] shrink-0">
-                          {new Date(item.thread.lastMessageTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
+              <div className="flex flex-col">
+                {displayList.map((item, idx) => {
+                  const isFirstNew = !item.thread && (idx === 0 || displayList[idx-1].thread);
+                  return (
+                    <div key={item.id}>
+                      {isFirstNew && (
+                        <div className="px-4 py-2 mt-2 text-xs font-bold text-[#7B8798] uppercase tracking-wider bg-white/[0.02]">
+                          Start a new chat
+                        </div>
                       )}
-                    </div>
-                    {item.thread ? (
-                      <div className="flex justify-between items-center">
-                        <p className={cn(
-                          "text-xs truncate", 
-                          (item.thread.unreadCountTeacher || 0) > 0 ? "text-white font-medium" : "text-[#7B8798]"
-                        )}>
-                          {item.thread.typingIndicator?.student ? (
-                            <span className="text-[#5B5CFF]">typing...</span>
-                          ) : (
-                            item.thread.lastMessage
-                          )}
-                        </p>
-                        {(item.thread.unreadCountTeacher || 0) > 0 && (
-                          <span className="bg-[#5B5CFF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0 ml-2">
-                            {item.thread.unreadCountTeacher}
-                          </span>
+                      <button
+                        onClick={() => handleStudentClick(item.id, item.name, item.avatar)}
+                        className={cn(
+                          "w-full p-4 flex items-center gap-3 text-left transition-colors border-b border-white/[0.02]",
+                          activeThreadId === item.id ? "bg-[#5B5CFF]/10" : "hover:bg-white/[0.02]"
                         )}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-[#7B8798] truncate italic">Start a new chat</p>
-                    )}
-                  </div>
-                </button>
-              ))
+                      >
+                        <div className="w-12 h-12 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 relative">
+                          {item.avatar ? (
+                            <img src={item.avatar} alt={item.name} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <User className="w-6 h-6 text-[#B6C2D9]" />
+                          )}
+                          {item.thread?.onlineStatus?.student && (
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] border-2 border-[#070D19] rounded-full" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 overflow-hidden">
+                          <div className="flex justify-between items-baseline mb-0.5">
+                            <h3 className="text-[15px] font-semibold text-white truncate pr-2">{item.name}</h3>
+                            {item.thread && (
+                              <span className="text-[11px] text-[#7B8798] shrink-0">
+                                {new Date(item.thread.lastMessageTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                          {item.thread ? (
+                            <div className="flex justify-between items-center">
+                              <p className={cn(
+                                "text-[13px] truncate", 
+                                (item.thread.unreadCountTeacher || 0) > 0 ? "text-white font-medium" : "text-[#7B8798]"
+                              )}>
+                                {item.thread.typingIndicator?.student ? (
+                                  <span className="text-[#5B5CFF]">typing...</span>
+                                ) : (
+                                  item.thread.lastMessage
+                                )}
+                              </p>
+                              {(item.thread.unreadCountTeacher || 0) > 0 && (
+                                <span className="bg-[#22C55E] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0 ml-2">
+                                  {item.thread.unreadCountTeacher}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[13px] text-[#5B5CFF] truncate italic">Tap to message</p>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -238,13 +255,17 @@ export default function TeacherChatPage() {
           {activeThreadId ? (
             <>
               {/* Header */}
-              <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center justify-between px-6 shrink-0 relative z-10">
+              <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center justify-between px-6 shrink-0 relative z-10 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center">
-                    <User className="w-5 h-5 text-[#B6C2D9]" />
+                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center overflow-hidden">
+                    {displayList.find(s => s.id === activeThreadId)?.avatar ? (
+                      <img src={displayList.find(s => s.id === activeThreadId)?.avatar} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-5 h-5 text-[#B6C2D9]" />
+                    )}
                   </div>
                   <div>
-                    <h2 className="text-white font-semibold leading-tight">{activeThread?.studentName || "Student"}</h2>
+                    <h2 className="text-white font-semibold leading-tight">{displayList.find(s => s.id === activeThreadId)?.name || "Student"}</h2>
                     <div className="text-xs text-[#7B8798] flex items-center gap-1.5 h-4">
                       {activeThread?.typingIndicator?.student ? (
                         <span className="text-[#5B5CFF] font-medium animate-pulse">typing...</span>
