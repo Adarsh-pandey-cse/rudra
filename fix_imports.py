@@ -1,19 +1,26 @@
 ﻿import re
 
-with open("src/store/authStore.ts", "r", encoding="utf-8") as f:
-    content = f.read()
+def fix_imports(filepath):
+    with open(filepath, "r", encoding="utf-8") as f:
+        content = f.read()
 
-# Add missing imports
-old_import = 'import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where } from "firebase/firestore";'
-new_import = 'import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where, getDocs } from "firebase/firestore";'
+    # Clean up duplicate imports from lucide-react
+    lucide_match = re.search(r'import \{([^\}]+)\} from "lucide-react";', content)
+    if lucide_match:
+        items = [x.strip() for x in lucide_match.group(1).split(',')]
+        unique_items = list(dict.fromkeys(items)) # preserve order
+        
+        # Make sure ArrowLeft and Download are in there
+        if "ArrowLeft" not in unique_items:
+            unique_items.append("ArrowLeft")
+        if "Download" not in unique_items:
+            unique_items.append("Download")
+            
+        new_import = "import { " + ", ".join(unique_items) + ' } from "lucide-react";'
+        content = content[:lucide_match.start()] + new_import + content[lucide_match.end():]
+        
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
 
-if old_import in content:
-    content = content.replace(old_import, new_import)
-else:
-    # Just replace "import { doc, getDoc" if the string isn't exactly matching
-    content = re.sub(r'import \{ ([^}]+) \} from "firebase/firestore";', 
-                     lambda m: f'import {{ {m.group(1)}, getDocs, query, where }} from "firebase/firestore";' if 'getDocs' not in m.group(1) else m.group(0), 
-                     content)
-
-with open("src/store/authStore.ts", "w", encoding="utf-8") as f:
-    f.write(content)
+fix_imports("src/app/dashboard/student/chat/page.tsx")
+fix_imports("src/app/dashboard/teacher/chat/page.tsx")

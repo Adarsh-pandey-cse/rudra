@@ -1,10 +1,11 @@
+import Link from "next/link";
 ﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useChatStore } from "@/store/chatStore";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Send, Image as ImageIcon, Check, CheckCheck, Loader2, X, Trash2 } from "lucide-react";
+import { Send, Image as ImageIcon, ArrowLeft, Check, CheckCheck, Loader2, X, Trash2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -124,6 +125,9 @@ export default function StudentChatPage() {
         {/* Chat Header */}
         <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center justify-between px-6 shrink-0 relative z-10">
           <div className="flex items-center gap-4">
+            <Link href="/dashboard/student" className="md:hidden p-2 -ml-2 hover:bg-white/[0.1] rounded-full text-[#B6C2D9] transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B5CFF] to-[#8B5CF6] flex items-center justify-center text-white font-bold text-lg shadow-lg">
               T
             </div>
@@ -179,16 +183,29 @@ export default function StudentChatPage() {
                   )}
                   
                   <div className="flex items-center gap-2 relative w-full justify-end">
-                    {/* Delete Message Button */}
-                    <button 
-                      onClick={() => handleDeleteMessage(msg.id)}
-                      className={cn(
-                        "opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#EF4444] transition-all",
-                        isMe ? "order-1" : "order-2"
+                    {/* Action Buttons */}
+                    <div className={cn(
+                      "opacity-0 group-hover:opacity-100 flex flex-col gap-1 transition-all",
+                      isMe ? "order-1" : "order-2"
+                    )}>
+                      {msg.attachmentUrl && (
+                        <a 
+                          href={msg.attachmentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          download
+                          className="p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#38BDF8] transition-all"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </a>
                       )}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      <button 
+                        onClick={() => handleDeleteMessage(msg.id)}
+                        className="p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#EF4444] transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   
                     <div className={cn(
                       "relative px-4 py-2 rounded-2xl break-words whitespace-pre-wrap shadow-sm",
@@ -203,7 +220,7 @@ export default function StudentChatPage() {
                               <img 
                                 src={msg.attachmentUrl} 
                                 alt="Attachment" 
-                                className="max-w-full h-auto cursor-zoom-in hover:opacity-90 transition-opacity" 
+                                className="max-w-full max-h-[300px] object-contain rounded-lg bg-black/20 cursor-zoom-in hover:opacity-90 transition-opacity" 
                                 onClick={() => setFullScreenImage(msg.attachmentUrl!)} 
                               />
                             </div>
