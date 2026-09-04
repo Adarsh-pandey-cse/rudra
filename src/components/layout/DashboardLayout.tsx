@@ -22,7 +22,7 @@ import {
   MessageCircleQuestion,
   Trophy,
   FileText
-} from "lucide-react";
+, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import RudraLogo from "@/components/brand/RudraLogo";
 import { Toaster } from "sonner";
@@ -33,6 +33,7 @@ import { useDoubtStore } from "@/store/doubtStore";
 import { useTestStore } from "@/store/testStore";
 import { cn, formatDate } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notificationStore";
+import { useChatStore } from "@/store/chatStore";
 import { useLeaderboardStore } from "@/store/leaderboardStore";
 import { useBadgeStore } from "@/store/badgeStore";
 import { useFeeStore } from "@/store/feeStore";
@@ -52,6 +53,7 @@ type NavItem = {
 
 const TEACHER_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/teacher", icon: LayoutDashboard },
+  { label: "Chat", href: "/dashboard/teacher/chat", icon: MessageSquare },
   { label: "Students", href: "/dashboard/teacher/students", icon: Users },
   { label: "Homework", href: "/dashboard/teacher/homework", icon: BookOpen },
   { label: "Notes", href: "/dashboard/teacher/notes", icon: BookOpen },
@@ -66,6 +68,7 @@ const TEACHER_NAV: NavItem[] = [
 
 const STUDENT_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/student", icon: LayoutDashboard },
+  { label: "Chat", href: "/dashboard/student/chat", icon: MessageSquare },
   { label: "Homework", href: "/dashboard/student/homework", icon: BookOpen },
   { label: "Notes", href: "/dashboard/student/notes", icon: BookOpen },
     { label: "Test Marks", href: "/dashboard/student/tests", icon: FileText },
@@ -219,6 +222,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     return (mounted && currentUser) ? getUserNotifications(currentUser.id, currentUser.role) : [];
   }, [mounted, currentUser, notifications, getUserNotifications]);
   const unreadCount = inAppNotifs.filter(n => !n.read).length;
+  const chatUnread = useChatStore(state => state.unreadTotal);
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Mount background notification daemon
@@ -704,7 +708,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                 <motion.div whileTap={{ scale: 0.9 }} className="flex flex-col items-center justify-center w-full py-1 relative">
                   <div className="relative">
                     <Icon className={cn("w-[22px] h-[22px] mb-0.5 transition-colors", isActive ? "text-[#5B5CFF]" : "text-[#4B5563] group-hover:text-[#7B8798]")} />
-                    {item.href === "#notifications" && unreadCount > 0 && (
+                    {(item.href === "#notifications" && unreadCount > 0) || (item.href.includes("chat") && chatUnread > 0) && (
                       <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#EF4444] rounded-full animate-pulse border-2 border-[#07111F]" />
                     )}
                   </div>
