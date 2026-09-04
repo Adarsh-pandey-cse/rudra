@@ -28,7 +28,7 @@ export default function StudentHomeworkPage() {
   const submissionsList = useHomeworkStore(state => state.submissions);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("Pending");
+  const [activeTab, setActiveTab] = useState("All");
   const [newNotifCount, setNewNotifCount] = useState(0);
 
   useEffect(() => {

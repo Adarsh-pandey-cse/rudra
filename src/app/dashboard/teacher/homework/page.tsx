@@ -37,8 +37,8 @@ export default function HomeworkPage() {
   const { subjects } = useDataStore();
   
   const [mounted, setMounted] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("active");
-  const [classFilter, setClassFilter] = useState("active");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
