@@ -159,8 +159,8 @@ export default function TeacherChatPage() {
     return a.name.localeCompare(b.name);
   });
   
-  // If no search, just show existing threads
-  const displayList = search ? allSearchable : threads.map(t => ({ id: t.id, name: t.studentName, avatar: t.studentAvatar, thread: t }));
+  // Always show the full list so "Start a new chat" is visible
+  const displayList = allSearchable;
 
   return (
     <DashboardLayout role="teacher">
