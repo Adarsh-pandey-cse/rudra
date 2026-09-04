@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useChatStore } from "@/store/chatStore";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Send, Image as ImageIcon, Check, CheckCheck, Loader2, X, Search, User, Trash2 } from "lucide-react";
+import { Send, Image as ImageIcon, Check, CheckCheck, Loader2, X, Search, User, ArrowLeft, Trash2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -257,6 +257,12 @@ export default function TeacherChatPage() {
               {/* Header */}
               <div className="h-16 border-b border-white/[0.06] bg-[#131D2E] flex items-center justify-between px-6 shrink-0 relative z-10 shadow-sm">
                 <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setActiveThreadId(null)}
+                    className="md:hidden p-2 -ml-2 hover:bg-white/[0.1] rounded-full text-[#B6C2D9] transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
                   <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center overflow-hidden">
                     {displayList.find(s => s.id === activeThreadId)?.avatar ? (
                       <img src={displayList.find(s => s.id === activeThreadId)?.avatar} alt="Profile" className="w-full h-full object-cover" />
@@ -334,7 +340,7 @@ export default function TeacherChatPage() {
                                     <img 
                                       src={msg.attachmentUrl} 
                                       alt="Attachment" 
-                                      className="max-w-full h-auto cursor-zoom-in hover:opacity-90 transition-opacity" 
+                                      className="max-w-full max-h-[300px] object-contain rounded-lg bg-black/20 cursor-zoom-in hover:opacity-90 transition-opacity" 
                                       onClick={() => setFullScreenImage(msg.attachmentUrl!)} 
                                     />
                                   </div>
