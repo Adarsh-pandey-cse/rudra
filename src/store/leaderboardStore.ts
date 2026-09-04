@@ -273,14 +273,14 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
 
         const unsub1 = eventBus.on("HOMEWORK_GRADED", (event) => {
           const payload = event.payload as any;
-          if (payload && payload.studentId && payload.grade !== undefined && !payload.isLate) {
+          if (payload && payload.studentId && payload.grade !== undefined) {
             get().addPoints(payload.studentId, payload.grade, "Homework graded");
           }
         });
         
         const unsub2 = eventBus.on("HOMEWORK_SUBMITTED", (event) => {
           const payload = event.payload as any;
-          if (payload && payload.studentId && !payload.isLate) {
+          if (payload && payload.studentId) {
             get().updateStreak(payload.studentId, 1);
           }
         });

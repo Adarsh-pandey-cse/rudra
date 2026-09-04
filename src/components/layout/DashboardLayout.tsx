@@ -131,7 +131,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
   // One-time fix to restore Aastha's 40 points
   useEffect(() => {
-    if (currentUser?.role === "teacher") {
+    if (currentUser) {
       import("firebase/firestore").then(({ collection, getDocs, doc, updateDoc }) => {
         import("@/lib/firebase/firebase").then(async ({ db }) => {
           const snapshot = await getDocs(collection(db, "users"));
