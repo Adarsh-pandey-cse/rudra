@@ -1,12 +1,24 @@
 ﻿import re
 
-with open('src/app/dashboard/teacher/doubts/[id]/page.tsx', 'r', encoding='utf-8') as f:
+with open("src/app/dashboard/teacher/chat/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
+# Add getAllUsers to destructuring
 content = content.replace(
-    'const { currentUser, isAuthenticated, _hasHydrated } = useAuthStore();',
-    'const { currentUser, isAuthenticated, _hasHydrated, users } = useAuthStore();'
+    'const { currentUser, users } = useAuthStore();',
+    'const { currentUser, users, getAllUsers } = useAuthStore();'
 )
 
-with open('src/app/dashboard/teacher/doubts/[id]/page.tsx', 'w', encoding='utf-8') as f:
+# Add useEffect to fetch users
+injection = """
+  useEffect(() => {
+    getAllUsers();
+  }, [getAllUsers]);
+
+"""
+
+if "getAllUsers()" not in content:
+    content = content.replace('const [search, setSearch] = useState("");', 'const [search, setSearch] = useState("");\n' + injection)
+
+with open("src/app/dashboard/teacher/chat/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
