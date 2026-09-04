@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+import Link from "next/link";
+﻿
 
 import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -163,9 +165,14 @@ export default function TeacherChatPage() {
       <div className="max-w-6xl mx-auto h-[calc(100vh-120px)] flex bg-[#0B1527] border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl relative z-0">
         
         {/* Sidebar */}
-        <div className="w-80 shrink-0 border-r border-white/[0.06] flex flex-col bg-[#070D19]">
+        <div className={cn("w-full md:w-80 shrink-0 border-r border-white/[0.06] flex-col bg-[#070D19]", activeThreadId ? "hidden md:flex" : "flex")}>
           <div className="p-4 border-b border-white/[0.06]">
-            <h2 className="text-lg font-bold text-white mb-4">Student Chats</h2>
+            <div className="flex items-center gap-3 mb-4">
+                <Link href="/dashboard/teacher" className="md:hidden p-2 -ml-2 hover:bg-white/[0.1] rounded-full text-[#B6C2D9] transition-colors">
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <h2 className="text-lg font-bold text-white">Student Chats</h2>
+              </div>
             <div className="relative">
               <Search className="w-4 h-4 text-[#7B8798] absolute left-3 top-1/2 -translate-y-1/2" />
               <input 
