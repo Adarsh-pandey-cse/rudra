@@ -27,7 +27,7 @@ interface ChatState {
   setOnlineStatus: (threadId: string, role: "student" | "teacher", name: string, isOnline: boolean) => Promise<void>;
   createThreadIfMissing: (studentId: string, studentName: string, studentAvatar?: string) => Promise<void>;
   deleteMessage: (threadId: string, msgId: string) => Promise<void>;
-  clearChat: (threadId: string) => Promise<void>;
+  clearChat: (threadId: string, role: "teacher" | "student", clearType: "me" | "everyone") => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -221,24 +221,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  clearChat: async (threadId) => {
+  clearChat: async (threadId, role, clearType) => {
     try {
-      // Step 1: Delete all messages in the subcollection first!
-      const messagesRef = collection(db, `chats/${threadId}/messages`);
-      const msgSnapshot = await getDocs(messagesRef);
-      
-      const batch = writeBatch(db);
-      msgSnapshot.docs.forEach((msgDoc) => {
-        batch.delete(msgDoc.ref);
-      });
-      await batch.commit();
-
-      // Step 2: Delete the thread document itself
-      await deleteDoc(doc(db, "chats", threadId));
-      
-      // Step 3: Clear UI state
-      if (get().activeThreadId === threadId) {
-        set({ activeThreadId: null, messages: [] });
+      if (clearType === "everyone") {
+        // Step 1: Delete all messages in the subcollection
+        const messagesRef = collection(db, `chats/${threadId}/messages`);
+        const msgSnapshot = await getDocs(messagesRef);
+        
+        const batch = writeBatch(db);
+        msgSnapshot.docs.forEach((msgDoc) => {
+          batch.delete(msgDoc.ref);
+        });
+        await batch.commit();
+  
+        // Step 2: Delete the thread document itself
+        await deleteDoc(doc(db, "chats", threadId));
+        
+        if (get().activeThreadId === threadId) {
+          set({ activeThreadId: null, messages: [] });
+        }
+      } else {
+        // Clear for ME only: Update the clearedAt timestamp
+        const threadRef = doc(db, "chats", threadId);
+        const updateData: any = {};
+        if (role === "teacher") updateData.clearedAtTeacher = Date.now();
+        if (role === "student") updateData.clearedAtStudent = Date.now();
+        
+        await updateDoc(threadRef, updateData);
+        
+        // Don't close the chat, just let the listener filter out old messages
       }
     } catch (e) {
       console.error("Error clearing chat", e);

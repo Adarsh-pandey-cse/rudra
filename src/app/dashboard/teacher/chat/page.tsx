@@ -32,6 +32,7 @@ export default function TeacherChatPage() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [search, setSearch] = useState("");
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   useEffect(() => {
     getAllUsers();
@@ -129,9 +130,10 @@ export default function TeacherChatPage() {
     }
   };
 
-  const handleClearChat = async () => {
-    if (activeThreadId && window.confirm("Are you sure you want to delete this chat entirely? This cannot be undone.")) {
-      await clearChat(activeThreadId);
+  const handleClearChat = async (type: "me" | "everyone") => {
+    if (activeThreadId) {
+      await clearChat(activeThreadId, "teacher", type);
+      setShowClearDialog(false);
     }
   };
 
@@ -296,7 +298,7 @@ export default function TeacherChatPage() {
                 
                 {/* Delete Chat Button */}
                 <button 
-                  onClick={handleClearChat}
+                  onClick={() => setShowClearDialog(true)}
                   title="Clear Chat History"
                   className="w-10 h-10 rounded-full bg-white/[0.02] hover:bg-[#EF4444]/10 text-[#7B8798] hover:text-[#EF4444] flex items-center justify-center transition-colors"
                 >
@@ -306,79 +308,99 @@ export default function TeacherChatPage() {
 
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 z-0">
-                {messages.length === 0 ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-[#7B8798] opacity-50">
-                    <p>No messages yet. Send a message to start the conversation.</p>
-                  </div>
-                ) : (
-                  messages.map((msg, idx) => {
-                    const isMe = msg.senderRole === "teacher";
-                    const showTeacherName = isMe && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
+                {(() => {
+                  const activeThread = threads.find(t => t.id === activeThreadId);
+                  const visibleMessages = messages.filter(msg => {
+                    if (!activeThread?.clearedAtTeacher) return true;
+                    return new Date(msg.createdAt).getTime() > activeThread.clearedAtTeacher;
+                  });
+                  return visibleMessages.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-[#7B8798] opacity-50">
+                      <p>No messages yet. Send a message to start the conversation.</p>
+                    </div>
+                  ) : (
+                    visibleMessages.map((msg, idx) => {
+                      const isMe = msg.senderRole === "teacher";
+                      const showTeacherName = isMe && (idx === 0 || visibleMessages[idx - 1].senderId !== msg.senderId);
 
-                    return (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        key={msg.id} 
-                        className={cn("flex flex-col max-w-[75%] group", isMe ? "self-end items-end" : "self-start items-start")}
-                      >
-                        {showTeacherName && <span className="text-[10px] text-[#7B8798] mb-1 mr-1">{msg.senderName} (Teacher)</span>}
-                        
-                        <div className="flex items-center gap-2 relative w-full justify-end">
-                          {/* Delete Message Button */}
-                          <button 
-                            onClick={() => handleDeleteMessage(msg.id)}
-                            className={cn(
-                              "opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#EF4444] transition-all",
-                              isMe ? "order-1" : "order-2"
-                            )}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                      return (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          key={msg.id} 
+                          className={cn("flex flex-col max-w-[75%] group", isMe ? "self-end items-end" : "self-start items-start")}
+                        >
+                          {showTeacherName && <span className="text-[10px] text-[#7B8798] mb-1 mr-1">{msg.senderName} (Teacher)</span>}
                           
-                          <div className={cn(
-                            "relative px-4 py-2 rounded-2xl break-words whitespace-pre-wrap shadow-sm",
-                            isMe ? "order-2 bg-[#5B5CFF] text-white rounded-br-sm" : "order-1 bg-[#131D2E] border border-white/[0.06] text-[#B6C2D9] rounded-bl-sm"
-                          )}>
-                            {msg.attachmentUrl && (
-                              <div className="mb-2 -mx-2 -mt-1 overflow-hidden rounded-xl">
-                                {msg.attachmentType === "image" ? (
-                                  <div className="relative group/img">
-                                    <img 
-                                      src={msg.attachmentUrl} 
-                                      alt="Attachment" 
-                                      className="max-w-full max-h-[300px] object-contain rounded-lg bg-black/20 cursor-zoom-in hover:opacity-90 transition-opacity" 
-                                      onClick={() => setFullScreenImage(msg.attachmentUrl!)} 
-                                    />
-                                  </div>
-                                ) : (
-                                  <a href={msg.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-black/20 hover:bg-black/40 transition-colors">
-                                    <span className="text-sm underline">Download Attachment</span>
-                                  </a>
+                          <div className="flex items-center gap-2 relative w-full justify-end">
+                            {/* Action Buttons */}
+                            <div className={cn(
+                              "opacity-0 group-hover:opacity-100 flex flex-col gap-1 transition-all",
+                              isMe ? "order-1" : "order-2"
+                            )}>
+                              {msg.attachmentUrl && (
+                                <a 
+                                  href={msg.attachmentUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  download
+                                  className="p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#38BDF8] transition-all"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </a>
+                              )}
+                              <button 
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                className="p-1.5 rounded-full hover:bg-white/[0.06] text-[#7B8798] hover:text-[#EF4444] transition-all"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Message Bubble */}
+                            <div className={cn(
+                              "p-3 rounded-2xl relative shadow-sm",
+                              isMe 
+                                ? "bg-[#5B5CFF] text-white rounded-tr-sm order-2" 
+                                : "bg-white/[0.06] text-[#E2E8F0] rounded-tl-sm order-1"
+                            )}>
+                              {msg.attachmentUrl && (
+                                <div className="mb-2 -mx-2 -mt-1 overflow-hidden rounded-xl">
+                                  {msg.attachmentType === "image" ? (
+                                    <div className="relative group/img">
+                                      <img 
+                                        src={msg.attachmentUrl} 
+                                        alt="Attachment" 
+                                        className="max-w-full max-h-[300px] object-contain rounded-lg bg-black/20 cursor-zoom-in hover:opacity-90 transition-opacity" 
+                                        onClick={() => setFullScreenImage(msg.attachmentUrl!)} 
+                                      />
+                                    </div>
+                                  ) : (
+                                    <a href={msg.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-3 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
+                                      <div className="w-8 h-8 rounded-full bg-[#5B5CFF]/20 flex items-center justify-center">
+                                        <Download className="w-4 h-4 text-[#5B5CFF]" />
+                                      </div>
+                                      <span className="text-sm font-medium">Download Document</span>
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                              <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                              <div className={cn("flex items-center gap-1 mt-1.5", isMe ? "justify-end text-white/70" : "justify-start text-[#7B8798]")}>
+                                <span className="text-[10px] uppercase tracking-wider">{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                {isMe && (
+                                  msg.status === "read" 
+                                    ? <CheckCheck className="w-3 h-3 text-[#38BDF8]" />
+                                    : <Check className="w-3 h-3" />
                                 )}
                               </div>
-                            )}
-                            {msg.text && <span className="text-[14px] leading-relaxed block">{msg.text}</span>}
-                            
-                            <div className={cn(
-                              "flex items-center justify-end gap-1 mt-1 -mb-0.5", 
-                              isMe ? "text-white/70" : "text-[#7B8798]"
-                            )}>
-                              <span className="text-[9px]">
-                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              {isMe && (
-                                msg.status === "read" 
-                                  ? <CheckCheck className="w-3 h-3 text-[#38BDF8]" />
-                                  : <Check className="w-3 h-3" />
-                              )}
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                )}
+                        </motion.div>
+                      );
+                    })
+                  );
+                })()}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -471,6 +493,46 @@ export default function TeacherChatPage() {
             </div>
             <img src={fullScreenImage} alt="Full Screen" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
           </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Clear Chat Dialog */}
+      <AnimatePresence>
+        {showClearDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-[#07111F]/80 backdrop-blur-sm"
+              onClick={() => setShowClearDialog(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-[#0B1527] border border-white/[0.06] rounded-2xl shadow-2xl p-6 flex flex-col gap-4"
+            >
+              <h3 className="text-xl font-bold text-white text-center">Clear Chat</h3>
+              <p className="text-[#7B8798] text-sm text-center mb-2">How would you like to clear this conversation?</p>
+              
+              <button 
+                onClick={() => handleClearChat("me")}
+                className="w-full py-3 px-4 bg-white/[0.06] hover:bg-white/[0.1] text-white rounded-xl font-medium transition-colors"
+              >
+                Clear for Me
+              </button>
+              <button 
+                onClick={() => handleClearChat("everyone")}
+                className="w-full py-3 px-4 bg-[#EF4444]/10 hover:bg-[#EF4444]/20 text-[#EF4444] rounded-xl font-medium transition-colors"
+              >
+                Clear for Everyone
+              </button>
+              <button 
+                onClick={() => setShowClearDialog(false)}
+                className="w-full py-3 px-4 text-[#7B8798] hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </DashboardLayout>

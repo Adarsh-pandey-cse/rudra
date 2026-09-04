@@ -113,7 +113,7 @@ export default function StudentChatPage() {
 
   const handleClearChat = async () => {
     if (currentUser && window.confirm("Are you sure you want to delete this chat entirely? This cannot be undone.")) {
-      await clearChat(currentUser.id);
+      await clearChat(currentUser.id, "student", "me");
     }
   };
 
@@ -160,7 +160,13 @@ export default function StudentChatPage() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 z-0">
-          {messages.length === 0 ? (
+          {(() => {
+            const activeThread = threads[0];
+            const visibleMessages = messages.filter(msg => {
+              if (!activeThread?.clearedAtStudent) return true;
+              return new Date(msg.createdAt).getTime() > activeThread.clearedAtStudent;
+            });
+            return visibleMessages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-[#7B8798] opacity-50">
               <div className="w-16 h-16 mb-4 rounded-2xl bg-white/[0.04] flex items-center justify-center">
                 <Send className="w-8 h-8" />
@@ -168,7 +174,7 @@ export default function StudentChatPage() {
               <p>Say hello to your teachers!</p>
             </div>
           ) : (
-            messages.map((msg, idx) => {
+            visibleMessages.map((msg, idx) => {
               const isMe = msg.senderRole === "student";
               const showAvatar = !isMe && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
 
@@ -252,7 +258,8 @@ export default function StudentChatPage() {
                 </motion.div>
               );
             })
-          )}
+          );
+          })()}
           <div ref={messagesEndRef} />
         </div>
 
