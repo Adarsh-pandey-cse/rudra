@@ -129,6 +129,23 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     }
   }, [currentUser]);
 
+  // One-time fix to restore Aastha's 40 points
+  useEffect(() => {
+    if (currentUser?.role === "teacher") {
+      import("firebase/firestore").then(({ collection, getDocs, doc, updateDoc }) => {
+        import("@/lib/firebase/firebase").then(async ({ db }) => {
+          const snapshot = await getDocs(collection(db, "users"));
+          for (const userDoc of snapshot.docs) {
+            const data = userDoc.data();
+            if (data.name?.includes("Aastha") && data.points === 20) {
+              await updateDoc(userDoc.ref, { points: 40 });
+            }
+          }
+        });
+      });
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
