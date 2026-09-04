@@ -192,5 +192,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
         await updateDoc(threadRef, { "onlineStatus.teacher": isOnline ? name : null });
       }
     } catch(e) {}
+  },
+
+  createThreadIfMissing: async (studentId, studentName, studentAvatar) => {
+    const threadRef = doc(db, "chats", studentId);
+    const snap = await getDoc(threadRef);
+    if (!snap.exists()) {
+      await setDoc(threadRef, {
+        id: studentId,
+        studentId,
+        studentName,
+        studentAvatar: studentAvatar || "",
+        lastMessage: "Chat started",
+        lastMessageTime: new Date().toISOString(),
+        unreadCountTeacher: 0,
+        unreadCountStudent: 0,
+        typingIndicator: {},
+        onlineStatus: {}
+      });
+    }
+  },
+
+  deleteMessage: async (threadId, msgId) => {
+    try {
+      await deleteDoc(doc(db, `chats/${threadId}/messages`, msgId));
+    } catch(e) {
+      console.error("Error deleting message", e);
+    }
+  },
+
+  clearChat: async (threadId) => {
+    try {
+      // In a real app we'd delete subcollections using a Cloud Function.
+      // Here we just delete the thread document and let the UI clear out.
+      await deleteDoc(doc(db, "chats", threadId));
+      if (get().activeThreadId === threadId) {
+        set({ activeThreadId: null, messages: [] });
+      }
+    } catch (e) {
+      console.error("Error clearing chat", e);
+    }
   }
 }));
