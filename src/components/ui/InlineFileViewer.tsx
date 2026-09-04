@@ -25,7 +25,7 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
   const isDoc = type === 'docx' || url.endsWith('.docx');
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0B1527] rounded-xl overflow-hidden border border-white/10 group touch-none">
+    <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0B1527] rounded-xl overflow-hidden border border-white/10 group touch-none isolate z-0">
       {/* Top Bar for Download */}
       <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
         <a 
@@ -42,7 +42,7 @@ export default function InlineFileViewer({ url, name, type }: InlineFileViewerPr
 
       {isImage ? (
         <>
-          <div className="w-full h-full flex items-center justify-center overflow-hidden relative">
+          <div className="w-full h-full flex items-center justify-center overflow-hidden relative" style={{ isolation: "isolate" }}>
             <motion.div
               drag
               dragConstraints={{ left: -1000, right: 1000, top: -1000, bottom: 1000 }}

@@ -106,7 +106,11 @@ export default function TeacherChatPage() {
   };
 
   const handleStudentClick = async (studentId: string, studentName: string, studentAvatar?: string) => {
-    await createThreadIfMissing(studentId, studentName, studentAvatar);
+    try {
+      await createThreadIfMissing(studentId, studentName, studentAvatar);
+    } catch (e) {
+      console.error("Could not create thread upfront (might be rules), continuing anyway:", e);
+    }
     setActiveThreadId(studentId);
     setSearch("");
   };
