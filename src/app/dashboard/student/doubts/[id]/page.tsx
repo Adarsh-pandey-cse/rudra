@@ -214,8 +214,11 @@ export default function StudentDoubtChatPage() {
     if (ratingValue === 0) return;
     markResolved(doubtId);
     rateResponse(doubtId, ratingValue, feedbackText.trim());
-    if (currentUser) {
-      adjustPoints(currentUser.id, ratingValue, `Rated a doubt (${ratingValue / 2} stars)`);
+    
+    // Find the teacher who answered to give them points
+    const teacherReply = chatMessages.find(msg => msg.authorRole === "teacher");
+    if (teacherReply && teacherReply.authorId) {
+      adjustPoints(teacherReply.authorId, ratingValue, `Doubt rating received`);
     }
   };
 
