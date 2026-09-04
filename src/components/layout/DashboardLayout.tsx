@@ -120,8 +120,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
           const snapshot = await getDocs(collection(db, "users"));
           for (const userDoc of snapshot.docs) {
             const data = userDoc.data();
-            if (data.name?.includes("Aastha") && data.points > 22) {
-              await updateDoc(userDoc.ref, { points: 22 });
+            if (data.name?.includes("Aastha") && data.points !== 20) {
+              await updateDoc(userDoc.ref, { points: 20 });
             }
           }
         });
