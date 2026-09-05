@@ -61,11 +61,9 @@ export const LeaderboardPodium = ({ leaderboard }: { leaderboard: any[] }) => {
             </div>
             
             <div className={`w-28 md:w-40 ${group.height} rounded-t-2xl bg-gradient-to-b ${group.color} border-t-2 border-x border-white/0 backdrop-blur-sm flex flex-col items-center pt-4 shadow-[0_0_30px_rgba(0,0,0,0.3)] px-1`}>
-              {group.students.slice(0, 2).map(s => (
-                 <p key={s.studentId} className="text-white font-bold text-center text-[11px] md:text-sm truncate w-full leading-tight mb-0.5">{s.name}</p>
-              ))}
-              {group.students.length > 2 && (
-                 <p className="text-white/70 text-[10px] md:text-xs">+{group.students.length - 2} more</p>
+              <p className="text-white font-bold text-center text-[11px] md:text-sm truncate w-full leading-tight mb-0.5">{group.students[0].name}</p>
+              {group.students.length > 1 && (
+                 <p className="text-white/70 font-semibold text-[10px] md:text-xs bg-black/20 rounded-full px-2 py-0.5 mt-1">+{group.students.length - 1} more</p>
               )}
               <p className="text-[#EAB308] font-bold text-sm md:text-lg mt-auto">{group.students[0].points}</p>
               <p className="text-[10px] text-[#7B8798] uppercase tracking-wider mb-2">Points</p>
