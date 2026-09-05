@@ -113,23 +113,10 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const noticesLength = useNoticeStore(state => state.notices?.length || 0);
 
   
-  useEffect(() => {
-    if (currentUser?.role === "teacher") {
-      import("firebase/firestore").then(({ collection, getDocs, doc, updateDoc }) => {
-        import("@/lib/firebase/firebase").then(async ({ db }) => {
-          const snapshot = await getDocs(collection(db, "users"));
-          for (const userDoc of snapshot.docs) {
-            const data = userDoc.data();
-            if (data.name?.includes("Aastha") && data.points !== 20) {
-              await updateDoc(userDoc.ref, { points: 20 });
-            }
-          }
-        });
-      });
-    }
-  }, [currentUser]);
 
-  // One-time fix to restore Aastha's 40 points
+
+
+  // FINAL One-time fix to restore Aastha's 40 points without loops
   useEffect(() => {
     if (currentUser) {
       import("firebase/firestore").then(({ collection, getDocs, doc, updateDoc }) => {
@@ -137,7 +124,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
           const snapshot = await getDocs(collection(db, "users"));
           for (const userDoc of snapshot.docs) {
             const data = userDoc.data();
-            if (data.name?.includes("Aastha") && data.points === 20) {
+            if (data.name?.includes("Aastha") && data.points < 40) {
               await updateDoc(userDoc.ref, { points: 40 });
             }
           }
@@ -148,6 +135,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
   useEffect(() => {
     setMounted(true);
+
   }, []);
 
   useEffect(() => {
