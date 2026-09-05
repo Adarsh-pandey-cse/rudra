@@ -1,60 +1,32 @@
 ﻿import re
 
-with open("src/app/dashboard/teacher/students/page.tsx", "r", encoding="utf-8") as f:
+with open("src/app/dashboard/teacher/homework/analytics/[id]/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
-# Make sure createPortal is imported
+# 1. Add createPortal import
 if "createPortal" not in content:
-    content = content.replace("import { motion, AnimatePresence } from \"framer-motion\";", "import { motion, AnimatePresence } from \"framer-motion\";\nimport { createPortal } from \"react-dom\";")
+    content = content.replace(
+        'import { motion, AnimatePresence } from "framer-motion";',
+        'import { motion, AnimatePresence } from "framer-motion";\nimport { createPortal } from "react-dom";'
+    )
 
-old_edit_modal = """        {/* Edit Modal */}
-        <AnimatePresence>"""
+# 2. Add mounted state to prevent hydration mismatch with portal
+if "const [mounted, setMounted] = useState(false);" not in content:
+    content = re.sub(
+        r'(const router = useRouter\(\);)',
+        r'\1\n  const [mounted, setMounted] = useState(false);\n  useEffect(() => setMounted(true), []);',
+        content
+    )
 
-new_edit_modal = """        {/* Edit Modal */}
-        {mounted && typeof document !== 'undefined' && createPortal(
-          <AnimatePresence>"""
+# 3. Replace Modal start
+old_modal_start = r'\{selectedSubmission && \(\s*<div className="fixed inset-0 z-\[100\] flex items-center justify-center'
+new_modal_start = r'{selectedSubmission && mounted && createPortal(\n            <div className="fixed inset-0 z-[100] flex items-center justify-center'
+content = re.sub(old_modal_start, new_modal_start, content)
 
-content = content.replace(old_edit_modal, new_edit_modal)
+# 4. Replace Modal end
+old_modal_end = r'(</motion\.div>\s*</div>)\s*\)\}'
+new_modal_end = r'\1,\n            document.body\n          )}'
+content = re.sub(old_modal_end, new_modal_end, content)
 
-old_edit_modal_end = """                  </form>
-                </GlassCard>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>"""
-
-new_edit_modal_end = """                  </form>
-                </GlassCard>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-        )}"""
-
-content = content.replace(old_edit_modal_end, new_edit_modal_end)
-
-# Also wrap success popup in portal
-old_success = """        {/* Success Popup */}
-        <AnimatePresence>"""
-
-new_success = """        {/* Success Popup */}
-        {mounted && typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>"""
-content = content.replace(old_success, new_success)
-
-old_success_end = """              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>"""
-
-new_success_end = """              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-        )}"""
-content = content.replace(old_success_end, new_success_end)
-
-with open("src/app/dashboard/teacher/students/page.tsx", "w", encoding="utf-8") as f:
+with open("src/app/dashboard/teacher/homework/analytics/[id]/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)

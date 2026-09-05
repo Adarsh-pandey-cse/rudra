@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft, Clock, CheckCircle, BrainCircuit, Users,
   BarChart3, AlertTriangle, BookOpen, Star, FileText,
@@ -490,8 +491,8 @@ export default function HomeworkAnalyticsPage() {
 
       {/* Submission Detail Modal */}
       <AnimatePresence>
-        {selectedSubmission && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
+        {selectedSubmission && mounted && createPortal(
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -692,8 +693,9 @@ export default function HomeworkAnalyticsPage() {
                 </div>
               </div>
             </motion.div>
-          </div>
-        )}
+          </div>,
+            document.body
+          )}
       </AnimatePresence>
 
     </DashboardLayout>
