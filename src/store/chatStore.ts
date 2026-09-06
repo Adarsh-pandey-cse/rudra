@@ -186,11 +186,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setOnlineStatus: async (threadId, role, name, isOnline) => {
     const threadRef = doc(db, "chats", threadId);
     try {
+      const updates: any = {};
+      const timestamp = new Date().toISOString();
       if (role === "student") {
-        await updateDoc(threadRef, { "onlineStatus.student": isOnline });
+        updates["onlineStatus.student"] = isOnline;
+        if (!isOnline) updates["lastSeen.student"] = timestamp;
       } else {
-        await updateDoc(threadRef, { "onlineStatus.teacher": isOnline ? name : null });
+        updates["onlineStatus.teacher"] = isOnline ? name : null;
+        if (!isOnline) updates["lastSeen.teacher"] = timestamp;
       }
+      await updateDoc(threadRef, updates);
     } catch(e) {}
   },
 

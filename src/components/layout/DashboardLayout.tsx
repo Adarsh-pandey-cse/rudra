@@ -318,6 +318,43 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       };
     }
   }, [currentUser?.id, currentUser?.role]);
+  // Global Presence Tracker for Students
+  useEffect(() => {
+    if (currentUser?.id && currentUser?.role === "student" && typeof window !== "undefined") {
+      const { setOnlineStatus } = useChatStore.getState();
+      
+      const updatePresence = (isOnline: boolean) => {
+        setOnlineStatus(currentUser.id, "student", currentUser.name, isOnline);
+      };
+
+      // Mark online when dashboard mounts
+      updatePresence(true);
+
+      // Handle tab visibility changes
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          updatePresence(true);
+        } else {
+          updatePresence(false);
+        }
+      };
+
+      // Handle window close/refresh
+      const handleBeforeUnload = () => {
+        updatePresence(false);
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      return () => {
+        updatePresence(false);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      };
+    }
+  }, [currentUser?.id, currentUser?.role, currentUser?.name]);
+
   // Sync FCM token logic
   useEffect(() => {
     const syncToken = async () => {

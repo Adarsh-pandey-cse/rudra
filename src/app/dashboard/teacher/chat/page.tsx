@@ -10,6 +10,22 @@ import { Send, Image as ImageIcon, Check, CheckCheck, Loader2, X, Search, User, 
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
+
+const formatLastSeen = (timestamp?: string) => {
+  if (!timestamp) return "Offline";
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  if (isToday) {
+    return `Last seen today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  const isYesterday = new Date(now.setDate(now.getDate() - 1)).getDate() === date.getDate() && now.getMonth() === date.getMonth();
+  if (isYesterday) {
+    return `Last seen yesterday at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  return `Last seen ${date.toLocaleDateString([], { day: '2-digit', month: 'short' })} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+};
+
 export default function TeacherChatPage() {
   const { currentUser, users, getAllUsers } = useAuthStore();
   const { 

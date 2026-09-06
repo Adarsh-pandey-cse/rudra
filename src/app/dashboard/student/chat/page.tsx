@@ -43,13 +43,13 @@ export default function StudentChatPage() {
     const unsubThread = initializeStudentThreadListener(currentUser.id, currentUser.name);
     const unsubMessages = initializeMessagesListener(currentUser.id, "student");
     setActiveThreadId(currentUser.id);
-    setOnlineStatus(currentUser.id, "student", currentUser.name, true);
+    
 
     return () => {
       unsubThread();
       unsubMessages();
       setActiveThreadId(null);
-      setOnlineStatus(currentUser.id, "student", currentUser.name, false);
+      
     };
   }, [currentUser]);
 

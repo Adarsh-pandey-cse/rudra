@@ -28,6 +28,10 @@ export interface ChatThread {
     student?: boolean;
     teacher?: string; // Teacher name if online
   };
+  lastSeen?: {
+    student?: string; // ISO string
+    teacher?: string; // ISO string
+  };
   clearedAtStudent?: number; // Timestamp of when student cleared the chat for themselves
   clearedAtTeacher?: number; // Timestamp of when teacher cleared the chat for themselves
 }
