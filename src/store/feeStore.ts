@@ -687,6 +687,7 @@ export const useFeeStore = create<FeeState>()((set, get) => ({
       };
       localStorage.setItem(`manual_fee_reminder_${invoice.studentId}`, JSON.stringify(notificationPayload));
     }
+      return newPaymentId;
   },
 
   undoPayment: async (invoiceId) => {
