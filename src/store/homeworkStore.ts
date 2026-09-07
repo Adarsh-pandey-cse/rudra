@@ -376,7 +376,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
             assignmentId,
             studentId,
             teacherId: assignment?.teacherId || "",
-            maxMarks: assignment?.maxMarks || 0,
+            maxMarks: assignment?.maxMarks || 20,
             evaluatedBy: "",
             reviewHistory: [],
             auditLog: [createAuditEntry("DRAFT_CREATED", studentId, "not_started", "draft")],
@@ -471,7 +471,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
               assignmentId,
               studentId,
               teacherId: assignment?.teacherId || "",
-              maxMarks: assignment?.maxMarks || 0,
+              maxMarks: assignment?.maxMarks || 20,
               evaluatedBy: "",
               reviewHistory: [],
               auditLog: newAuditLog,
@@ -711,7 +711,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
         const currentTeacherId = useAuthStore.getState().currentUser?.id || "unknown";
 
         if (status === "accepted") {
-          const gVal = validateGrade(grade || 0, sub.maxMarks || (assignment?.maxMarks || 0));
+          const gVal = validateGrade(grade || 0, sub.maxMarks || (assignment?.maxMarks || 20));
           if (!gVal.valid) throw new Error(gVal.error);
         }
         
@@ -723,7 +723,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
            version: sub.currentVersion || 1,
            status,
            marks: grade,
-           maxMarks: sub.maxMarks || (assignment?.maxMarks || 0),
+           maxMarks: sub.maxMarks || (assignment?.maxMarks || 20),
            feedback,
            reviewedBy: currentTeacherId,
            reviewedAt: now
@@ -759,7 +759,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                  studentId: sub.studentId,
                  teacherId: currentTeacherId,
                  grade: grade || 0,
-                 maxMarks: sub.maxMarks || (assignment?.maxMarks || 0),
+                 maxMarks: sub.maxMarks || (assignment?.maxMarks || 20),
                  feedback,
                  title,
                  isLate: !!sub.isLate
