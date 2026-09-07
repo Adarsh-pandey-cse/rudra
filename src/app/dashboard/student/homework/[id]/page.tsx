@@ -47,6 +47,9 @@ export default function StudentHomeworkDetailsPage() {
   const [viewingAttachment, setViewingAttachment] = useState<Attachment | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   
+  // Pending files to upload at the end
+  const [pendingFiles, setPendingFiles] = useState<{ id: string, file: File, previewUrl: string, name: string }[]>([]);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -150,42 +153,32 @@ export default function StudentHomeworkDetailsPage() {
   };
 
   // -- Subjective Handlers --
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
-    try {
-      const filesArray = Array.from(files);
-      const uploadedFiles = await uploadService.uploadFiles(
-        filesArray,
-        "homework",
-        "homework",
-        homework.id
-      );
+    const newPending = Array.from(files).map((file, i) => ({
+      id: `pending_${Date.now()}_${i}`,
+      file,
+      name: file.name,
+      previewUrl: URL.createObjectURL(file)
+    }));
 
-      const newAttachments: Attachment[] = uploadedFiles.map((f, i) => ({
-        id: `att_${Date.now()}_${i}`,
-        name: f.name,
-        url: f.url,
-        type: 'image',
-        size: f.size || 0,
-        uploadedAt: new Date().toISOString()
-      }));
-
-      const updatedAttachments = [...studentAttachments, ...newAttachments];
-      setStudentAttachments(updatedAttachments);
-      
-      // Auto-save draft
-      if (!isCompleted) {
-        await saveSubmissionDraft(homework.id, currentUser.id, textResponse, updatedAttachments);
+    setPendingFiles(prev => [...prev, ...newPending]);
+    
+    // Clear inputs so same file can be selected again if needed
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  };
+  
+  const removePendingFile = (id: string) => {
+    setPendingFiles(prev => {
+      const fileToRemove = prev.find(p => p.id === id);
+      if (fileToRemove) {
+        URL.revokeObjectURL(fileToRemove.previewUrl);
       }
-    } catch (err: any) {
-      console.error("Upload failed:", err);
-      alert("Failed to upload files: " + (err.message || err.toString()));
-    } finally {
-      setIsUploading(false);
-    }
+      return prev.filter(p => p.id !== id);
+    });
   };
 
   const removeStudentAttachment = async (id: string) => {
@@ -205,13 +198,38 @@ export default function StudentHomeworkDetailsPage() {
   };
 
   const handleSubmitSubjective = async () => {
-    if (studentAttachments.length === 0 && !textResponse.trim()) {
+    if (studentAttachments.length === 0 && pendingFiles.length === 0 && !textResponse.trim()) {
       if (!confirm("You haven't attached any files or written a response. Submit anyway?")) return;
     }
     setIsSubmitting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload
-      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, studentAttachments);
+      let finalAttachments = [...studentAttachments];
+      
+      // Upload any pending files first
+      if (pendingFiles.length > 0) {
+        const filesArray = pendingFiles.map(p => p.file);
+        const uploadedFiles = await uploadService.uploadFiles(
+          filesArray,
+          "homework",
+          "homework",
+          homework.id
+        );
+        
+        const newAttachments: Attachment[] = uploadedFiles.map((f, i) => ({
+          id: `att_${Date.now()}_${i}`,
+          name: f.name,
+          url: f.url,
+          type: 'image',
+          size: f.size || 0,
+          uploadedAt: new Date().toISOString()
+        }));
+        
+        finalAttachments = [...finalAttachments, ...newAttachments];
+        setStudentAttachments(finalAttachments);
+        setPendingFiles([]); // Clear pending
+      }
+      
+      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, finalAttachments);
       await submitHomework(homework.id, currentUser.id);
       triggerSuccess();
     } catch (err: any) {
@@ -533,8 +551,9 @@ export default function StudentHomeworkDetailsPage() {
                 />
               </div>
 
-              {studentAttachments.length > 0 && (
+              {(studentAttachments.length > 0 || pendingFiles.length > 0) && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+                    {/* Render saved attachments */}
                     {studentAttachments.map((att) => (
                       <div key={att.id} className="relative group">
                         <button
@@ -554,6 +573,26 @@ export default function StudentHomeworkDetailsPage() {
                           <button
                             onClick={(e) => { e.stopPropagation(); removeStudentAttachment(att.id); }}
                             className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#EF4444] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Render pending local files */}
+                    {pendingFiles.map((pending) => (
+                      <div key={pending.id} className="relative group">
+                        <div className="w-full aspect-square rounded-xl bg-[#131D2E] border-2 border-dashed border-[#5B5CFF]/40 flex items-center justify-center overflow-hidden relative">
+                          <div className="absolute inset-0 bg-cover bg-center opacity-70" style={{ backgroundImage: `url(${pending.previewUrl})` }} />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-wider bg-black/50 px-2 py-1 rounded">Pending</span>
+                          </div>
+                        </div>
+                        {!isCompleted && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removePendingFile(pending.id); }}
+                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#EF4444] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>

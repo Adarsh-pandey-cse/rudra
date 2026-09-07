@@ -302,18 +302,18 @@ export default function TeacherChatPage() {
                   </div>
                   <div>
                     <h2 className="text-white font-semibold leading-tight">{displayList.find(s => s.id === activeThreadId)?.name || "Student"}</h2>
-                    <div className="text-xs text-[#7B8798] flex items-center gap-1.5 h-4">
-                      {activeThread?.typingIndicator?.student ? (
-                        <span className="text-[#5B5CFF] font-medium animate-pulse">typing...</span>
-                      ) : activeThread?.onlineStatus?.student ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
-                          <span className="text-[#B6C2D9]">Online</span>
-                        </div>
-                      ) : (
-                        <span>Offline</span>
-                      )}
-                    </div>
+                      <div className="text-xs text-[#7B8798] flex items-center gap-1.5 h-4">
+                        {activeThread?.typingIndicator?.student ? (
+                          <span className="text-[#5B5CFF] font-medium animate-pulse">typing...</span>
+                        ) : activeThread?.onlineStatus?.student ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                            <span className="text-[#B6C2D9]">Online</span>
+                          </div>
+                        ) : (
+                          <span>{formatLastSeen(activeThread?.lastSeen?.student, activeThread?.lastMessageTime)}</span>
+                        )}
+                      </div>
                   </div>
                 </div>
                 
