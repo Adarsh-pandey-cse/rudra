@@ -3,7 +3,7 @@ export type HomeworkEvent =
   | { type: 'HOMEWORK_VIEWED'; payload: { assignmentId: string; studentId: string; } }
   | { type: 'HOMEWORK_STARTED'; payload: { assignmentId: string; studentId: string; } }
   | { type: 'HOMEWORK_SUBMITTED'; payload: { assignmentId: string; studentId: string; submissionId: string; version: number; isLate?: boolean; } }
-  | { type: 'HOMEWORK_GRADED'; payload: { submissionId: string; assignmentId: string; studentId: string; teacherId: string; grade: number; maxMarks: number; feedback: string; title: string; isLate?: boolean; } }
+  | { type: 'HOMEWORK_GRADED'; payload: { submissionId: string; assignmentId: string; studentId: string; teacherId: string; grade: number; previousGrade?: number | null; maxMarks: number; feedback: string; title: string; isLate?: boolean; } }
   | { type: 'HOMEWORK_REJECTED'; payload: { submissionId: string; assignmentId: string; studentId: string; teacherId: string; reason: string; title: string; } }
   | { type: 'HOMEWORK_RESUBMISSION_REQUESTED'; payload: { submissionId: string; assignmentId: string; studentId: string; teacherId: string; remarks: string; title: string; } }
   | { type: 'HOMEWORK_DEADLINE_EXTENDED'; payload: { assignmentId: string; newDate: string; title: string; studentIds: string[]; } }

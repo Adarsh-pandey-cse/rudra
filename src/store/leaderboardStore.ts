@@ -274,7 +274,13 @@ export const useLeaderboardStore = create<LeaderboardState>()((set, get) => ({
         const unsub1 = eventBus.on("HOMEWORK_GRADED", (event) => {
           const payload = event.payload as any;
           if (payload && payload.studentId && payload.grade !== undefined) {
-            get().addPoints(payload.studentId, payload.grade, "Homework graded");
+            let pointsToAdd = payload.grade;
+            if (payload.previousGrade !== undefined && payload.previousGrade !== null) {
+              pointsToAdd = payload.grade - payload.previousGrade;
+            }
+            if (pointsToAdd !== 0) {
+              get().addPoints(payload.studentId, pointsToAdd, "Homework graded");
+            }
           }
         });
         

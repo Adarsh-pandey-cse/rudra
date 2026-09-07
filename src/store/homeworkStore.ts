@@ -591,7 +591,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
           setTimeout(() => {
             eventBus.emit({
               type: 'HOMEWORK_GRADED',
-              payload: {
+                 payload: {
                 submissionId: existing.id,
                 assignmentId,
                 studentId,
@@ -601,7 +601,8 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                 feedback: "Auto-evaluated MCQ",
                 title: assignment.title,
                 isLate: !!existing.isLate
-              }
+              ,
+                  previousGrade: existing.teacherGrade !== undefined && existing.teacherGrade !== null ? existing.teacherGrade : (existing.status === 'ai_evaluated' && existing.aiEvaluation ? existing.aiEvaluation.suggestedMarks : null)}
             });
             eventBus.emit({
               type: 'HOMEWORK_SUBMITTED',
@@ -642,7 +643,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
           setTimeout(() => {
             eventBus.emit({
               type: 'HOMEWORK_GRADED',
-              payload: {
+                 payload: {
                 submissionId: subId,
                 assignmentId,
                 studentId,
@@ -652,7 +653,8 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                 feedback: "Auto-evaluated MCQ",
                 title: assignment.title,
                 isLate: !!newSub.isLate
-              }
+              ,
+                  previousGrade: null}
             });
             eventBus.emit({
               type: 'HOMEWORK_SUBMITTED',
@@ -751,7 +753,7 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
           setTimeout(() => {
             eventBus.emit({
                type: 'HOMEWORK_GRADED',
-               payload: {
+                 payload: {
                  submissionId,
                  assignmentId: sub.assignmentId,
                  studentId: sub.studentId,
@@ -761,7 +763,8 @@ export const useHomeworkStore = create<HomeworkState>((set, get) => ({
                  feedback,
                  title,
                  isLate: !!sub.isLate
-               }
+               ,
+                   previousGrade: sub.teacherGrade !== undefined && sub.teacherGrade !== null ? sub.teacherGrade : (sub.status === 'ai_evaluated' && sub.aiEvaluation ? sub.aiEvaluation.suggestedMarks : null)}
             });
           }, 0);
         } else if (status === "rejected") {
