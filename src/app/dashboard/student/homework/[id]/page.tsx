@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -48,7 +48,7 @@ export default function StudentHomeworkDetailsPage() {
   const [isUploading, setIsUploading] = useState(false);
   
   // Pending files to upload at the end
-  const [pendingFiles, setPendingFiles] = useState<{ id: string, file: File, previewUrl: string, name: string }[]>([]);
+  
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -153,33 +153,69 @@ export default function StudentHomeworkDetailsPage() {
   };
 
   // -- Subjective Handlers --
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newPending = Array.from(files).map((file, i) => ({
-      id: `pending_${Date.now()}_${i}`,
-      file,
-      name: file.name,
-      previewUrl: URL.createObjectURL(file)
-    }));
-
-    setPendingFiles(prev => [...prev, ...newPending]);
+    // Do NOT block UI. Let user take more photos immediately.
+    // We will show a toast or just append them as they finish.
     
-    // Clear inputs so same file can be selected again if needed
+    // Create temporary placeholders so they show up instantly in the grid
+    const tempIds = Array.from(files).map((f, i) => `temp_${Date.now()}_${i}`);
+    const placeholders: Attachment[] = Array.from(files).map((file, i) => ({
+      id: tempIds[i],
+      name: file.name || "Uploading...",
+      url: URL.createObjectURL(file), // Local preview
+      type: 'image',
+      size: file.size || 0,
+      uploadedAt: new Date().toISOString()
+    }));
+    
+    setStudentAttachments(prev => [...prev, ...placeholders]);
+    
+    // Clear inputs so they can take another photo immediately
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
+
+    try {
+      const filesArray = Array.from(files);
+      const uploadedFiles = await uploadService.uploadFiles(
+        filesArray,
+        "homework",
+        "homework",
+        homework.id
+      );
+
+      const newAttachments: Attachment[] = uploadedFiles.map((f, i) => ({
+        id: `att_${Date.now()}_${i}`,
+        name: f.name,
+        url: f.url,
+        type: 'image',
+        size: f.size || 0,
+        uploadedAt: new Date().toISOString()
+      }));
+
+      // Replace placeholders with real attachments
+      setStudentAttachments(prev => {
+        const filtered = prev.filter(p => !tempIds.includes(p.id));
+        const updated = [...filtered, ...newAttachments];
+        
+        // Auto-save draft
+        if (!isCompleted) {
+          saveSubmissionDraft(homework.id, currentUser.id, textResponse, updated).catch(console.error);
+        }
+        return updated;
+      });
+      
+    } catch (err: any) {
+      console.error("Upload failed:", err);
+      // Remove placeholders on failure
+      setStudentAttachments(prev => prev.filter(p => !tempIds.includes(p.id)));
+      alert("Failed to upload files: " + (err.message || err.toString()));
+    }
   };
   
-  const removePendingFile = (id: string) => {
-    setPendingFiles(prev => {
-      const fileToRemove = prev.find(p => p.id === id);
-      if (fileToRemove) {
-        URL.revokeObjectURL(fileToRemove.previewUrl);
-      }
-      return prev.filter(p => p.id !== id);
-    });
-  };
+  const removePendingFile = (id: string) => {};
 
   const removeStudentAttachment = async (id: string) => {
     const updatedAttachments = studentAttachments.filter(a => a.id !== id);
@@ -198,38 +234,18 @@ export default function StudentHomeworkDetailsPage() {
   };
 
   const handleSubmitSubjective = async () => {
-    if (studentAttachments.length === 0 && pendingFiles.length === 0 && !textResponse.trim()) {
+    // Check if there are any uploading placeholders
+    if (studentAttachments.some(a => a.id.startsWith('temp_'))) {
+      alert("Please wait for all images to finish uploading before submitting.");
+      return;
+    }
+
+    if (studentAttachments.length === 0 && !textResponse.trim()) {
       if (!confirm("You haven't attached any files or written a response. Submit anyway?")) return;
     }
     setIsSubmitting(true);
     try {
-      let finalAttachments = [...studentAttachments];
-      
-      // Upload any pending files first
-      if (pendingFiles.length > 0) {
-        const filesArray = pendingFiles.map(p => p.file);
-        const uploadedFiles = await uploadService.uploadFiles(
-          filesArray,
-          "homework",
-          "homework",
-          homework.id
-        );
-        
-        const newAttachments: Attachment[] = uploadedFiles.map((f, i) => ({
-          id: `att_${Date.now()}_${i}`,
-          name: f.name,
-          url: f.url,
-          type: 'image',
-          size: f.size || 0,
-          uploadedAt: new Date().toISOString()
-        }));
-        
-        finalAttachments = [...finalAttachments, ...newAttachments];
-        setStudentAttachments(finalAttachments);
-        setPendingFiles([]); // Clear pending
-      }
-      
-      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, finalAttachments);
+      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, studentAttachments);
       await submitHomework(homework.id, currentUser.id);
       triggerSuccess();
     } catch (err: any) {
@@ -551,7 +567,7 @@ export default function StudentHomeworkDetailsPage() {
                 />
               </div>
 
-              {(studentAttachments.length > 0 || pendingFiles.length > 0) && (
+              {studentAttachments.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
                     {/* Render saved attachments */}
                     {studentAttachments.map((att) => (
@@ -578,105 +594,11 @@ export default function StudentHomeworkDetailsPage() {
                           </button>
                         )}
                       </div>
-                    ))}
-                    
-                    {/* Render pending local files */}
-                    {pendingFiles.map((pending) => (
-                      <div key={pending.id} className="relative group">
-                        <div className="w-full aspect-square rounded-xl bg-[#131D2E] border-2 border-dashed border-[#5B5CFF]/40 flex items-center justify-center overflow-hidden relative">
-                          <div className="absolute inset-0 bg-cover bg-center opacity-70" style={{ backgroundImage: `url(${pending.previewUrl})` }} />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-                            <span className="text-[10px] font-bold text-white uppercase tracking-wider bg-black/50 px-2 py-1 rounded">Pending</span>
-                          </div>
-                        </div>
-                        {!isCompleted && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); removePendingFile(pending.id); }}
-                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#EF4444] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {!isCompleted ? (
-                <div className="flex flex-col gap-5 mt-4 items-center">
-                  <div
-                    onDragOver={e => { if (isPastDue) return; e.preventDefault(); !isUploading && setIsDragging(true); }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={(e) => { if (isPastDue) return; e.preventDefault(); setIsDragging(false); const target = e.dataTransfer; if (!isUploading && target.files && target.files.length > 0) handleFileChange({ target } as any); }}
-                    onClick={() => !isPastDue && !isUploading && fileInputRef.current?.click()}
-                    className={`w-full max-w-2xl mx-auto border-2 border-dashed rounded-[14px] p-8 flex flex-col items-center justify-center text-center transition-colors ${isPastDue ? "cursor-not-allowed border-red-500/20 bg-red-500/5 opacity-70" : isUploading ? "cursor-not-allowed border-white/[0.1] bg-white/[0.02]" : isDragging ? "cursor-pointer border-[#4F9DFF] bg-[#4F9DFF]/10" : "cursor-pointer border-white/[0.12] hover:bg-white/[0.04]"}`}
-                  >
-                    {isPastDue ? (
-                      <>
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 shadow-lg rounded-full mb-4">
-                          <UploadCloud className="w-6 h-6 text-red-400" />
-                        </div>
-                        <p className="text-[15px] text-red-400 font-bold mb-1.5">Deadline Passed</p>
-                        <p className="text-xs text-red-400/70">Submissions are closed. Ask your teacher to extend the deadline.</p>
-                      </>
-                    ) : isUploading ? (<UploadProgressRing />) : (
-                      <>
-                        <div className="p-4 bg-white/[0.03] border border-white/[0.05] shadow-lg rounded-full mb-4">
-                          <UploadCloud className={`w-6 h-6 ${isDragging ? "text-[#4F9DFF]" : "text-[#7B8798]"}`} />
-                        </div>
-                        <p className="text-[15px] text-white font-medium mb-1.5">Tap to Upload or Take a Photo</p>
-                        <p className="text-xs text-[#7B8798]">Supports JPG, PNG, HEIC</p>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-2xl mx-auto">
-                    <GlassButton 
-                      onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
-                      disabled={isUploading || isPastDue}
-                      className="w-full sm:w-1/2 py-3.5 border-[#8B5CF6]/30 hover:bg-[#8B5CF6]/10 text-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed justify-center"
-                    >
-                      <Camera className="w-4 h-4 mr-2" /> Take Photo
-                    </GlassButton>
-                  
-                    <GradientButton 
-                      onClick={handleSubmitSubjective} 
-                      disabled={isSubmitting || isUploading || isPastDue} 
-                      className="w-full sm:w-1/2 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed justify-center"
-                    >
-                      {isSubmitting ? (
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mx-auto" />
-                      ) : (
-                        <span className="flex items-center justify-center font-medium">Submit Work <Send className="w-4 h-4 ml-2" /></span>
-                      )}
-                    </GradientButton>
-                  </div>
-                </div>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    <div className="p-4 bg-[#22C55E]/10 border border-[#22C55E]/30 rounded-xl text-center text-[#22C55E] flex flex-col items-center justify-center gap-2">
-                      <CheckCircle className="w-8 h-8 mb-1" />
-                      <span className="font-medium">Successfully Submitted</span>
-                      {submission?.teacherGrade !== null && submission?.teacherGrade !== undefined && (
-                        <span className="text-sm text-white bg-[#22C55E]/20 px-3 py-1 rounded-full mt-2">
-                          Grade: {submission.teacherGrade} / {homework.maxMarks}
-                        </span>
-                      )}
+                      ))}
                     </div>
-                    {submission?.teacherFeedback && (
-                      <div className="p-4 bg-white/[0.02] border border-white/[0.08] rounded-xl text-left">
-                        <h4 className="text-sm font-semibold text-[#B6C2D9] mb-2 uppercase tracking-wider flex items-center gap-2">
-                          <MessageCircleQuestion className="w-4 h-4 text-[#4F9DFF]" /> Teacher Feedback
-                        </h4>
-                        <p className="text-sm text-white leading-relaxed">
-                          {submission.teacherFeedback}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Hidden inputs for Subjective uploads */}
+                  )}
+                      
+                  {/* Hidden inputs for Subjective uploads */}
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*" className="hidden" />
                 <input type="file" ref={cameraInputRef} onChange={handleFileChange} accept="image/*" capture="environment" className="hidden" />
               </GlassCard>
