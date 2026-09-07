@@ -43,6 +43,7 @@ export default function HomeworkAnalyticsPage() {
   const [selectedSubmission, setSelectedSubmission] = useState<{sub: Submission, student: any} | null>(null);
   const [teacherGrade, setTeacherGrade] = useState<string | number>("");
   const [teacherFeedback, setTeacherFeedback] = useState<string>("");
+  const [isSubmittingGrade, setIsSubmittingGrade] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<"all" | "needs_review">("all");
 
   useEffect(() => {
@@ -136,8 +137,8 @@ export default function HomeworkAnalyticsPage() {
     if (!selectedSubmission) return;
     
     // Prevent double submissions
-    if ((selectedSubmission.sub as any).isSaving) return;
-    (selectedSubmission.sub as any).isSaving = true;
+    if (isSubmittingGrade) return;
+    setIsSubmittingGrade(true);
 
     const gradeVal = teacherGrade === "" ? null : Number(teacherGrade);
     
@@ -148,9 +149,10 @@ export default function HomeworkAnalyticsPage() {
       // Close the modal directly to force live reliance on store and give a perfect workflow
       setSelectedSubmission(null);
     } catch (error: any) {
+      console.error("Teacher Review Error:", error);
       alert(error.message || "Failed to submit review.");
     } finally {
-      delete (selectedSubmission.sub as any).isSaving;
+      setIsSubmittingGrade(false);
     }
   };
 
@@ -666,7 +668,8 @@ export default function HomeworkAnalyticsPage() {
                     <div className="flex flex-col gap-2">
                        <GradientButton 
                         type="button"
-                        onClick={() => handleSaveGrade("accepted")} 
+                        onClick={() => handleSaveGrade("accepted")}
+                          loading={isSubmittingGrade && selectedSubmission.sub.status !== "rejected" && selectedSubmission.sub.status !== "resubmission_requested"} 
                         className="w-full py-2.5 flex items-center justify-center gap-2"
                         disabled={Number(teacherGrade) > maxMarks || Number(teacherGrade) < 0}
                       >
@@ -677,6 +680,7 @@ export default function HomeworkAnalyticsPage() {
                         <button 
                           type="button"
                           onClick={() => handleSaveGrade("resubmission_requested")}
+                            disabled={isSubmittingGrade || teacherFeedback.trim().length < 5}
                           className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors border text-[#EAB308] bg-[#EAB308]/10 hover:bg-[#EAB308]/20 border-[#EAB308]/30 cursor-pointer"
                         >
                           {selectedSubmission.sub.status === "resubmission_requested" ? "Update Request" : "Request Resubmission"}
@@ -684,6 +688,7 @@ export default function HomeworkAnalyticsPage() {
                         <button 
                           type="button"
                           onClick={() => handleSaveGrade("rejected")}
+                            disabled={isSubmittingGrade || teacherFeedback.trim().length < 5}
                           className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors border text-[#EF4444] bg-[#EF4444]/10 hover:bg-[#EF4444]/20 border-[#EF4444]/30 cursor-pointer"
                         >
                           {selectedSubmission.sub.status === "rejected" ? "Update Rejection" : "Reject"}
