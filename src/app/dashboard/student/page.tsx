@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clock, Target, ChevronRight, BookOpen, 
   Trophy, Bot, MessageCircleQuestion, Megaphone, CheckCircle, Brain, CalendarDays,
-  Bell, FileText, Sparkles, Camera, X, UploadCloud, Flame, Crown
+  Bell, FileText, Sparkles, Camera, X, UploadCloud, Flame, Crown, MessageSquare
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -23,6 +23,7 @@ import { useNoticeStore } from '@/store/noticeStore';
 import { useDoubtStore } from '@/store/doubtStore';
 import { useLeaderboardStore } from '@/store/leaderboardStore';
 import { useTestStore } from '@/store/testStore';
+import { useChatStore } from '@/store/chatStore';
 import { getSubjectsForClass } from '@/data/curriculum-index';
 import { getMasteryColor, getMasteryLevel, Student } from '@/types';
 
@@ -54,6 +55,7 @@ export default function StudentDashboard() {
   const doubtsList = useDoubtStore(state => state.doubts);
   const leaderboardEntries = useLeaderboardStore(state => state.entries);
   const { initializeTestsListener, getMarksForStudent } = useTestStore();
+  const chatUnread = useChatStore(state => state.unreadTotal);
   
   const [isLoaded, setIsLoaded] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);

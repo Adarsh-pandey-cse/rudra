@@ -298,6 +298,14 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             const unsubDoubts = initializeDoubtsListener(currentUser.id, currentUser.role);
       const unsubTests = initializeTestsListener(currentUser.role, currentUser.id);
       
+      let unsubChat: (() => void) | undefined;
+      const { initializeTeacherThreadsListener, initializeStudentThreadListener } = useChatStore.getState();
+      if (currentUser.role === "teacher") {
+        unsubChat = initializeTeacherThreadsListener();
+      } else if (currentUser.role === "student") {
+        unsubChat = initializeStudentThreadListener(currentUser.id, currentUser.name);
+      }
+      
       let unsubReads: (() => void) | undefined;
       if (currentUser.role === "student") {
         unsubReads = initializeReadListener(currentUser.id);
@@ -446,6 +454,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             );
           }
           const showDot = hasNewEvents(item.href);
+          const isChat = item.href.includes("/chat");
+          const unreadCountForNav = isChat ? chatUnread : 0;
 
           return (
             <Link
