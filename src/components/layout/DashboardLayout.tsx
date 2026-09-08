@@ -33,6 +33,7 @@ import { useDoubtStore } from "@/store/doubtStore";
 import { useTestStore } from "@/store/testStore";
 import { cn, formatDate } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notificationStore";
+import { useUsageStore } from "@/store/usageStore";
 import { useChatStore } from "@/store/chatStore";
 import { useLeaderboardStore } from "@/store/leaderboardStore";
 import { useBadgeStore } from "@/store/badgeStore";
@@ -326,42 +327,22 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
       };
     }
   }, [currentUser?.id, currentUser?.role]);
-  // Global Presence Tracker for Students
+  // Usage Time Tracker
   useEffect(() => {
-    if (currentUser?.id && currentUser?.role === "student" && typeof window !== "undefined") {
-      const { setOnlineStatus } = useChatStore.getState();
-      
-      const updatePresence = (isOnline: boolean) => {
-        setOnlineStatus(currentUser.id, "student", currentUser.name, isOnline);
-      };
-
-      // Mark online when dashboard mounts
-      updatePresence(true);
-
-      // Handle tab visibility changes
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === "visible") {
-          updatePresence(true);
-        } else {
-          updatePresence(false);
-        }
-      };
-
-      // Handle window close/refresh
-      const handleBeforeUnload = () => {
-        updatePresence(false);
-      };
-
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-      window.addEventListener("beforeunload", handleBeforeUnload);
-
+    if (currentUser?.id && typeof window !== "undefined") {
+      let isMounted = true;
+      import("@/store/usageStore").then(({ useUsageStore }) => {
+        if (!isMounted) return;
+        useUsageStore.getState().startTracking(currentUser.id);
+      });
       return () => {
-        updatePresence(false);
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-        window.removeEventListener("beforeunload", handleBeforeUnload);
+        isMounted = false;
+        import("@/store/usageStore").then(({ useUsageStore }) => {
+          useUsageStore.getState().stopTracking();
+        });
       };
     }
-  }, [currentUser?.id, currentUser?.role, currentUser?.name]);
+  }, [currentUser?.id]);
 
   // Sync FCM token logic
   useEffect(() => {
