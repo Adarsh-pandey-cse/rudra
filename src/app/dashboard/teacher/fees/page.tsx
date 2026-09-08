@@ -220,7 +220,7 @@ export default function TeacherFeesPage() {
     try {
       let record = await receiptService.getReceiptByPaymentId(payment.id);
       if (!record) {
-        record = await receiptService.createReceiptRecord(payment.id, invoice.id, currentUser!.id, currentUser!.name);
+        record = await receiptService.createReceiptRecord(payment.id, invoice.id, student.id, currentUser!.id);
       }
       setActiveReceiptData({ payment, invoice, record, student });
     } catch (error) {
