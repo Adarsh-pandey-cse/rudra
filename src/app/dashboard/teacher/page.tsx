@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Users, 
+  MessageSquare,
+  Users,
   FileText, 
   TrendingUp,
   AlertCircle,
@@ -178,18 +179,12 @@ export default function TeacherDashboard() {
   ];
 
     const quickActions = [
-    { label: "Create
-Homework", icon: FileEdit, href: "/dashboard/teacher/homework/create", color: "text-[#5B5CFF]", bg: "bg-[#5B5CFF]/10", border: "border-[#5B5CFF]/20" },
-    { label: "Check
-Submissions", icon: ClipboardCheck, href: "/dashboard/teacher/homework", color: "text-[#F43F5E]", bg: "bg-[#F43F5E]/10", border: "border-[#F43F5E]/20" },
-    { label: "Student
-Chats", icon: MessageSquare, href: "/dashboard/teacher/chat", color: "text-[#10B981]", bg: "bg-[#10B981]/10", border: "border-[#10B981]/20", isChat: True },
-    { label: "Post
-Notice", icon: Megaphone, href: "/dashboard/teacher/notices/create", color: "text-[#2DD4BF]", bg: "bg-[#2DD4BF]/10", border: "border-[#2DD4BF]/20" },
-    { label: "Review
-Doubts", icon: BookCheck, href: "/dashboard/teacher/doubts", color: "text-[#4F9DFF]", bg: "bg-[#4F9DFF]/10", border: "border-[#4F9DFF]/20" },
-    { label: "Mark
-Attendance", icon: UserPlus, href: "/dashboard/teacher/students", color: "text-[#FB923C]", bg: "bg-[#FB923C]/10", border: "border-[#FB923C]/20" },
+    { label: "Create\nHomework", icon: FileEdit, href: "/dashboard/teacher/homework/create", color: "text-[#5B5CFF]", bg: "bg-[#5B5CFF]/10", border: "border-[#5B5CFF]/20" },
+    { label: "Check\nHomework", icon: ClipboardCheck, href: "/dashboard/teacher/homework", color: "text-[#F43F5E]", bg: "bg-[#F43F5E]/10", border: "border-[#F43F5E]/20" },
+    { label: "Student\nChats", icon: MessageSquare, href: "/dashboard/teacher/chat", color: "text-[#10B981]", bg: "bg-[#10B981]/10", border: "border-[#10B981]/20", isChat: true },
+    { label: "Post\nNotice", icon: Megaphone, href: "/dashboard/teacher/notices/create", color: "text-[#2DD4BF]", bg: "bg-[#2DD4BF]/10", border: "border-[#2DD4BF]/20" },
+    { label: "Review\nDoubts", icon: BookCheck, href: "/dashboard/teacher/doubts", color: "text-[#4F9DFF]", bg: "bg-[#4F9DFF]/10", border: "border-[#4F9DFF]/20" },
+    { label: "Mark\nAttendance", icon: UserPlus, href: "/dashboard/teacher/students", color: "text-[#FB923C]", bg: "bg-[#FB923C]/10", border: "border-[#FB923C]/20" },
   ];
 
   return (
