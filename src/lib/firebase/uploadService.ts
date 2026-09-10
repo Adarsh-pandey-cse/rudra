@@ -16,60 +16,74 @@ export const uploadFile = async (
   path: string,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-    if (!cloudName || !uploadPreset) {
-      return reject(new Error("Cloudinary configuration missing. Please create a free Cloudinary account and set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in your .env.local file."));
+  return new Promise(async (resolve, reject) => {
+    // We only support ImgBB right now because Firebase Storage is disabled for billing
+    // and Cloudinary is not configured. ImgBB only supports images.
+    if (!file.type.startsWith('image/')) {
+      return reject(new Error("Only image files are supported in this chat currently."));
     }
 
-    // Use 'auto' to support images, videos, and raw files (PDFs, DOCX)
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
-    
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
-    
-    // We omit explicit folder appending to avoid unsigned upload preset restrictions.
+    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY || "YOUR_IMGBB_API_KEY_HERE";
+    if (apiKey === "YOUR_IMGBB_API_KEY_HERE" || !apiKey) {
+      return reject(new Error("Missing ImgBB API Key! Get one instantly at https://api.imgbb.com/"));
+    }
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", url, true);
+    try {
+      if (onProgress) onProgress(30);
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        const progress = (e.loaded / e.total) * 100;
-        // Cap visual progress at 99% until fully resolved by server
-        onProgress(Math.min(progress, 99));
-      }
-    };
-
-    xhr.onload = () => {
-      try {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          if (onProgress) onProgress(100);
-          const response = JSON.parse(xhr.responseText);
-          resolve(response.secure_url);
-        } else {
-          let errorMessage = `Upload failed with status ${xhr.status}`;
-          try {
-            const response = JSON.parse(xhr.responseText);
-            if (response.error?.message) errorMessage = response.error.message;
-          } catch (e) {
-            // Ignore parse error on failure response
+      // Compress image just like in homework
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      
+      const fileToUpload = await new Promise<File>((resolveCompress) => {
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const canvas = document.createElement('canvas');
+          let { width, height } = img;
+          const MAX_SIZE = 1920; 
+          if (width > height && width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
           }
-          reject(new Error(errorMessage));
-        }
-      } catch (err: any) {
-        reject(new Error("Failed to process upload response: " + err.message));
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolveCompress(file); 
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (!blob) return resolveCompress(file); 
+            resolveCompress(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpeg", { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.8);
+        };
+        img.onerror = () => resolveCompress(file);
+        img.src = objectUrl;
+      });
+
+      const formData = new FormData();
+      formData.append("image", fileToUpload);
+
+      if (onProgress) onProgress(60);
+
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: "POST",
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errText = await response.text();
+        return reject(new Error(`ImgBB Upload failed (${response.status}): ${errText}`));
       }
-    };
-
-    xhr.onerror = () => {
-      reject(new Error("Network error occurred during upload. Please check your connection."));
-    };
-
-    xhr.send(formData);
+      
+      const data = await response.json();
+      if (onProgress) onProgress(100);
+      resolve(data.data.url);
+      
+    } catch (err: any) {
+      reject(new Error("Failed to process upload: " + err.message));
+    }
   });
 };
 

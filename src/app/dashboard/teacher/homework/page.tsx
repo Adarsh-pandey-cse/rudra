@@ -251,19 +251,31 @@ export default function HomeworkPage() {
             animate="show"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
           >
-            {filteredAssignments.map((assignment) => {
-              const subject = subjects.find(s => s.id === assignment.subjectId);
-              const isMenuOpen = openMenuId === assignment.id;
-              
-              return (
-                <motion.div 
-                  key={assignment.id} 
-                  variants={itemVariants} 
-                  layout 
-                  onClick={() => router.push(`/dashboard/teacher/homework/analytics/${assignment.id}`)} 
-                  className={`cursor-pointer group relative bg-[#0B1527] border border-white/[0.06] hover:border-[#5B5CFF]/40 rounded-2xl p-5 transition-all shadow-lg hover:shadow-xl flex flex-col h-full gap-4 ${isMenuOpen ? 'z-50' : 'z-10'}`}
-                >
-                  {/* Top Row: Icon, Title, Menu */}
+                          {filteredAssignments.map((assignment) => {
+                const subject = subjects.find(s => s.id === assignment.subjectId);
+                const isMenuOpen = openMenuId === assignment.id;
+                
+                const assignedCount = ((assignment as any).assignedTo || (assignment as any).recipientStudentIds || []).length;
+                const subs = getAssignmentSubmissions(assignment.id);
+                const subCount = subs.length;
+                const isAllSubmitted = assignedCount > 0 && subCount === assignedCount;
+                const gradedCount = subs.filter((s: any) => s.status === 'accepted' || s.status === 'rejected' || s.status === 'resubmission_requested' || (s.teacherGrade !== null && s.teacherGrade !== undefined)).length;
+                const isAllGraded = isAllSubmitted && gradedCount === assignedCount && assignedCount > 0;
+                
+                return (
+                  <motion.div 
+                    key={assignment.id} 
+                    variants={itemVariants} 
+                    layout 
+                    onClick={() => router.push(`/dashboard/teacher/homework/analytics/${assignment.id}`)} 
+                    className={`cursor-pointer group relative bg-[#0B1527] border border-white/[0.06] hover:border-[#5B5CFF]/40 rounded-2xl p-5 transition-all shadow-lg hover:shadow-xl flex flex-col h-full gap-4 ${isMenuOpen ? 'z-50' : 'z-10'}`}
+                  >
+                    {isAllGraded && (
+                      <div className="absolute top-4 right-4 z-20 bg-[#22C55E]/10 backdrop-blur-md border border-[#22C55E]/30 text-[#22C55E] text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded transform rotate-12 shadow-[0_0_15px_rgba(34,197,94,0.2)] select-none">
+                        GRADED
+                      </div>
+                    )}
+                    {/* Top Row: Icon, Title, Menu */}
                   <div className="flex items-start justify-between gap-3 relative z-10">
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.05] flex items-center justify-center shrink-0">

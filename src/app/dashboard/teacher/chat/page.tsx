@@ -1,3 +1,4 @@
+import React from 'react';
 "use client";
 import Link from "next/link";
 ﻿
@@ -344,13 +345,24 @@ export default function TeacherChatPage() {
                       const isMe = msg.senderRole === "teacher";
                       const showTeacherName = isMe && (idx === 0 || visibleMessages[idx - 1].senderId !== msg.senderId);
 
+                      const msgDateStr = new Date(msg.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                      const prevDateStr = idx > 0 ? new Date(visibleMessages[idx - 1].createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : null;
+                      const showDate = msgDateStr !== prevDateStr;
+
                       return (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          key={msg.id} 
-                          className={cn("flex flex-col max-w-[75%] group", isMe ? "self-end items-end" : "self-start items-start")}
-                        >
+                        <React.Fragment key={msg.id}>
+                          {showDate && (
+                            <div className="w-full flex justify-center my-4">
+                              <span className="bg-[#131D2E] text-[#B6C2D9] text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full border border-white/[0.05]">
+                                {msgDateStr}
+                              </span>
+                            </div>
+                          )}
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={cn("flex flex-col max-w-[75%] group", isMe ? "self-end items-end" : "self-start items-start")}
+                          >
                           {showTeacherName && <span className="text-[10px] text-[#7B8798] mb-1 mr-1">{msg.senderName} (Teacher)</span>}
                           
                           <div className="flex items-center gap-2 relative w-full justify-end">
@@ -418,6 +430,7 @@ export default function TeacherChatPage() {
                             </div>
                           </div>
                         </motion.div>
+                        </React.Fragment>
                       );
                     })
                   );
@@ -455,7 +468,7 @@ export default function TeacherChatPage() {
                     <input 
                       type="file" 
                       className="hidden" 
-                      accept="image/*,.pdf,.doc,.docx"
+                      accept="image/*"
                       onChange={(e) => e.target.files?.[0] && setAttachment(e.target.files[0])}
                     />
                     <ImageIcon className="w-5 h-5" />
