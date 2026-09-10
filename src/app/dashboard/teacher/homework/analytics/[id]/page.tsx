@@ -400,7 +400,7 @@ export default function HomeworkAnalyticsPage() {
                                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3">
                                       {sub.status === "accepted" && (
                                         <div className={`border-2 text-[10px] uppercase tracking-[0.2em] font-black px-1.5 py-0.5 rounded-sm transform -rotate-6 opacity-90 select-none ${borderColor} ${gradeColor}`}>
-                                          Checked
+                                          GRADED
                                         </div>
                                       )}
                                       <span className={`text-xl font-bold whitespace-nowrap ${gradeColor}`}>{sub.teacherGrade ?? "-"} / {maxMarks}</span>

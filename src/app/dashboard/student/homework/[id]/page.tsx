@@ -43,6 +43,7 @@ export default function StudentHomeworkDetailsPage() {
 
   // Subjective Assignment State
   const [studentAttachments, setStudentAttachments] = useState<Attachment[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<{id: string, file: File}[]>([]);
   const [textResponse, setTextResponse] = useState("");
   const [viewingAttachment, setViewingAttachment] = useState<Attachment | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -153,73 +154,38 @@ export default function StudentHomeworkDetailsPage() {
   };
 
   // -- Subjective Handlers --
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+        const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-    // Do NOT block UI. Let user take more photos immediately.
-    // We will show a toast or just append them as they finish.
-    
-    // Create temporary placeholders so they show up instantly in the grid
-    const tempIds = Array.from(files).map((f, i) => `temp_${Date.now()}_${i}`);
-    const placeholders: Attachment[] = Array.from(files).map((file, i) => ({
-      id: tempIds[i],
-      name: file.name || "Uploading...",
-      url: URL.createObjectURL(file), // Local preview
-      type: 'image',
-      size: file.size || 0,
-      uploadedAt: new Date().toISOString()
-    }));
-    
-    setStudentAttachments(prev => [...prev, ...placeholders]);
-    
-    // Clear inputs so they can take another photo immediately
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (cameraInputRef.current) cameraInputRef.current.value = "";
-
-    try {
-      const filesArray = Array.from(files);
-      const uploadedFiles = await uploadService.uploadFiles(
-        filesArray,
-        "homework",
-        "homework",
-        homework.id
-      );
-
-      const newAttachments: Attachment[] = uploadedFiles.map((f, i) => ({
-        id: `att_${Date.now()}_${i}`,
-        name: f.name,
-        url: f.url,
-        type: 'image',
-        size: f.size || 0,
-        uploadedAt: new Date().toISOString()
+      const newPending = Array.from(files).map((file, i) => ({
+        id: `temp_${Date.now()}_${i}`,
+        file
       }));
 
-      // Replace placeholders with real attachments
-      setStudentAttachments(prev => {
-        const filtered = prev.filter(p => !tempIds.includes(p.id));
-        const updated = [...filtered, ...newAttachments];
-        
-        // Auto-save draft
-        if (!isCompleted) {
-          saveSubmissionDraft(homework.id, currentUser.id, textResponse, updated).catch(console.error);
-        }
-        return updated;
-      });
+      const placeholders: Attachment[] = newPending.map(p => ({
+        id: p.id,
+        name: p.file.name || "Image",
+        url: URL.createObjectURL(p.file),
+        type: 'image',
+        size: p.file.size || 0,
+        uploadedAt: new Date().toISOString()
+      }));
       
-    } catch (err: any) {
-      console.error("Upload failed:", err);
-      // Remove placeholders on failure
-      setStudentAttachments(prev => prev.filter(p => !tempIds.includes(p.id)));
-      alert("Failed to upload files: " + (err.message || err.toString()));
-    }
-  };
-  
-  const removePendingFile = (id: string) => {};
+      setStudentAttachments(prev => [...prev, ...placeholders]);
+      setPendingFiles(prev => [...prev, ...newPending]);
+      
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
+    };
 
+
+
+  
   const removeStudentAttachment = async (id: string) => {
     const updatedAttachments = studentAttachments.filter(a => a.id !== id);
     setStudentAttachments(updatedAttachments);
+    setPendingFiles(prev => prev.filter(p => p.id !== id));
     if (!isCompleted) {
       await saveSubmissionDraft(homework.id, currentUser.id, textResponse, updatedAttachments);
     }
@@ -234,27 +200,52 @@ export default function StudentHomeworkDetailsPage() {
   };
 
   const handleSubmitSubjective = async () => {
-    // Check if there are any uploading placeholders
-    if (studentAttachments.some(a => a.id.startsWith('temp_'))) {
-      alert("Please wait for all images to finish uploading before submitting.");
-      return;
-    }
+      if (studentAttachments.length === 0 && !textResponse.trim()) {
+        if (!confirm("You haven't attached any files or written a response. Submit anyway?")) return;
+      }
+      setIsSubmitting(true);
+      setIsUploading(true);
+      
+      try {
+        let finalAttachments = [...studentAttachments];
+        
+        if (pendingFiles.length > 0) {
+          const filesArray = pendingFiles.map(p => p.file);
+          const uploadedFiles = await uploadService.uploadFiles(
+            filesArray,
+            "homework",
+            "homework",
+            homework.id
+          );
+          
+          const newAttachments: Attachment[] = uploadedFiles.map((f, i) => ({
+            id: `att_${Date.now()}_${i}`,
+            name: f.name,
+            url: f.url,
+            type: 'image',
+            size: f.size || 0,
+            uploadedAt: new Date().toISOString()
+          }));
+          
+          // Replace placeholders with actual URLs
+          const pendingIds = pendingFiles.map(p => p.id);
+          finalAttachments = finalAttachments.filter(a => !pendingIds.includes(a.id));
+          finalAttachments = [...finalAttachments, ...newAttachments];
+        }
 
-    if (studentAttachments.length === 0 && !textResponse.trim()) {
-      if (!confirm("You haven't attached any files or written a response. Submit anyway?")) return;
-    }
-    setIsSubmitting(true);
-    try {
-      await saveSubmissionDraft(homework.id, currentUser.id, textResponse, studentAttachments);
-      await submitHomework(homework.id, currentUser.id);
-      triggerSuccess();
-    } catch (err: any) {
-      console.error("Submission failed:", err);
-      alert("Failed to submit: " + (err.message || err.toString()));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        await saveSubmissionDraft(homework.id, currentUser.id, textResponse, finalAttachments);
+        await submitHomework(homework.id, currentUser.id);
+        triggerSuccess();
+      } catch (err: any) {
+        console.error("Submission failed:", err);
+        alert("Failed to submit: " + (err.message || err.toString()));
+      } finally {
+        setIsSubmitting(false);
+        setIsUploading(false);
+      }
+    };
+
+
 
   const triggerSuccess = () => {
     try {
